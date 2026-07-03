@@ -56,15 +56,61 @@ theorem euler_flow_turing_complete {Γ : Type} [Encodable Γ] (step : Γ → Γ)
       V.IsBeltrami u ∧ Simulates (V.flowOf u) step enc := by
   sorry
 
-/-! ## 已證的離散側配套（零 sorry）
+/-! ## 已證的離散→連續下半層（零 sorry）
 
-主定理的離散→連續下半層不必等接觸幾何：M4 的懸掛流在**映射環面**上
-已經無條件模擬任何離散系統。這是主定理的「已完成部分」的精確陳述。 -/
+主定理的下半層不必等接觸幾何：M4 的映射環面給出**全證**的版本 ——
+任何緊緻空間上的可逆離散動力系統，都被某緊緻空間上的連續 ℝ-流模擬。
+主定理與此的差距**只剩**「該流可取為 Euler 穩態（Beltrami）流」，
+即 M5 的接觸幾何詮釋層。 -/
 
 /-- 懸掛流模擬離散系統（無條件、已證）：對任何 `f : X → X`，
 映射環面上的懸掛時間-1 映射在切片 `t = 0` 上實現 `f`。 -/
 theorem suspension_simulates {X : Type*} (f : X → X) (x : X) :
     MappingTorus.suspFlow 1 (MappingTorus.mk f (x, 0)) = MappingTorus.mk f (f x, 0) :=
   MappingTorus.suspFlow_one_realizes x
+
+universe u
+
+/-- **下半層主定理（全證、零 sorry）**：緊緻空間 `X` 上的任何同胚 `e`，
+都存在緊緻空間 `M` 上的連續 ℝ-流（`ContinuousFlowOn`，聯合連續 + 群律）
+經單射編碼模擬 `e` 的離散動力學。
+
+構造：`M = X` 的映射環面、流 = 懸掛流、編碼 = 切片嵌入 `x ↦ [x, 0]`。
+單射性用 M4 的完整不變量；緊緻性用 `X × [0,1]` 滿射像；
+聯合連續性用開商映射（不需 Whitehead 定理）。 -/
+theorem suspension_flow_simulates {X : Type u} [TopologicalSpace X] [CompactSpace X]
+    (e : X ≃ₜ X) :
+    ∃ (M : Type u) (_ : TopologicalSpace M) (_ : CompactSpace M)
+      (F : ContinuousFlowOn M) (enc : X → M),
+      Simulates F (⇑e) enc := by
+  refine ⟨MappingTorus ⇑e, inferInstance, MappingTorus.compactSpace e.toEquiv,
+    { φ := MappingTorus.suspFlow
+      continuous := MappingTorus.continuous_suspFlow_uncurried e
+      map_zero := MappingTorus.suspFlow_zero
+      map_add := MappingTorus.suspFlow_add },
+    fun x ↦ MappingTorus.mk ⇑e (x, 0), ?_, fun c ↦ ⟨1, one_pos, ?_⟩⟩
+  · exact MappingTorus.mk_slice_injective e.toEquiv
+  · exact MappingTorus.suspFlow_one_realizes c
+
+/-! ### 實例：雙邊 full shift（generalized shift 的骨幹） -/
+
+/-- 雙邊 full shift `σ : (ℤ → Bool) ≃ₜ (ℤ → Bool)`，`(σ s) n = s (n+1)`。
+可逆（左移的逆是右移）、雙向連續（乘積拓撲）。 -/
+def fullShift : (ℤ → Bool) ≃ₜ (ℤ → Bool) where
+  toFun s n := s (n + 1)
+  invFun s n := s (n - 1)
+  left_inv s := funext fun n ↦ by simp
+  right_inv s := funext fun n ↦ by simp
+  continuous_toFun := continuous_pi fun n ↦ continuous_apply (n + 1)
+  continuous_invFun := continuous_pi fun n ↦ continuous_apply (n - 1)
+
+/-- **全證實例**：雙邊 full shift 被緊緻空間上的連續流模擬。
+這正是 Cardona et al. 構造鏈「generalized shift → 流」一步的
+拓撲動力學核心（缺的只是把流實現成 Euler/Beltrami 的幾何）。 -/
+theorem fullShift_suspension_simulates :
+    ∃ (M : Type) (_ : TopologicalSpace M) (_ : CompactSpace M)
+      (F : ContinuousFlowOn M) (enc : (ℤ → Bool) → M),
+      Simulates F (⇑fullShift) enc :=
+  suspension_flow_simulates fullShift
 
 end FluidTuring
