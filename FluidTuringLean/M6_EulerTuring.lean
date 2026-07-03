@@ -36,6 +36,21 @@ def Simulates {M : Type*} [TopologicalSpace M] (F : ContinuousFlowOn M)
   Function.Injective enc ∧
     ∀ c : Γ, ∃ t : ℝ, 0 < t ∧ F.φ t (enc c) = enc (step c)
 
+/-- 迭代引理：模擬單步 ⟹ 軌道以正時間實現**任意 `n+1` 步**轉移
+（時間沿流群律相加）。把「一步模擬」升級成「整條軌道模擬」。 -/
+theorem Simulates.iterate {M : Type*} [TopologicalSpace M] {F : ContinuousFlowOn M}
+    {Γ : Type*} {step : Γ → Γ} {enc : Γ → M}
+    (h : Simulates F step enc) (c : Γ) (n : ℕ) :
+    ∃ t : ℝ, 0 < t ∧ F.φ t (enc c) = enc (step^[n + 1] c) := by
+  induction n with
+  | zero => simpa using h.2 c
+  | succ m ih =>
+      obtain ⟨t₁, ht₁, hφ₁⟩ := ih
+      obtain ⟨t₂, ht₂, hφ₂⟩ := h.2 (step^[m + 1] c)
+      exact ⟨t₂ + t₁, by linarith, by
+        rw [F.map_add, hφ₁, hφ₂]
+        exact congrArg enc (Function.iterate_succ_apply' step (m + 1) c).symm⟩
+
 /-- **主定理（Euler-only，PAPER-BLOCKED sorry）** —— 誠實範圍陳述：
 
 > 對任意可編碼組態空間 `Γ` 上的轉移函數 `step`，存在緊緻空間 `M`、

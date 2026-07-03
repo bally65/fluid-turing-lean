@@ -71,6 +71,34 @@ def IsEulerStationary (u : V.Vec) (euler_witness : V.Vec → Prop) : Prop :=
 
 end VectorCalculus3
 
+/-! ## 與 mathlib 動力系統庫的橋接 -/
+
+/-- 橋接：`ContinuousFlowOn` → mathlib 的 `Flow ℝ`。
+欄位一一對應（joint continuity = `cont'`、群律同形），零成本互通，
+讓下游可直接使用 mathlib 的不變集/軌道/ω-極限理論。 -/
+def ContinuousFlowOn.toFlow {M : Type*} [TopologicalSpace M]
+    (F : ContinuousFlowOn M) : Flow ℝ M where
+  toFun := F.φ
+  cont' := F.continuous
+  map_add' := F.map_add
+  map_zero' := F.map_zero
+
+/-- 橋接（反向）：mathlib 的 `Flow ℝ` → `ContinuousFlowOn`。 -/
+def ContinuousFlowOn.ofFlow {M : Type*} [TopologicalSpace M]
+    (F : Flow ℝ M) : ContinuousFlowOn M where
+  φ := F.toFun
+  continuous := F.cont'
+  map_zero := F.map_zero'
+  map_add := F.map_add'
+
+@[simp]
+theorem ContinuousFlowOn.toFlow_ofFlow {M : Type*} [TopologicalSpace M]
+    (F : Flow ℝ M) : (ContinuousFlowOn.ofFlow F).toFlow = F := rfl
+
+@[simp]
+theorem ContinuousFlowOn.ofFlow_toFlow {M : Type*} [TopologicalSpace M]
+    (F : ContinuousFlowOn M) : ContinuousFlowOn.ofFlow F.toFlow = F := rfl
+
 /-! ## Lemma B（paper-blocked） -/
 
 /-- **PAPER-BLOCKED sorry** — Etnyre–Ghrist 對應（Cardona et al. 2021 的 Lemma B 用法）：
