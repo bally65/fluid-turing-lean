@@ -22,7 +22,7 @@
 | M3 康托爾編碼 | `M3_Encoding.lean` | `Encodable Γ ↪ ℝ` 單射 + 轉移共軛；**v0.2 真康托爾集升級**：`cantorEncode : (ℕ→Bool) → ℝ` 三進位編碼，單射（首異位論證）、連續（M-判別法）、閉嵌入、shift 動力學在康托爾集上的**連續**共軛；**v0.3 generalized shift（Moore 1990）**：`GenShift` 有限視窗局部規則結構（平移量 `F` 與改寫 `G` 都只依賴視窗、`G` 視窗外恆等）、乘積拓撲下連續（柱集上＝常數或座標投影）、**可逆 ⟹ 自同胚**（`toHomeomorph`，緊 Hausdorff 連續雙射的逆自動連續） | 0 |
 | M3b 可逆 TM → GS | `M3b_ReversibleTM.lean` | **v0.4 定理鏈離散端**：`BitTM` 自足雙向無限帶圖靈機（moving-tape、狀態=滿位向量 `Fin m → Bool`，docstring 記錄對比 mathlib `TM0` 的取捨）；`encCfg` 組態空間 ≃ `(ℤ→Bool)` **顯式雙射**打包；`GenShift.ofLocal` 局部資料打包器；`toGenShift`：**機器單步在編碼下實現為 generalized shift**（視窗 `[-1,m]`）且 `step` 雙射 ⟹ `GenShift.Reversible`；`LocalReversible`：**局部可判定**（有限鋪磚檢查）的可逆充分條件 ⟹ 全域雙射；實例 `cnotTM`（受控反閘機，`decide` 驗證）；**v0.5 `ofPerm` 置換機引擎**：局部更新 `(q,a)↦(next,write)` 是置換且 `move` 只依賴新狀態 ⟹ `LocalReversible`（參數化鋪磚證明，機器級可逆化的可逆性引擎）。**里程碑 B（部分）**：Bennett 1973 history 構造 `bennett f`——單射 + n 步模擬已證；`bennett_not_surjective` 誠實記錄缺口（抽象構造不滿射；動力學層已由 M3c 封死，機器級=後續工作） | 0 |
 | M3c Bennett 可逆化 | `M3c_Bennett.lean` | **v0.5 動力學層 Bennett（全證）**：`histConveyor` —— `X × V` 上任意雙射升級成 `X × (ℤ→V)` 上雙射（歷史輸送帶：讀流位 0 當緩衝、記錄從 -1 吐出、整流下移；雙向無限流無「空歷史」角點，滿射由顯式逆映射成立）；`BitTM.bufferedStep` **Feistel 帶緩衝單步**——任意（不可逆）位元機單步配一格緩衝成顯式雙射（新狀態=`next⊕r`、寫入位=`write⊕b`、緩衝吐出被丟棄的 `(q,t 0)`），空白緩衝上精確=`M.step`；`bennettAut`+`bennettAut_iterate`：n 步 conveyor = n 步機器（**無時間膨脹**）、垃圾誠實外顯；`bennettHomeo`：緊 Hausdorff 上正向連續（每輸出座標只讀有限離散資料+至多三帶座標）⟹ 自同胚 | 0 |
-| M3d 機器級 Bennett | `M3d_BennettTM.lean` | **milestone A（構造 + 可逆性，全證）**：`bennettTM : BitTM → BitTM` —— 狀態打包 `m' = m + (m+1) + 3`（M-狀態 × HistRec 緩衝 × 3 相位位，顯式 `Equiv` 鏈 `bitsSplit`/`bufSplit`/`shuttleUnpack`）；微步原語全是逐段驗證的置換（`feistelCore` = M3c `bufferedStep` 狀態側 Feistel 輪、`swapHead` 對合、`rotBuf` 循環旋轉、`phaseInc` 3 位遞增、`phaseDispatch` = `prodShear` 相位纖維分派）；`L = shuttleL` 打包共軛複合、`μ = shuttleDir` 只讀新狀態相位位（`ofPerm` 紀律）；`bennettTM_reversible` 由 `ofPerm_reversible` 免費。**只主張構造 + 可逆**；模擬語意（乾淨組態不變量、宏步引理）= milestone B/C，占位相位排程屆時換標記驅動可逆分支，可逆性定理與排程無關。待決清單成文於檔頭 docstring | 0 |
+| M3d 機器級 Bennett | `M3d_BennettTM.lean` | **milestone A（構造 + 可逆性，全證）**：`bennettTM : BitTM → BitTM` —— 狀態打包 `m' = m + (m+1) + 3`（M-狀態 × HistRec 緩衝 × 3 相位位，顯式 `Equiv` 鏈 `bitsSplit`/`bufSplit`/`shuttleUnpack`）；微步原語全是逐段驗證的置換（`feistelCore` = M3c `bufferedStep` 狀態側 Feistel 輪、`swapHead` 對合、`rotBuf` 循環旋轉、`phaseInc` 3 位遞增、`phaseDispatch` = `prodShear` 相位纖維分派）；`L = shuttleL` 打包共軛複合、`μ = shuttleDir` 只讀新狀態相位位（`ofPerm` 紀律）；`bennettTM_reversible` 由 `ofPerm_reversible` 免費。**只主張構造 + 可逆**；**milestone B（部分）**：4-軌帶佈局定案（模擬格 `k` ↦ 帶位 `4k..4k+3` = 工作/垃圾資料/垃圾標記/home 標記）、`shuttleEncode` 編碼、`IsClean` 乾淨組態謂詞（垃圾標記 = 與 home 相鄰連續區段 `[-L,0)`、未標記格 = 0、垃圾內容自由）、`shuttleEncode_isClean`（編碼落在 `IsClean 0`）——皆排程無關全證。**未證**：微步保不變量引理 + 宏步引理（= milestone C，綁定排程；占位相位排程屆時換標記驅動可逆分支，可逆性定理與排程無關）。待決清單成文於檔頭 docstring | 0 |
 | M4 懸掛構造 | `M4_Suspension.lean` | 映射環面 + 懸掛流群律/切片連續/時間-1 實現；**v0.2 可逆升級**：完整不變量 `(e^⌊t⌋x, fract t)`、`mk` 等價刻劃、切片嵌入單射、`X` 緊 ⟹ 環面緊、商投影是開映射、懸掛流**聯合連續**（開商映射法，免 Whitehead） | 0 |
 | M5 Reeb 介面層 | `M5_ReebInterface.lean` | 連續流結構（嚴格）＋抽象向量微積分簽名＋`IsBeltrami`；Etnyre–Ghrist 對應 | 1 ⛔ |
 | M6 主定理 | `M6_EulerTuring.lean` | `Simulates` 謂詞；主定理（Euler-only，paper-blocked）；**v0.2 下半層主定理（全證）**：`suspension_flow_simulates` — 緊空間上任何同胚都被緊空間上的連續 ℝ-流經單射編碼模擬；實例 `fullShift_suspension_simulates`（雙邊 full shift）；**v0.3 推論（全證）**：`genShift_suspension_simulates` — 任何**可逆 generalized shift** 被緊空間上連續 ℝ-流經單射編碼模擬；`fullShiftGS` = full shift 作為 GenShift 的平凡實例；**v0.4 推論（全證）**：`reversibleTM_suspension_simulates` — 任何**可逆位元圖靈機**的組態動力學被緊空間上連續 ℝ-流經單射編碼模擬；端到端實例 `cnotTM_suspension_simulates`；**v0.5 推論（全證）**：`bitTM_suspension_simulates` — **任意（不可逆）位元機**經 Bennett 歷史編碼被緊空間上連續 ℝ-流模擬（可逆性假設拿掉；歷史分量與落點垃圾誠實外顯為存在量詞） | 1 ⛔ |
@@ -85,14 +85,22 @@ M3c 全部、M6 `bitTM_suspension_simulates`）僅依賴
    （`prodShear` 相位纖維分派）—— 逐段 `Equiv` 驗證。**占位排程**
    （相位 0 = Feistel、1 = 垃圾走位、餘恆等）待 milestone C 換成
    標記驅動可逆分支；可逆性定理與排程無關。
-4. **垃圾堆疊拖曳**（milestone B，未動）：歷史堆疊保持與 home 相鄰
-   （標記連續區段），頭移動時旋轉堆疊一格（撿底放頂；垃圾內容順序無關）；
-   所有掃描以標記邊界終止，無無界搜尋失敗模式。堆疊區不變量：
-   未標記格=0（撿起時歸零維持）。乾淨組態謂詞 + 每類微步保不變量引理。
+4. **垃圾堆疊拖曳**（milestone B **部分完成**）：✅ 帶佈局 4-軌定案、
+   `shuttleEncode` 編碼、`IsClean` 謂詞（標記連續區段 `[-L,0)` 與 home
+   相鄰、未標記格=0、垃圾內容自由）、`shuttleEncode_isClean` —— 排程無關
+   半邊全證。**未動**：頭移動時旋轉堆疊一格（撿底放頂）、掃描以標記邊界
+   終止的微步排程、每類微步保不變量引理 —— 這半邊綁定排程，與步驟 5 一起做
+   （對占位排程證引理 = 死工，故不先證）。
 5. **模擬引理**（milestone C，未動；風險集中）：每 M-步耗 O(堆疊長) 微步
    （`∃ n` 陳述容納變長排程，配 M6 `Simulates.iterate` 語意）；
    正確性歸納 = 相位×區段不變量。爆量時先證單一相位段部分引理。
    Lean 工程量估 1500+ 行。設計待決 7 條成文於 M3d 檔頭 docstring。
+
+**停損記錄（2026-07-04 本輪）**：A 全證 + B 排程無關半邊全證，停在全綠
+verified commit；C 的入口 = 先把 `shuttleCore` 占位排程換成標記驅動可逆
+分支（M3d 待決 1、7），再證微步保不變量與宏步引理。零 sorry、零自訂
+axiom；`bennettTM_reversible` 與 v0.5 四條迴歸定理皆僅依賴標準三公理
+（本輪 `#print axioms` 覆核）。
 
 ## M6 範圍決策（2026-07-04，使用者選定 B：Euler-only）
 
