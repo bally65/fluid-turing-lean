@@ -215,4 +215,96 @@ theorem exists_continuous_shift_conjugate :
       _ = ((⟨cantorEncode s, hmem⟩ : Set.range cantorEncode) : ℝ) := by rw [this]
     rw [this]
 
+/-! ## Generalized shift（Moore 1990）
+
+雙邊符號空間 `ℤ → Bool` 上由**有限視窗局部規則**決定的動力系統
+（Moore 1990, "Unpredictability and undecidability in dynamical systems"）：
+`Φ(s) = σ^{F(s)}(s ⊕ G(s))`，其中平移量 `F` 與改寫 `G` 都只依賴
+（且 `G` 只更動）有限視窗 `window` 內的座標。這是 Cardona et al.
+構造鏈的離散起點：TM ↪ generalized shift → 康托爾集上的動力學。
+
+本節證明：任何 generalized shift 在乘積拓撲下連續；**可逆**者是自同胚
+（緊緻 Hausdorff 上連續雙射的逆自動連續），可直接餵入 M6 的
+`suspension_flow_simulates`。
+
+**後續工作（誠實標示）**：TM → **可逆** generalized shift 的可逆化
+（Bennett 1973 history-keeping 構造）工程量大，本檔不佯稱完成；
+`Reversible` 以雙射為假設暴露，等該構造補上非平凡實例
+（平凡實例 `fullShiftGS` 見 M6）。 -/
+
+/-- Moore 1990 的 generalized shift：`(ℤ → Bool)` 上由有限視窗 `window`
+內的局部規則決定的映射。`shiftAmt`（Moore 的 `F`）給平移量、
+`rewrite`（Moore 的 `G`）給改寫；兩者都只依賴視窗內座標，
+且 `rewrite` 在視窗外是恆等。 -/
+structure GenShift where
+  /-- 有限依賴視窗。 -/
+  window : Finset ℤ
+  /-- 平移量函數 `F`。 -/
+  shiftAmt : (ℤ → Bool) → ℤ
+  /-- 改寫函數 `G`。 -/
+  rewrite : (ℤ → Bool) → ℤ → Bool
+  /-- `F` 只依賴視窗內座標。 -/
+  shiftAmt_local : ∀ {s s' : ℤ → Bool}, (∀ i ∈ window, s i = s' i) →
+    shiftAmt s = shiftAmt s'
+  /-- `G` 在視窗內的值只依賴視窗內座標。 -/
+  rewrite_local : ∀ {s s' : ℤ → Bool}, (∀ i ∈ window, s i = s' i) →
+    ∀ i ∈ window, rewrite s i = rewrite s' i
+  /-- `G` 在視窗外恆等。 -/
+  rewrite_off : ∀ (s : ℤ → Bool), ∀ i ∉ window, rewrite s i = s i
+
+namespace GenShift
+
+/-- generalized shift 的作用：先改寫再平移 `F s` 格，`(Φ s) n = (G s) (n + F s)`。 -/
+def apply (Φ : GenShift) (s : ℤ → Bool) : ℤ → Bool :=
+  fun n ↦ Φ.rewrite s (n + Φ.shiftAmt s)
+
+/-- generalized shift 在乘積拓撲下連續：在「視窗座標固定」的 clopen 柱集上，
+每個輸出座標要嘛是常數（讀到視窗內），要嘛是某座標投影（讀到視窗外）。 -/
+theorem continuous_apply (Φ : GenShift) : Continuous Φ.apply := by
+  refine continuous_pi fun n ↦ continuous_iff_continuousAt.2 fun s₀ ↦ ?_
+  -- 柱集鄰域 `U`：視窗內座標與 `s₀` 一致的所有序列
+  set U : Set (ℤ → Bool) := {s | ∀ i ∈ Φ.window, s i = s₀ i} with hUdef
+  have hUopen : IsOpen U := by
+    have hpi : U = (Φ.window : Set ℤ).pi fun i ↦ {s₀ i} := by
+      ext s
+      simp [hUdef, Set.mem_pi]
+    rw [hpi]
+    exact isOpen_set_pi Φ.window.finite_toSet fun i _ ↦ isOpen_discrete _
+  have hUnhds : U ∈ nhds s₀ := hUopen.mem_nhds fun i _ ↦ rfl
+  have hF : ∀ s ∈ U, Φ.shiftAmt s = Φ.shiftAmt s₀ := fun s hs ↦ Φ.shiftAmt_local hs
+  by_cases hmem : n + Φ.shiftAmt s₀ ∈ Φ.window
+  · -- 讀到視窗內：柱集上是常數
+    refine ((continuousOn_const (c := Φ.rewrite s₀ (n + Φ.shiftAmt s₀))).congr
+      fun s hs ↦ ?_).continuousAt hUnhds
+    change Φ.rewrite s (n + Φ.shiftAmt s) = Φ.rewrite s₀ (n + Φ.shiftAmt s₀)
+    rw [hF s hs]
+    exact Φ.rewrite_local hs _ hmem
+  · -- 讀到視窗外：柱集上是座標投影
+    refine (((_root_.continuous_apply (n + Φ.shiftAmt s₀)).continuousOn).congr
+      fun s hs ↦ ?_).continuousAt hUnhds
+    change Φ.rewrite s (n + Φ.shiftAmt s) = s (n + Φ.shiftAmt s₀)
+    rw [hF s hs]
+    exact Φ.rewrite_off s _ hmem
+
+/-- 可逆性：`apply` 是雙射。（TM → 可逆 GS 的 Bennett 1973 構造是後續工作，
+此處以雙射假設暴露。） -/
+def Reversible (Φ : GenShift) : Prop := Function.Bijective Φ.apply
+
+/-- **可逆 generalized shift 是自同胚**：乘積拓撲下雙向連續。
+正向連續是 `continuous_apply`；逆向連續免費 —— 緊緻空間到 Hausdorff
+空間的連續雙射是同胚（`(ℤ → Bool)` 緊緻：有限離散的可數乘積）。 -/
+noncomputable def toHomeomorph (Φ : GenShift) (h : Φ.Reversible) :
+    (ℤ → Bool) ≃ₜ (ℤ → Bool) :=
+  Continuous.homeoOfEquivCompactToT2 (f := Equiv.ofBijective Φ.apply h) Φ.continuous_apply
+
+@[simp] theorem toHomeomorph_apply (Φ : GenShift) (h : Φ.Reversible) (s : ℤ → Bool) :
+    Φ.toHomeomorph h s = Φ.apply s := rfl
+
+/-- 雙向連續的另一半：逆映射連續（由 `toHomeomorph` 自帶）。 -/
+theorem continuous_toHomeomorph_symm (Φ : GenShift) (h : Φ.Reversible) :
+    Continuous (Φ.toHomeomorph h).symm :=
+  (Φ.toHomeomorph h).continuous_invFun
+
+end GenShift
+
 end FluidTuring

@@ -128,4 +128,33 @@ theorem fullShift_suspension_simulates :
       Simulates F (⇑fullShift) enc :=
   suspension_flow_simulates fullShift
 
+/-! ### Generalized shift（Moore 1990）→ 流：全證推論
+
+M3 的 `GenShift` 把「有限視窗局部規則」結構化；可逆者經 `toHomeomorph`
+變成 `(ℤ → Bool)` 的自同胚，直接餵入 `suspension_flow_simulates`。 -/
+
+/-- `fullShift` 是 generalized shift 的平凡實例：空視窗、平移量常數 `1`、不改寫。 -/
+def fullShiftGS : GenShift where
+  window := ∅
+  shiftAmt _ := 1
+  rewrite s := s
+  shiftAmt_local _ := rfl
+  rewrite_local _ i hi := absurd hi (Finset.notMem_empty i)
+  rewrite_off _ _ _ := rfl
+
+@[simp] theorem fullShiftGS_apply : fullShiftGS.apply = ⇑fullShift := rfl
+
+theorem fullShiftGS_reversible : fullShiftGS.Reversible := fullShift.bijective
+
+/-- **推論（全證、零 sorry）**：任何**可逆** generalized shift（Moore 1990）
+都被緊緻空間上的連續 ℝ-流經單射編碼模擬。這把 Cardona et al. 構造鏈的
+「generalized shift → 流」一步從 full shift 骨幹升級到完整的局部規則類；
+與主定理的差距只剩幾何實現（M5 接觸幾何詮釋層）與
+TM → 可逆 GS 的 Bennett 可逆化（後續工作，見 M3）。 -/
+theorem genShift_suspension_simulates (Φ : GenShift) (h : Φ.Reversible) :
+    ∃ (M : Type) (_ : TopologicalSpace M) (_ : CompactSpace M)
+      (F : ContinuousFlowOn M) (enc : (ℤ → Bool) → M),
+      Simulates F Φ.apply enc :=
+  suspension_flow_simulates (Φ.toHomeomorph h)
+
 end FluidTuring
