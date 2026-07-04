@@ -8,6 +8,16 @@ import FluidTuringLean.M5_ReebInterface
 **Euler 穩態解**（Beltrami 場）的圖靈完備性，對應
 Cardona–Miranda–Peralta-Salas–Presas 2021（PNAS）的原始設定。
 
+**範圍決策二（2026-07-05，使用者選定 A：緊空間自同胚版）**：主定理的
+被模擬對象由「任意 `Encodable Γ` 上的任意 `step`」改為
+「緊空間上的自同胚 `e : X ≃ₜ X`」。原版有兩處與 Cardona 原文的落差，
+v0.5 驗收時記錄、本次收斂：(1) 對可合流 `step` 主張嚴格 `Simulates`
+超出原文（原文走雙射 generalized shift）；(2) `Encodable Γ`（可數）與
+原文的康托爾型不可數空間不合。新版與已證下半層
+`suspension_flow_simulates` 逐字對接，TM/generalized shift/Bennett
+全由 M3b/M3c/M3 既有鏈餵入。任意（可合流）機器的模擬語意由
+`bitTM_suspension_simulates` 的垃圾外顯形式承接，不再由主定理直接主張。
+
 **明確不主張**（v0.3 前身草案中被判定為錯誤或嚴重超譯的斷言，永久移除）：
 
 1. ~~「調和場 `Δ_H X = 0` ⟹ Navier–Stokes 黏滯耗散為零」~~ —— 假。
@@ -52,24 +62,29 @@ theorem Simulates.iterate {M : Type*} [TopologicalSpace M] {F : ContinuousFlowOn
         rw [F.map_add, hφ₁, hφ₂]
         exact congrArg enc (Function.iterate_succ_apply' step (m + 1) c).symm⟩
 
-/-- **主定理（Euler-only，PAPER-BLOCKED sorry）** —— 誠實範圍陳述：
+/-- **主定理（Euler-only，PAPER-BLOCKED sorry；範圍決策 A，2026-07-05）**：
 
-> 對任意可編碼組態空間 `Γ` 上的轉移函數 `step`，存在緊緻空間 `M`、
+> 對任意緊空間上的自同胚 `e : X ≃ₜ X`，存在緊緻空間 `M`、
 > 其上的向量微積分詮釋 `V`、及 Beltrami 場 `u`（= Euler 穩態解，
-> 見 M5 `IsBeltrami`），使 `u` 的積分流模擬 `step`。
+> 見 M5 `IsBeltrami`），使 `u` 的積分流模擬 `e`。
 
-紙面證明鏈：TM → generalized shift → 康托爾編碼（M3）→ 圓環面上的
-area-preserving diffeo → 懸掛（M4）→ S³ 上的 Reeb 場（M5, Lemma B）
+「圖靈完備」語意：TM/可逆機器/generalized shift 的動力學經
+M3b `toGenShift`、M3 `toHomeomorph`、M3c `bennettHomeo` 全部落在
+「緊空間自同胚」這個類裡 —— 本定理配上那些**已證**橋接即涵蓋計算模擬；
+與已證下半層 `suspension_flow_simulates` 的差距**只剩**
+「流可取為 Euler 穩態（Beltrami）」的接觸幾何詮釋層。
+
+紙面證明鏈：自同胚 → 懸掛（M4）→ S³ 上的 Reeb 場（M5, Lemma B）
 → Beltrami 場 = Euler 穩態解。
 
 分類：`paper-blocked`，依賴 [Cardona–Miranda–Peralta-Salas–Presas 2021,
 "Constructing Turing complete Euler flows in dimension 3", PNAS 118(19),
-Theorem 1]，經由 M5 的 Etnyre–Ghrist 對應。前四模組的離散→連續管線
-（編碼、懸掛）已在 M1–M4 零 sorry 建立；缺口全部集中在接觸幾何詮釋層。 -/
-theorem euler_flow_turing_complete {Γ : Type} [Encodable Γ] (step : Γ → Γ) :
+Theorem 1]，經由 M5 的 Etnyre–Ghrist 對應。 -/
+theorem euler_flow_turing_complete {X : Type} [TopologicalSpace X] [CompactSpace X]
+    (e : X ≃ₜ X) :
     ∃ (M : Type) (_ : TopologicalSpace M) (_ : CompactSpace M)
-      (V : VectorCalculus3 M) (u : V.Vec) (enc : Γ → M),
-      V.IsBeltrami u ∧ Simulates (V.flowOf u) step enc := by
+      (V : VectorCalculus3 M) (u : V.Vec) (enc : X → M),
+      V.IsBeltrami u ∧ Simulates (V.flowOf u) (⇑e) enc := by
   sorry
 
 /-! ## 已證的離散→連續下半層（零 sorry）
