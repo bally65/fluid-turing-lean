@@ -224,6 +224,88 @@ def bennettTM : BitTM := BitTM.ofPerm M.shuttleBits M.shuttleL M.shuttleDir
 theorem bennettTM_reversible : M.bennettTM.Reversible :=
   ofPerm_reversible M.shuttleBits M.shuttleL M.shuttleDir
 
+@[simp] theorem bennettTM_m : M.bennettTM.m = M.shuttleBits := rfl
+
+theorem bennettTM_next (s : Fin M.shuttleBits → Bool) (a : Bool) :
+    M.bennettTM.next s a = (M.shuttleL (s, a)).1 := rfl
+
+theorem bennettTM_write (s : Fin M.shuttleBits → Bool) (a : Bool) :
+    M.bennettTM.write s a = (M.shuttleL (s, a)).2 := rfl
+
+theorem bennettTM_move (s : Fin M.shuttleBits → Bool) (a : Bool) :
+    M.bennettTM.move s a = M.shuttleDir (M.shuttleL (s, a)).1 := rfl
+
+/-! ## Milestone B（部分）：帶佈局、編碼與乾淨組態謂詞
+
+4-軌帶佈局（README 步驟 2 帶側）：模擬帶格 `k` ↦ shuttle 帶位 `4k..4k+3` =
+（工作位 `4k`、垃圾資料位 `4k+1`、垃圾標記位 `4k+2`、home 標記位 `4k+3`）。
+
+**誠實界線**：本節只給排程無關的部分 —— 編碼、乾淨組態謂詞、
+「編碼產出乾淨組態」。每類微步保不變量的單步引理**綁定微步排程**，
+而現行排程是占位（見 `shuttleCore` docstring），故與 milestone C 的
+標記驅動排程一起做，避免對將被替換的排程證死引理。 -/
+
+/-- 空白緩衝。 -/
+def blankBuf : Fin (M.m + 1) → Bool := fun _ ↦ false
+
+/-- 打包 shuttle 狀態（`shuttleUnpack` 的逆）。 -/
+def shuttlePack (q : Fin M.m → Bool) (buf : Fin (M.m + 1) → Bool) (p : ShuttlePhase) :
+    Fin M.shuttleBits → Bool :=
+  M.shuttleUnpack.symm (q, (buf, p))
+
+@[simp] theorem shuttleUnpack_shuttlePack (q : Fin M.m → Bool)
+    (buf : Fin (M.m + 1) → Bool) (p : ShuttlePhase) :
+    M.shuttleUnpack (M.shuttlePack q buf p) = (q, (buf, p)) :=
+  M.shuttleUnpack.apply_symm_apply _
+
+/-- 編碼帶：工作軌載模擬帶、垃圾兩軌全空、home 標記唯一在區塊 0。 -/
+def shuttleEncodeTape (t : ℤ → Bool) : ℤ → Bool := fun i ↦
+  if i % 4 = 0 then t (i / 4)
+  else if i = 3 then true
+  else false
+
+/-- **編碼**：模擬組態 → shuttle 機組態（相位 0、緩衝空白、垃圾空、
+head 在 home 區塊工作位）。 -/
+def shuttleEncode (c : M.Cfg) : M.bennettTM.Cfg :=
+  (M.shuttlePack c.1 M.blankBuf ph0, shuttleEncodeTape c.2)
+
+/-- **乾淨組態謂詞**（垃圾堆疊長 `L`；垃圾內容自由 —— 宏步引理中
+以存在量詞外顯，語意比照 M3c `bennettAut_iterate`）：
+相位 0、緩衝空白、工作軌 = 模擬帶、home 標記唯一在區塊 0、
+垃圾標記恰為區塊 `[-L, 0)` 的連續區段（與 home 相鄰）、未標記垃圾格 = 0。 -/
+def IsClean (L : ℕ) (c : M.bennettTM.Cfg) (q : Fin M.m → Bool) (t : ℤ → Bool) : Prop :=
+  M.shuttleUnpack c.1 = (q, (M.blankBuf, ph0)) ∧
+  (∀ k : ℤ, c.2 (4 * k) = t k) ∧
+  (∀ k : ℤ, c.2 (4 * k + 3) = decide (k = 0)) ∧
+  (∀ k : ℤ, c.2 (4 * k + 2) = decide (-(L : ℤ) ≤ k ∧ k < 0)) ∧
+  (∀ k : ℤ, c.2 (4 * k + 2) = false → c.2 (4 * k + 1) = false)
+
+/-- **編碼產出乾淨組態**（垃圾堆疊長 0）。 -/
+theorem shuttleEncode_isClean (c : M.Cfg) :
+    M.IsClean 0 (M.shuttleEncode c) c.1 c.2 := by
+  refine ⟨M.shuttleUnpack_shuttlePack _ _ _, fun k ↦ ?_, fun k ↦ ?_, fun k ↦ ?_, fun k ↦ ?_⟩
+  · change shuttleEncodeTape c.2 (4 * k) = c.2 k
+    simp only [shuttleEncodeTape]
+    rw [if_pos (by omega : (4 * k) % 4 = 0),
+      Int.mul_ediv_cancel_left k (by norm_num : (4 : ℤ) ≠ 0)]
+  · change shuttleEncodeTape c.2 (4 * k + 3) = decide (k = 0)
+    simp only [shuttleEncodeTape]
+    rw [if_neg (by omega : ¬(4 * k + 3) % 4 = 0)]
+    rcases eq_or_ne k 0 with rfl | hk
+    · rw [if_pos (by omega : (4 * (0 : ℤ) + 3) = 3), eq_comm]
+      exact decide_eq_true rfl
+    · rw [if_neg (by omega : ¬(4 * k + 3) = 3), eq_comm]
+      exact decide_eq_false hk
+  · change shuttleEncodeTape c.2 (4 * k + 2) = decide (-(0 : ℤ) ≤ k ∧ k < 0)
+    simp only [shuttleEncodeTape]
+    rw [if_neg (by omega : ¬(4 * k + 2) % 4 = 0), if_neg (by omega : ¬(4 * k + 2) = 3),
+      eq_comm]
+    exact decide_eq_false (by omega)
+  · intro _
+    change shuttleEncodeTape c.2 (4 * k + 1) = false
+    simp only [shuttleEncodeTape]
+    rw [if_neg (by omega : ¬(4 * k + 1) % 4 = 0), if_neg (by omega : ¬(4 * k + 1) = 3)]
+
 end BitTM
 
 end
