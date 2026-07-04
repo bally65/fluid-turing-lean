@@ -16,6 +16,10 @@ import FluidTuringLean.M3_Encoding
   M6 的 `genShift_suspension_simulates`。
 * `BitTM.LocalReversible`：**局部可判定**（有限檢查）的可逆充分條件，
   蘊含 `M.step` 雙射；實例 `cnotTM`（受控反閘機）以 `decide` 驗證。
+* `BitTM.ofPerm`：**置換機打包器** —— 局部更新 `(q,a) ↦ (next, write)` 是
+  `(狀態 × 位元)` 上的置換且 `move` 只依賴新狀態 ⟹ `LocalReversible`
+  （`ofPerm_localReversible`，參數化證明、不能 `decide`）。
+  機器級可逆完備化的可逆性引擎：設計者給置換，鋪磚一次付清。
 
 ## 模型取捨（為何不用 mathlib `Turing.TM0`）
 
@@ -418,6 +422,51 @@ theorem LocalReversible.reversible (h : M.LocalReversible) : M.Reversible := by
     · rw [if_neg hz, if_neg hz]
       congr 1
       ring
+
+/-! ### 置換機：機器級可逆完備化引擎
+
+`LocalReversible` 的鋪磚條件有個乾淨的充分形式：**局部更新
+`(q, a) ↦ (next q a, write q a)` 是 `(狀態 × 位元)` 上的置換，且移動方向只依賴
+更新後的新狀態**。此時目標槽 `(p, β)` 的唯一前像就是 `L.symm (p, β (μ p))` ——
+鋪磚精確成立。`ofPerm` 把任何置換 `L` 與方向表 `μ` 打包成位元機，
+`ofPerm_localReversible` 給出**參數化**證明（狀態空間隨參數而變，不能
+`decide`）。任何依此紀律設計的機器自動可逆；可逆計算的標準微步
+（swap、受控寫入、Feistel 輪）全是這個形狀。這是 Bennett 機器級構造的
+可逆性引擎：構造只需給出置換，鋪磚檢查一次付清。 -/
+
+/-- 由「局部更新置換 `L` + 方向表 `μ`」打包位元機：`next`/`write` 取 `L` 的
+兩個分量、`move` 由更新後的新狀態查 `μ`。 -/
+def ofPerm (m : ℕ) (L : ((Fin m → Bool) × Bool) ≃ ((Fin m → Bool) × Bool))
+    (μ : (Fin m → Bool) → Dir) : BitTM where
+  m := m
+  next q a := (L (q, a)).1
+  write q a := (L (q, a)).2
+  move q a := μ (L (q, a)).1
+
+/-- **置換機自動局部可逆**（參數化鋪磚證明）：槽 `(p, β)` 的唯一前像是
+`L.symm (p, β (μ p))`。 -/
+theorem ofPerm_localReversible (m : ℕ)
+    (L : ((Fin m → Bool) × Bool) ≃ ((Fin m → Bool) × Bool))
+    (μ : (Fin m → Bool) → Dir) : (ofPerm m L μ).LocalReversible := by
+  intro p β
+  refine ⟨L.symm (p, β (μ p)), ⟨?_, ?_⟩, fun qa hqa ↦ ?_⟩
+  · show (L (L.symm (p, β (μ p)))).1 = p
+    rw [Equiv.apply_symm_apply]
+  · show (L (L.symm (p, β (μ p)))).2 = β (μ (L (L.symm (p, β (μ p)))).1)
+    rw [Equiv.apply_symm_apply]
+  · obtain ⟨hnext, hwrite⟩ := hqa
+    have hnext' : (L (qa.1, qa.2)).1 = p := hnext
+    have hwrite' : (L (qa.1, qa.2)).2 = β (μ (L (qa.1, qa.2)).1) := hwrite
+    have hL : L (qa.1, qa.2) = (p, β (μ p)) := by
+      refine Prod.ext hnext' ?_
+      rw [hwrite', hnext']
+    exact L.eq_symm_apply.mpr hL
+
+/-- 置換機可逆（`step` 雙射）。 -/
+theorem ofPerm_reversible (m : ℕ)
+    (L : ((Fin m → Bool) × Bool) ≃ ((Fin m → Bool) × Bool))
+    (μ : (Fin m → Bool) → Dir) : (ofPerm m L μ).Reversible :=
+  (ofPerm_localReversible m L μ).reversible
 
 /-! ### 實例：受控反閘（CNOT）機 -/
 
