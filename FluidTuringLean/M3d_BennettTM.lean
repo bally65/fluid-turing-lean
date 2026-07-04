@@ -26,48 +26,68 @@ import FluidTuringLean.M3c_Bennett
 * **非法/未用狀態**：`L` 在未 dispatch 的相位走恆等。全空間置換照樣成立，
   模擬引理（milestone C）只對可達的乾淨組態負責。
 
-## Milestone C 排程設計定案（rev.1，2026-07-04；取代原待決 1、2、5、6、7）
+## Milestone C 排程設計定案（rev.2，2026-07-04；取代 rev.1 與原待決 1、2、5、6、7）
 
-**幾何（causeway 方案，取代「堆疊拖曳」）**：垃圾堆疊**錨定在絕對原點**
-（區塊 `[-L, 0)`，永不搬動——不用撿底放頂拖曳）；home（模擬頭所在區塊）
-的 home 軌位形成 **causeway**：`[min(0,h), max(0,h)]` 上全標 1（`h` = home
-的絕對區塊號）。`h = 0` 時 causeway = 單點原點標記 = milestone B 的
-`shuttleEncode` 佈局，不變。所有掃描沿 causeway / 垃圾標記走，
-以標記邊界終止 —— 無無界搜尋。
+**rev.1 → rev.2 修訂原因（兩個設計洞）**：(a) 回程「走右遇到的第一個
+causeway 位」在 `h < 0` 時是 home、`h ≥ 0` 時是原點，兩者僅靠 causeway/
+垃圾軌不可區分；(b) 用垃圾資料位當原點哨兵會被垃圾內容假冒（causeway
+回縮後區塊可收垃圾、再延伸時哨兵可偽）。修法：**區塊加寬到 5 格**，
+第 5 軌 = 原點哨兵（只有絕對區塊 0 為 1，任何協定只讀不寫 —— 不變量
+平凡）；**傾倒跳過 causeway 區塊**（先讀 off3 再讀 off2），使區塊 0
+永不收垃圾、回程首個 causeway 位的哨兵讀取無假冒。
 
-**暫存器（rev.1 擴充）**：M-狀態 `m` 位 × 緩衝 `m+1` 位 × **相位 4 位
-（16 相位）× 塊內 offset 2 位**（mod-4 定位：跨區塊走位每步 ±1 格，
-offset 與方向鎖步遞增/遞減 —— 遞增 mod 4 是置換）。
+**幾何**：帶佈局 = 5 格區塊：模擬帶格 `k` ↦ 帶位 `5k..5k+4` =
+（off0 工作、off1 垃圾資料、off2 垃圾標記、off3 home/causeway、
+off4 原點哨兵）。垃圾**散置**（不再要求連續堆疊）：傾倒 = 從 home 向左
+第一個「非 causeway 且未標記」的區塊起逐塊向左；causeway =
+`[min(0,h), max(0,h)]` 的 off3 全 1（`h` = home 絕對區塊號）；`h = 0` 時
+= 單點原點標記 = milestone B 佈局。所有掃描以標記/offset 邊界終止。
 
-**每 M-步編排**（P0 從 home 工作位出發，`d = M.move q a` 從緩衝重算）：
-1. **P0 Feistel**：讀工作位、`(q,a)` 進緩衝、新 M-狀態/寫回（M3c 形狀）。
-2. **home 遷移**（`d ≠ stay`）：探測鄰塊 causeway 位判 `sign(h)`
-   （左鄰 causeway 位 = 相對格 `-1`、右鄰 = `+7`，因 `4k+3` 貼 `4(k+1)`）；
-   延伸（遠離原點）= 在新 home 區塊 home 軌**翻位**（NOT = 置換；不變量
-   保證翻前 = 0）、回縮（靠近原點）= 在舊 home 區塊翻位（翻前 = 1）。
-3. **垃圾傾倒**：沿 causeway 走到原點（標記邊界回折）、續左過垃圾標記段
-   到堆疊底、逐塊：翻垃圾標記 0→1、`swapHead` 緩衝位 0 ↔ 垃圾資料位、
-   `rotBuf` 旋轉 —— 新塊垃圾資料位 = 0（不變量）故換入 0；
-   **終止條件 = 緩衝全零**（換入的 0 累積；至多 `m+1` 塊；提前全零 =
-   短記錄，垃圾內容自由故無妨）。
-4. **回程**：沿垃圾標記段右行至原點（標記 0 = 邊界）、沿 causeway 走回
-   home 端、進 P0 —— 回到乾淨組態，`IsClean` 帶 `h` 參數化
-   （milestone B 的 `IsClean` = `h = 0` 特例）。
+**暫存器（rev.2）**：M-狀態 `m` 位 × 緩衝 `m+1` 位 × 相位 5 位（32 槽、
+FSM 用 17）× offset 3 位（mod-5 塊內定位，與走位方向鎖步，遞增 = 置換）。
 
-**可逆分支紀律**：相位轉移一律 = 「條件相位對換」（條件讀當前帶位/緩衝/
-offset —— 每資料纖維是置換 ⟹ `prodShear` 打包合法）；對換的反向誤觸
-（回彈）由可達不變量排除 —— 排程正確性歸 milestone C 的不變量層，
-`bennettTM_reversible` 對任何置換 `L` 成立、與排程無關。
+**相位表（17 相位；「dir」= 進入該相位時的移動方向；guard 只在指定
+offset 的格子讀帶位，其餘格照走）**：
+
+| 相位 | dir | 位置/guard | 動作與轉移 |
+|---|---|---|---|
+| P0 ready | S | home off0 | Feistel（`(q,a)`進緩衝）；d=L→P1'、d=R→P2a、d=S→P5a |
+| P1' probeCL | L | 至 off3（左鄰 causeway，2 步） | 讀 a：0→翻位(延伸@h-1)→WL0dep；1→P4'（回縮） |
+| P4' retrL | R | 至 off3（own causeway，5 步） | 翻位 1→0 →P4'a |
+| P4'a | L | 至 off3（左鄰，5 步） | 過站→WL0dep |
+| P2a hopR1 | R | 至 off3（own，3 步） | 過站→P2b |
+| P2b probeCR | R | 至 off3（右鄰 +8） | 讀 a：0→翻位(延伸@h+1)→P3'；1→P4（回縮） |
+| P4 retrR | L | 至 off3（own，5 步） | 翻位 1→0 →P3' |
+| P3' | R | 至 off0（新 home） | 過站→P5a |
+| WL0dep | L | 至 off0 | 過站→P5a（傾倒入口） |
+| P5a descend | L | 至 off3 | 讀 a：1→留 P5a（跳過 causeway 塊）；0→P5b |
+| P5b | L | 至 off2 | 讀 a：1→P5a（跳過垃圾塊）；0→翻位 0→1→P6 |
+| P6 deposit | L | 至 off1 | swap 緩衝[0]↔垃圾資料、rotBuf；緩衝全零→P7；否則→P5a |
+| P7 return | R | 至 off3 | 讀 a：0→留 P7；1→P8（首個 causeway 塊） |
+| P8 sentinel | R | 至 off4 | 讀 a：1→原點→P9；0→home→WL0fin |
+| P9 cwR | R | 至 off3 | 讀 a：1→留 P9（沿 causeway 右行）；0→P11a（過站一塊） |
+| P11a | L | 至 off3（5 步） | 過站→WL0fin |
+| WL0fin | L | 至 off0 | 過站→P0（回到乾淨組態） |
+
+**設計不變量（宏步歸納用，milestone C 後半）**：offset 暫存器 ≡ 頭絕對
+位置 mod 5（`μ = dirOf ∘ 新相位`、`L` 內 offset 依新相位方向鎖步更新）；
+翻位前值可預言（延伸翻 0→1、回縮翻 1→0、垃圾標記翻 0→1）；緩衝在
+home 遷移期間完整保存 `(q,a)`（d 可重算）、傾倒期間單調清零；
+回彈（條件對換反向誤觸）由「可達組態的 (相位, offset, 帶位) 剖面互斥」
+排除。
+
+**可逆分支紀律**：相位轉移一律 = 條件相位對換（條件讀當前帶位/緩衝/
+offset；每資料纖維是置換 ⟹ 合法）；`bennettTM_reversible` 對任何置換
+`L` 成立、與排程無關。
 
 ## 仍待決（milestone C 實作中定案）
 
-- 相位表細目（16 相位的走位/探測/傾倒/回程分工與精確轉移條件）——
-  實作時逐相位落檔。
-- 宏步引理歸納結構：相位 × 區段不變量；爆量時先證單一相位段部分引理
-  （原待決 4，不變）。
+- 宏步引理歸納結構：相位 × 區段不變量；爆量時先證單一相位段部分引理。
+- `IsClean` 的 `h ≠ 0`/散置垃圾一般化（現版 = `h = 0`、垃圾連續特例；
+  宏步引理陳述時一般化）。
 
 本檔現況：milestone A（構造 + 可逆）+ B 排程無關半邊（編碼 + `IsClean`）
-全證零 sorry；`shuttleCore` 排程 = C rev.1 實作中。
+全證零 sorry；`shuttleCore` 排程 = C rev.2 實作中（相位表如上）。
 -/
 
 namespace FluidTuring
@@ -95,11 +115,11 @@ def bufSplit (m : ℕ) : (Fin (m + 1) → Bool) ≃ ((Fin m → Bool) × Bool) :
 
 /-! ## 相位與 offset 暫存器 -/
 
-/-- shuttle 機相位暫存器：4 位（16 相位；C rev.1 排程用到約 12 個）。 -/
-abbrev ShuttlePhase : Type := Fin 4 → Bool
+/-- shuttle 機相位暫存器：5 位（32 槽；C rev.2 FSM 用 17 個）。 -/
+abbrev ShuttlePhase : Type := Fin 5 → Bool
 
-/-- 塊內 offset 暫存器：2 位（mod-4 定位；與走位方向鎖步更新）。 -/
-abbrev ShuttleOffset : Type := Fin 2 → Bool
+/-- 塊內 offset 暫存器：3 位（mod-5 定位；與走位方向鎖步更新）。 -/
+abbrev ShuttleOffset : Type := Fin 3 → Bool
 
 /-- 相位 0（M-step：Feistel 輪）。 -/
 def ph0 : ShuttlePhase := fun _ ↦ false
@@ -110,20 +130,49 @@ def ph1 : ShuttlePhase := fun j ↦ decide (j = 0)
 /-- offset 0（home 工作位）。 -/
 def off0 : ShuttleOffset := fun _ ↦ false
 
-/-- 相位遞增底層函數（4 位二進位 +1，mod 16）。 -/
+/-- 相位遞增底層函數（5 位二進位 +1，mod 32）。 -/
 private def phaseIncFun (p : ShuttlePhase) : ShuttlePhase := fun j ↦
   if j = 0 then !(p 0)
   else if j = 1 then xor (p 1) (p 0)
   else if j = 2 then xor (p 2) (p 0 && p 1)
-  else xor (p 3) (p 0 && p 1 && p 2)
+  else if j = 3 then xor (p 3) (p 0 && p 1 && p 2)
+  else xor (p 4) (p 0 && p 1 && p 2 && p 3)
 
-/-- 相位遞增置換（mod 16 循環）；逆 = 迭代 15 次，有限域 `decide` 驗證
-（固定 16 元素，非參數化——與 `bennettTM` 可逆性的參數化證明不同層）。 -/
+/-- 相位遞減底層函數（5 位二進位 −1，mod 32；借位鏈）。 -/
+private def phaseDecFun (p : ShuttlePhase) : ShuttlePhase := fun j ↦
+  if j = 0 then !(p 0)
+  else if j = 1 then xor (p 1) (!(p 0))
+  else if j = 2 then xor (p 2) (!(p 0) && !(p 1))
+  else if j = 3 then xor (p 3) (!(p 0) && !(p 1) && !(p 2))
+  else xor (p 4) (!(p 0) && !(p 1) && !(p 2) && !(p 3))
+
+/-- 相位遞增置換（mod 32 循環）；逆 = 顯式遞減，有限域 `decide` 驗證
+（固定 32 元素，非參數化——與 `bennettTM` 可逆性的參數化證明不同層）。 -/
 def phaseInc : ShuttlePhase ≃ ShuttlePhase where
   toFun := phaseIncFun
-  invFun := phaseIncFun^[15]
+  invFun := phaseDecFun
   left_inv := by intro p; revert p; decide
   right_inv := by intro p; revert p; decide
+
+/-- offset 遞增底層函數：3 位暫存器上的 mod-5 循環
+`0→1→2→3→4→0`（值 5、6、7 不動 —— 不可達，任意處置皆可）。
+編碼：`(b0,b1,b2)` = 低位在前二進位。 -/
+private def offIncFun (o : ShuttleOffset) : ShuttleOffset :=
+  -- 4 = (false,false,true) → 0；其餘 < 5 走二進位 +1；5..7 不動
+  if (!(o 0) && !(o 1) && o 2) then (fun _ ↦ false)
+  else if o 2 then o
+  else fun j ↦ if j = 0 then !(o 0) else if j = 1 then xor (o 1) (o 0)
+    else xor (o 2) (o 0 && o 1)
+
+/-- offset 遞增置換（mod-5 循環，5-循環的逆 = 迭代 4 次；`decide` 驗證）。 -/
+def offInc : ShuttleOffset ≃ ShuttleOffset where
+  toFun := offIncFun
+  invFun := offIncFun^[4]
+  left_inv := by intro o; revert o; decide
+  right_inv := by intro o; revert o; decide
+
+/-- offset 遞減置換（`offInc` 的逆）。 -/
+def offDec : ShuttleOffset ≃ ShuttleOffset := offInc.symm
 
 /-! ## 微步子置換原語 -/
 
@@ -197,16 +246,16 @@ namespace BitTM
 
 variable (M : BitTM)
 
-/-- shuttle 機狀態位數：M-狀態 `m` 位 + 緩衝 `m+1` 位 + 相位 4 位 + offset 2 位。 -/
-abbrev shuttleBits : ℕ := M.m + ((M.m + 1) + (4 + 2))
+/-- shuttle 機狀態位數：M-狀態 `m` 位 + 緩衝 `m+1` 位 + 相位 5 位 + offset 3 位。 -/
+abbrev shuttleBits : ℕ := M.m + ((M.m + 1) + (5 + 3))
 
 /-- 狀態打包：滿位向量 ↔（M-狀態, 緩衝, 相位, offset）。 -/
 def shuttleUnpack : (Fin M.shuttleBits → Bool) ≃
     ((Fin M.m → Bool) × ((Fin (M.m + 1) → Bool) × (ShuttlePhase × ShuttleOffset))) :=
-  (bitsSplit M.m ((M.m + 1) + (4 + 2))).trans
+  (bitsSplit M.m ((M.m + 1) + (5 + 3))).trans
     (Equiv.prodCongr (Equiv.refl _)
-      ((bitsSplit (M.m + 1) (4 + 2)).trans
-        (Equiv.prodCongr (Equiv.refl _) (bitsSplit 4 2))))
+      ((bitsSplit (M.m + 1) (5 + 3)).trans
+        (Equiv.prodCongr (Equiv.refl _) (bitsSplit 5 3))))
 
 /-- **Feistel M-step 核心**（M3c `bufferedStep` 的狀態側版本）：
 輸入 `((q, (r, b)), a)` ↦ `((next q a ⊕ r, (q, a)), write q a ⊕ b)` ——
@@ -306,10 +355,12 @@ def shuttlePack (q : Fin M.m → Bool) (buf : Fin (M.m + 1) → Bool)
     M.shuttleUnpack (M.shuttlePack q buf p o) = (q, (buf, (p, o))) :=
   M.shuttleUnpack.apply_symm_apply _
 
-/-- 編碼帶：工作軌載模擬帶、垃圾兩軌全空、home 標記唯一在區塊 0。 -/
+/-- 編碼帶：工作軌載模擬帶、垃圾兩軌全空、causeway 標記唯一在區塊 0
+（`h = 0` 單點）、原點哨兵在區塊 0（帶位 4，永不被協定改寫）。 -/
 def shuttleEncodeTape (t : ℤ → Bool) : ℤ → Bool := fun i ↦
-  if i % 4 = 0 then t (i / 4)
+  if i % 5 = 0 then t (i / 5)
   else if i = 3 then true
+  else if i = 4 then true
   else false
 
 /-- **編碼**：模擬組態 → shuttle 機組態（相位 0、緩衝空白、垃圾空、
@@ -319,41 +370,54 @@ def shuttleEncode (c : M.Cfg) : M.bennettTM.Cfg :=
 
 /-- **乾淨組態謂詞**（垃圾堆疊長 `L`；垃圾內容自由 —— 宏步引理中
 以存在量詞外顯，語意比照 M3c `bennettAut_iterate`）：
-相位 0、offset 0、緩衝空白、工作軌 = 模擬帶、home 標記唯一在區塊 0、
-垃圾標記恰為區塊 `[-L, 0)` 的連續區段（C rev.1：堆疊錨定原點；`h = 0`
-情形，`h ≠ 0` 的 causeway 一般化與宏步引理一起加）、未標記垃圾格 = 0。 -/
+相位 0、offset 0、緩衝空白、工作軌 = 模擬帶、causeway 標記唯一在區塊 0、
+原點哨兵唯一在區塊 0、垃圾標記恰為區塊 `[-L, 0)` 的連續區段（`h = 0`、
+垃圾連續特例；`h ≠ 0` / 散置垃圾的一般化與宏步引理一起加）、
+未標記垃圾格 = 0。 -/
 def IsClean (L : ℕ) (c : M.bennettTM.Cfg) (q : Fin M.m → Bool) (t : ℤ → Bool) : Prop :=
   M.shuttleUnpack c.1 = (q, (M.blankBuf, (ph0, off0))) ∧
-  (∀ k : ℤ, c.2 (4 * k) = t k) ∧
-  (∀ k : ℤ, c.2 (4 * k + 3) = decide (k = 0)) ∧
-  (∀ k : ℤ, c.2 (4 * k + 2) = decide (-(L : ℤ) ≤ k ∧ k < 0)) ∧
-  (∀ k : ℤ, c.2 (4 * k + 2) = false → c.2 (4 * k + 1) = false)
+  (∀ k : ℤ, c.2 (5 * k) = t k) ∧
+  (∀ k : ℤ, c.2 (5 * k + 3) = decide (k = 0)) ∧
+  (∀ k : ℤ, c.2 (5 * k + 4) = decide (k = 0)) ∧
+  (∀ k : ℤ, c.2 (5 * k + 2) = decide (-(L : ℤ) ≤ k ∧ k < 0)) ∧
+  (∀ k : ℤ, c.2 (5 * k + 2) = false → c.2 (5 * k + 1) = false)
 
 /-- **編碼產出乾淨組態**（垃圾堆疊長 0）。 -/
 theorem shuttleEncode_isClean (c : M.Cfg) :
     M.IsClean 0 (M.shuttleEncode c) c.1 c.2 := by
-  refine ⟨M.shuttleUnpack_shuttlePack _ _ _ _, fun k ↦ ?_, fun k ↦ ?_, fun k ↦ ?_, fun k ↦ ?_⟩
-  · change shuttleEncodeTape c.2 (4 * k) = c.2 k
+  refine ⟨M.shuttleUnpack_shuttlePack _ _ _ _, fun k ↦ ?_, fun k ↦ ?_, fun k ↦ ?_,
+    fun k ↦ ?_, fun k ↦ ?_⟩
+  · change shuttleEncodeTape c.2 (5 * k) = c.2 k
     simp only [shuttleEncodeTape]
-    rw [if_pos (by omega : (4 * k) % 4 = 0),
-      Int.mul_ediv_cancel_left k (by norm_num : (4 : ℤ) ≠ 0)]
-  · change shuttleEncodeTape c.2 (4 * k + 3) = decide (k = 0)
+    rw [if_pos (by omega : (5 * k) % 5 = 0),
+      Int.mul_ediv_cancel_left k (by norm_num : (5 : ℤ) ≠ 0)]
+  · change shuttleEncodeTape c.2 (5 * k + 3) = decide (k = 0)
     simp only [shuttleEncodeTape]
-    rw [if_neg (by omega : ¬(4 * k + 3) % 4 = 0)]
+    rw [if_neg (by omega : ¬(5 * k + 3) % 5 = 0)]
     rcases eq_or_ne k 0 with rfl | hk
-    · rw [if_pos (by omega : (4 * (0 : ℤ) + 3) = 3), eq_comm]
+    · rw [if_pos (by omega : (5 * (0 : ℤ) + 3) = 3), eq_comm]
       exact decide_eq_true rfl
-    · rw [if_neg (by omega : ¬(4 * k + 3) = 3), eq_comm]
+    · rw [if_neg (by omega : ¬(5 * k + 3) = 3), if_neg (by omega : ¬(5 * k + 3) = 4),
+        eq_comm]
       exact decide_eq_false hk
-  · change shuttleEncodeTape c.2 (4 * k + 2) = decide (-(0 : ℤ) ≤ k ∧ k < 0)
+  · change shuttleEncodeTape c.2 (5 * k + 4) = decide (k = 0)
     simp only [shuttleEncodeTape]
-    rw [if_neg (by omega : ¬(4 * k + 2) % 4 = 0), if_neg (by omega : ¬(4 * k + 2) = 3),
-      eq_comm]
+    rw [if_neg (by omega : ¬(5 * k + 4) % 5 = 0), if_neg (by omega : ¬(5 * k + 4) = 3)]
+    rcases eq_or_ne k 0 with rfl | hk
+    · rw [if_pos (by omega : (5 * (0 : ℤ) + 4) = 4), eq_comm]
+      exact decide_eq_true rfl
+    · rw [if_neg (by omega : ¬(5 * k + 4) = 4), eq_comm]
+      exact decide_eq_false hk
+  · change shuttleEncodeTape c.2 (5 * k + 2) = decide (-(0 : ℤ) ≤ k ∧ k < 0)
+    simp only [shuttleEncodeTape]
+    rw [if_neg (by omega : ¬(5 * k + 2) % 5 = 0), if_neg (by omega : ¬(5 * k + 2) = 3),
+      if_neg (by omega : ¬(5 * k + 2) = 4), eq_comm]
     exact decide_eq_false (by omega)
   · intro _
-    change shuttleEncodeTape c.2 (4 * k + 1) = false
+    change shuttleEncodeTape c.2 (5 * k + 1) = false
     simp only [shuttleEncodeTape]
-    rw [if_neg (by omega : ¬(4 * k + 1) % 4 = 0), if_neg (by omega : ¬(4 * k + 1) = 3)]
+    rw [if_neg (by omega : ¬(5 * k + 1) % 5 = 0), if_neg (by omega : ¬(5 * k + 1) = 3),
+      if_neg (by omega : ¬(5 * k + 1) = 4)]
 
 end BitTM
 
