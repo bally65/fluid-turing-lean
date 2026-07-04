@@ -2,6 +2,7 @@
 import FluidTuringLean.M1_Computability
 import FluidTuringLean.M2_Interpreter
 import FluidTuringLean.M3_Encoding
+import FluidTuringLean.M3b_ReversibleTM
 import FluidTuringLean.M4_Suspension
 import FluidTuringLean.M5_ReebInterface
 import FluidTuringLean.M6_EulerTuring

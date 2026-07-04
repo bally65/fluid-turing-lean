@@ -1,3 +1,4 @@
+import FluidTuringLean.M3b_ReversibleTM
 import FluidTuringLean.M5_ReebInterface
 
 /-!
@@ -156,5 +157,42 @@ theorem genShift_suspension_simulates (Φ : GenShift) (h : Φ.Reversible) :
       (F : ContinuousFlowOn M) (enc : (ℤ → Bool) → M),
       Simulates F Φ.apply enc :=
   suspension_flow_simulates (Φ.toHomeomorph h)
+
+/-! ### 可逆圖靈機（M3b）→ 流：全證推論
+
+M3b 的 `BitTM.toGenShift` 把機器單步實現為 generalized shift，
+可逆性沿雙射編碼 `encCfg` 搬運；此處再經 `genShift_suspension_simulates`
+把**機器本身的組態動力學**（不只編碼側）接到連續流。 -/
+
+/-- **推論（全證、零 sorry）**：任何**可逆**位元圖靈機（M3b `BitTM`，
+`step` 雙射）的組態動力學，都被緊緻空間上的連續 ℝ-流經單射編碼模擬。
+編碼 = `enc ∘ encCfg`（機器組態 → 康托爾序列 → 映射環面）。
+與主定理的差距只剩：幾何實現（M5 接觸幾何詮釋層，paper-blocked）與
+不可逆機器的 Bennett 可逆化（M3b 里程碑 B，部分完成、缺口誠實標示）。 -/
+theorem reversibleTM_suspension_simulates (M : BitTM) (h : M.Reversible) :
+    ∃ (X : Type) (_ : TopologicalSpace X) (_ : CompactSpace X)
+      (F : ContinuousFlowOn X) (enc : M.Cfg → X),
+      Simulates F M.step enc := by
+  obtain ⟨X, iT, iC, F, enc, hinj, hsim⟩ :=
+    genShift_suspension_simulates M.toGenShift (h.toGenShift)
+  refine ⟨X, iT, iC, F, enc ∘ ⇑M.encCfg, hinj.comp M.encCfg.injective, fun c ↦ ?_⟩
+  obtain ⟨t, ht, hφ⟩ := hsim (M.encCfg c)
+  refine ⟨t, ht, ?_⟩
+  have hstep : M.toGenShift.apply (M.encCfg c) = M.encCfg (M.step c) := by
+    rw [M.toGenShift_apply]
+    exact congrArg (fun x ↦ M.pack (M.step x)) (M.encCfg.left_inv c)
+  calc F.φ t ((enc ∘ ⇑M.encCfg) c)
+      = enc (M.toGenShift.apply (M.encCfg c)) := hφ
+    _ = enc (M.encCfg (M.step c)) := by rw [hstep]
+    _ = (enc ∘ ⇑M.encCfg) (M.step c) := rfl
+
+/-- **具體實例（全證）**：受控反閘機 `cnotTM`（M3b，`decide` 驗證局部可逆）
+被緊緻空間上的連續 ℝ-流模擬。整條「具體機器 → 局部可逆檢查 → 雙射 →
+generalized shift → 同胚 → 懸掛流」管線的端到端見證。 -/
+theorem cnotTM_suspension_simulates :
+    ∃ (X : Type) (_ : TopologicalSpace X) (_ : CompactSpace X)
+      (F : ContinuousFlowOn X) (enc : BitTM.cnotTM.Cfg → X),
+      Simulates F BitTM.cnotTM.step enc :=
+  reversibleTM_suspension_simulates BitTM.cnotTM BitTM.cnotTM_reversible
 
 end FluidTuring
