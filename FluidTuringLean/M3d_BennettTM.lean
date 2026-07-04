@@ -406,8 +406,9 @@ theorem bennettTM_move (s : Fin M.shuttleBits → Bool) (a : Bool) :
 
 /-! ## Milestone B（部分）：帶佈局、編碼與乾淨組態謂詞
 
-4-軌帶佈局（README 步驟 2 帶側）：模擬帶格 `k` ↦ shuttle 帶位 `4k..4k+3` =
-（工作位 `4k`、垃圾資料位 `4k+1`、垃圾標記位 `4k+2`、home 標記位 `4k+3`）。
+5 格區塊帶佈局（rev.2 幾何，取代早期 4-軌案）：模擬帶格 `k` ↦
+shuttle 帶位 `5k..5k+4` =（off0 工作位、off1 垃圾資料位、off2 垃圾標記位、
+off3 home/causeway 標記位、off4 原點哨兵）。
 
 **誠實界線**：本節只給排程無關的部分 —— 編碼、乾淨組態謂詞、
 「編碼產出乾淨組態」。每類微步保不變量的單步引理**綁定微步排程**，
