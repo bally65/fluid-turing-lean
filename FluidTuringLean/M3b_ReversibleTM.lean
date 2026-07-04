@@ -49,9 +49,11 @@ mathlib 的 `Turing.TM0` 帶是 `Turing.Tape`（`ListBlank` 商型別，
 `bennett f`：history-keeping 構造（丟棄的資訊全押進歷史欄）。已證：
 單射（`bennett_injective`）、n 步模擬（`bennett_iterate_fst`）。
 **誠實缺口**：`bennett_not_surjective` 證明此抽象構造**永不滿射**
-（`(x₀, [])` 無前像），故不能直接給出 `GenShift.Reversible` 所需的雙射；
-Bennett 機器級構造（歷史寫進帶、backward-complete 化）是後續工作，
-本檔不佯稱完成。
+（`(x₀, [])` 無前像），故不能直接給出 `GenShift.Reversible` 所需的雙射。
+此缺口已在 **M3c**（history conveyor：歷史容器換成雙向無限流 `ℤ → V`，
+「空歷史」角點不存在）於**動力學層**封死；字面的機器級
+`bennettTM : BitTM → BitTM`（歷史寫進帶）仍是後續工作，其可逆性那半
+可由本檔 `ofPerm` 引擎付清。
 
 本檔零 sorry。
 -/
@@ -494,10 +496,12 @@ end BitTM
 
 **已證**：單射（`bennett_injective`）、n 步軌道模擬（`bennett_iterate_fst`）。
 
-**誠實缺口（後續工作，非 paper-blocked）**：此抽象構造**不滿射**
+**誠實缺口（非 paper-blocked）**：此抽象構造**不滿射**
 （`bennett_not_surjective`：`(x₀, [])` 無前像，因為 `List.cons` 永不產生 `[]`），
-故不能直接餵 `GenShift.Reversible`（需雙射）。Bennett 1973 的完整機器級
-構造 —— 歷史寫進帶、轉移表 backward-complete 化、再編碼回 `BitTM` ——
+故不能直接餵 `GenShift.Reversible`（需雙射）。**動力學層已在 M3c 封死**：
+歷史容器換成雙向無限記錄流（history conveyor），滿射由顯式逆映射成立，
+且任意位元機經此升級後被連續流模擬（M6 `bitTM_suspension_simulates`）。
+仍開放的是字面機器級構造 —— 歷史寫進帶、再編碼回 `BitTM` ——
 工程量大，屬後續工作；本節不佯稱完成。 -/
 
 /-- Bennett history-keeping 構造（抽象層）：`(x, 歷史) ↦ (f x, x :: 歷史)`。 -/
