@@ -452,9 +452,9 @@ theorem ofPerm_localReversible (m : ℕ)
     (μ : (Fin m → Bool) → Dir) : (ofPerm m L μ).LocalReversible := by
   intro p β
   refine ⟨L.symm (p, β (μ p)), ⟨?_, ?_⟩, fun qa hqa ↦ ?_⟩
-  · show (L (L.symm (p, β (μ p)))).1 = p
+  · change (L (L.symm (p, β (μ p)))).1 = p
     rw [Equiv.apply_symm_apply]
-  · show (L (L.symm (p, β (μ p)))).2 = β (μ (L (L.symm (p, β (μ p)))).1)
+  · change (L (L.symm (p, β (μ p)))).2 = β (μ (L (L.symm (p, β (μ p)))).1)
     rw [Equiv.apply_symm_apply]
   · obtain ⟨hnext, hwrite⟩ := hqa
     have hnext' : (L (qa.1, qa.2)).1 = p := hnext

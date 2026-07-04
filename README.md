@@ -113,5 +113,12 @@ M3c 全部、M6 `bitTM_suspension_simulates`）僅依賴
   要自己扛的義務，本 repo 不隱藏。
 - M4 懸掛流的模擬用時間-1 映射；`Simulates` 只要求正時間實現一步轉移，
   未主張軌道分離性（expansivity）等更強動力學性質。
+- **主定理陳述層待審（v0.5 驗收時記錄）**：`euler_flow_turing_complete` 對
+  **任意**（可合流）`step` 主張嚴格 `Simulates`（單射 `enc`、每步精確落點）。
+  流的時刻映射可逆 ⟹ 合流組態被迫線性化進同一軌道 —— 語意上未必矛盾
+  （各組態時刻不同），但 Cardona 原文走的是雙射 generalized shift，
+  未對合流 step 主張此形式。未來消該 paper-blocked sorry 時，應同步檢視
+  主定理是否收斂為「可逆 step」版本、或改用 M3c 的垃圾外顯語意 ——
+  屆時屬範圍決策，需使用者拍板，不得靜默放寬或收緊。
 - M5 的 `VectorCalculus3` 是**運算元簽名**不是幾何：`curl`/`div` 未詮釋，
   任何用到它的定理都是「對所有滿足簽名的詮釋成立」。真詮釋等 mathlib 微分幾何。
