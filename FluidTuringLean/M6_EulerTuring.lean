@@ -1,4 +1,4 @@
-import FluidTuringLean.M3b_ReversibleTM
+import FluidTuringLean.M3c_Bennett
 import FluidTuringLean.M5_ReebInterface
 
 /-!
@@ -194,5 +194,33 @@ theorem cnotTM_suspension_simulates :
       (F : ContinuousFlowOn X) (enc : BitTM.cnotTM.Cfg → X),
       Simulates F BitTM.cnotTM.step enc :=
   reversibleTM_suspension_simulates BitTM.cnotTM BitTM.cnotTM_reversible
+
+/-! ### 任意（不可逆）位元機 → 流：Bennett 可逆化（M3c）推論
+
+`reversibleTM_suspension_simulates` 需要 `M.Reversible` 假設；M3c 的 history
+conveyor 把**任意**位元機升級成 `Cfg × 歷史流` 上的自同胚（`bennettHomeo`），
+且從空白歷史出發**無時間膨脹**地精確實現 `M.step^[n]`。餵入懸掛管線後，
+可逆性假設被拿掉 —— 代價誠實外顯：編碼域多出歷史分量、第 `n` 步落點的
+歷史內容是存在量詞（Bennett 垃圾）。由 `enc` 單射，流在時刻 `t` 的落點
+唯一決定 `(M.step^[n+1] c, η)`，工作分量即機器軌道。 -/
+
+/-- **推論（全證、零 sorry）**：**任意**位元機（不要求可逆）的組態動力學，
+經 Bennett 歷史編碼後被緊緻空間上的連續 ℝ-流模擬：對每個組態 `c` 與步數
+`n`，存在正時刻 `t` 與歷史內容 `η`，使流把 `(c, 空白歷史)` 的編碼送到
+`(M.step^[n+1] c, η)` 的編碼。這把定理鏈的離散端從「可逆機器」推進到
+「任意機器」；與主定理的差距只剩 M5 接觸幾何詮釋層（paper-blocked）。 -/
+theorem bitTM_suspension_simulates (M : BitTM) :
+    ∃ (X : Type) (_ : TopologicalSpace X) (_ : CompactSpace X)
+      (F : ContinuousFlowOn X) (enc : M.Cfg × (ℤ → M.HistRec) → X),
+      Function.Injective enc ∧
+        ∀ (c : M.Cfg) (n : ℕ), ∃ (t : ℝ) (η : ℤ → M.HistRec), 0 < t ∧
+          F.φ t (enc (c, M.blankHist)) = enc (M.step^[n + 1] c, η) := by
+  obtain ⟨X, iT, iC, F, enc, hsim⟩ := suspension_flow_simulates M.bennettHomeo
+  refine ⟨X, iT, iC, F, enc, hsim.1, fun c n ↦ ?_⟩
+  obtain ⟨t, ht, hφ⟩ := hsim.iterate (c, M.blankHist) n
+  obtain ⟨η, hit, -⟩ := M.bennettAut_iterate c (n + 1)
+  refine ⟨t, η, ht, ?_⟩
+  rw [hφ]
+  exact congrArg enc hit
 
 end FluidTuring
