@@ -30,22 +30,18 @@
 | M5 Reeb 介面層 | `M5_ReebInterface.lean` | 連續流結構（嚴格）＋抽象向量微積分簽名＋`IsBeltrami`；Etnyre–Ghrist 對應 | 1 ⛔ |
 | M6 主定理 | `M6_EulerTuring.lean` | `Simulates` 謂詞；主定理（Euler-only，paper-blocked）；**v0.2 下半層主定理（全證）**：`suspension_flow_simulates` — 緊空間上任何同胚都被緊空間上的連續 ℝ-流經單射編碼模擬；實例 `fullShift_suspension_simulates`（雙邊 full shift）；**v0.3 推論（全證）**：`genShift_suspension_simulates` — 任何**可逆 generalized shift** 被緊空間上連續 ℝ-流經單射編碼模擬；`fullShiftGS` = full shift 作為 GenShift 的平凡實例；**v0.4 推論（全證）**：`reversibleTM_suspension_simulates` — 任何**可逆位元圖靈機**的組態動力學被緊空間上連續 ℝ-流經單射編碼模擬；端到端實例 `cnotTM_suspension_simulates`；**v0.5 推論（全證）**：`bitTM_suspension_simulates` — **任意（不可逆）位元機**經 Bennett 歷史編碼被緊空間上連續 ℝ-流模擬（可逆性假設拿掉；歷史分量與落點垃圾誠實外顯為存在量詞） | 1 ⛔ |
 
-## sorry 帳本(2026-07-08：仍共 2，全部 paper-blocked，零可攻)
+## sorry 帳本(2026-07-08 方案 A 後：**共 0，整個專案零 sorry**)
 
-| 宣告 | 分類 | 依賴 |
-|---|---|---|
-| `reeb_realizes_beltrami` (M5) | paper-blocked | Etnyre–Ghrist 2000 "Contact topology and hydrodynamics I" Thm 2.1；需要接觸幾何（mathlib 無） |
-| `euler_flow_turing_complete` (M6) | paper-blocked | Cardona et al. 2021 Theorem 1；經 M5 對應 |
+**方案 A（2026-07-08）**：前身兩條 paper-blocked sorry（`reeb_realizes_beltrami`、
+`euler_flow_turing_complete`）已消除——把唯一未形式化的幾何依賴（接觸幾何 mathlib 無）
+從藏起來的 sorry 提升為**明寫、可引用論文的前提假設** `ReebBeltramiRealization`。
+主定理現為**零 sorry 的條件定理**：離散→連續→模擬鏈全證，唯一幾何輸入白紙黑字掛在
+假設上（形式化界處理未形式化依賴的標準誠實作法）。
 
-> M3d 里程碑 C 全部推進（C0-C5a、C2、C4b 有界版）**零新 sorry**——共 2 條不變。
-
-Axiom 檢查（`#print axioms`，2026-07-08 綜合掃描 13 頭條定理）：主線 M1-M6 +
-M3d 字面機（C0-C5a/C2/C4b 有界）全部已證定理僅依賴
-`[propext, Classical.choice, Quot.sound]`；上表兩條額外含 `sorryAx`；
-**零自訂 axiom**。特別地 `suspension_flow_simulates` /
-`genShift_suspension_simulates` / `reversibleTM_suspension_simulates` /
-`cnotTM_suspension_simulates` / `bitTM_suspension_simulates`
-**不依賴任何 sorry**（v0.5 迴歸抽查通過）。
+Axiom 檢查（`#print axioms`，2026-07-08 方案 A 後）：**全專案零 sorry**，所有定理
+（含主定理 `euler_flow_turing_complete`）僅依賴 `[propext, Classical.choice, Quot.sound]`，
+**零 sorryAx、零自訂 axiom**。接觸幾何依賴現為顯式假設 `ReebBeltramiRealization`
+（= Cardona et al. 2021 Thm 1 紙上內容），非 sorry。
 
 ## v0.5 的定理鏈意義
 
