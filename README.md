@@ -73,6 +73,13 @@ M3d 字面機（C0-C5a/C2/C4b 有界）全部已證定理僅依賴
 
 ## 後續工作：機器級 shuttle Bennett（非阻斷）
 
+> **2026-07-08 里程碑 C 大幅推進**（見 [`docs/M3D_C_DECOMPOSITION_PLAN.md`](docs/M3D_C_DECOMPOSITION_PLAN.md)）：
+> C0-C5a、C2、C4b **有界版**全達成、零新 sorry。剩**無界 C4b 宏步**經 U1 對抗艦隊
+> 裁決 **BLOCKED_irreducible_obstruction**（傾倒迴圈跳塊數奇偶=帶內容決定=無界量、
+> 環計數器修終止不修 merge 單射崩潰、無界量編不進 Fintype Profile；吻合 repo 四次
+> 嘗試 rev.1/2/3/ring 皆同機制失敗）→ **永久具名停損**，除非紙上先找到 rev.4 有界修復。
+> **主線定理鏈不需要它**（M3c `bitTM_suspension_simulates` 已供動力學層等價全證）。
+
 把 M3c 的動力學層構造下沉為字面的 `bennettTM : BitTM → BitTM`
 （歷史寫進帶本身），攻擊計畫（2026-07-04 評估；**milestone A 已於 M3d 落袋**）：
 
