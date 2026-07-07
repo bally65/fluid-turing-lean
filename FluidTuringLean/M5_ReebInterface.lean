@@ -120,4 +120,37 @@ def ReebBeltramiRealization : Prop :=
       Function.Injective ψ ∧ V.IsBeltrami u ∧
         ∀ (t : ℝ) (x : M), (V.flowOf u).φ t (ψ x) = ψ (F.φ t x)
 
+/-! ## 誠實邊界：抽象簽名的空洞性（2026-07-08，主線整合）
+
+**必須誠實面對**：`VectorCalculus3` 是**抽象簽名**（`curl`/`div` 未詮釋為真微分算子）。
+在此抽象層，`IsBeltrami` **trivially 可滿足** —— 取退化詮釋（`curl = id`、`div ≡ 0`、
+`smul _ = id`），任何流的任何場都「是 Beltrami」。下方 `reebBeltramiRealization_trivial`
+機器證明此點：`ReebBeltramiRealization` 在抽象簽名下**無條件成立**。
+
+**這對主定理意味什麼（誠實）**：主定理 `euler_flow_turing_complete` 的**真實、非空洞
+內容 = 離散→連續→模擬鏈**（M1-M4 + 懸掛 + 編碼，全證零 sorry）。「Euler 穩態/Beltrami」
+那一層是**抽象簽名級**、在抽象層空洞 —— 主定理**本身不建立真實 Euler 流的圖靈完備**。
+真物理內容需把 `VectorCalculus3` 詮釋為**真黎曼 3-流形上的真 curl/div**（mathlib 無）
+並驗證它滿足 `ReebBeltramiRealization` —— 那正是 Cardona et al. 2021 紙上證的、本專案
+未形式化的部分。故主定理誠實讀法：「**離散計算可被連續動力系統模擬**（全證）；把該系統
+實現為**真** Euler-Beltrami 流是紙上幾何輸入」。不誇大成「已證真流體圖靈完備」。 -/
+
+/-- 退化向量微積分詮釋（`curl = id`、`div ≡ 0`、`smul _ = id`、`flowOf _ = F`）——
+**僅為揭露抽象簽名的空洞性**，非任何真幾何。 -/
+def trivialVC3 (M : Type) [TopologicalSpace M] (F : ContinuousFlowOn M) :
+    VectorCalculus3 M where
+  Vec := Unit
+  curl := id
+  div := fun _ _ ↦ 0
+  flowOf := fun _ ↦ F
+  smul := fun _ ↦ id
+
+/-- **抽象簽名下 `ReebBeltramiRealization` 無條件成立**（機器見證簽名空洞）：
+每個流用退化詮釋，`IsBeltrami` trivially 真、共軛用 `id`。**這證明主定理的
+Beltrami 層在抽象簽名級空洞** —— 真內容在離散→連續機器 + 真幾何詮釋（見上）。 -/
+theorem reebBeltramiRealization_trivial : ReebBeltramiRealization := by
+  intro M _ _ F
+  exact ⟨M, ‹_›, ‹_›, trivialVC3 M F, (), id, Function.injective_id,
+    ⟨⟨1, one_ne_zero, rfl⟩, fun _ ↦ rfl⟩, fun _ _ ↦ rfl⟩
+
 end FluidTuring
