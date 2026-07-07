@@ -1017,6 +1017,62 @@ theorem dataSeg_idle_off_mstep (p : UPhase)
 theorem dataSeg_reversible : Function.Bijective M.dataSeg :=
   M.dataSeg.bijective
 
+/-! ### C4b 地基：全合成機器（data ∘ control 於統一狀態）
+
+先前判為「completeness-theater」不建；C4b 解封後它成為必需地基 —— 宏步引理
+的載體。統一狀態 `S = (M-狀態 × 緩衝) × (Profile × UPhase)`；`L = data ∘ control`，
+兩段各自只碰自己的座標（control 碰 Profile/帶位/UPhase、data 碰 M-狀態/緩衝/帶位、
+共享 UPhase 與帶位）。用 view-Equiv 重排 + 組合子複合，可逆性 `Equiv.trans` 免費。 -/
+
+/-- M-狀態 × 緩衝（feistelPiece 的非帶位部分）。 -/
+abbrev MBuf : Type := (Fin M.m → Bool) × (Fin (M.m + 1 + 1) → Bool)
+
+/-- 統一機器狀態：`(M-狀態 × 緩衝) × (Profile × UPhase)`。 -/
+abbrev UState : Type := M.MBuf × (Profile × UPhase)
+
+/-- control 視角重排：把 `(Profile × (帶位 × UPhase))`（`ctrlSegment` 定義域）
+拉出、`MBuf` 停車。 -/
+def ctrlView : (M.UState × Bool) ≃ ((Profile × (Bool × UPhase)) × M.MBuf) where
+  toFun x := ((x.1.2.1, (x.2, x.1.2.2)), x.1.1)
+  invFun y := ((y.2, (y.1.1, y.1.2.2)), y.1.2.1)
+  left_inv _ := rfl
+  right_inv _ := rfl
+
+/-- control 段抬升到統一狀態（`MBuf` spectator）。 -/
+def ctrlLift : (M.UState × Bool) ≃ (M.UState × Bool) :=
+  M.ctrlView.trans ((Equiv.prodCongr ctrlSegment (Equiv.refl M.MBuf)).trans M.ctrlView.symm)
+
+/-- data 視角重排：把 `(UPhase × (MBuf × 帶位))`（`dataSeg` 定義域）拉出、
+`Profile` 停車。 -/
+def dataView : (M.UState × Bool) ≃ ((UPhase × (M.MBuf × Bool)) × Profile) where
+  toFun x := ((x.1.2.2, (x.1.1, x.2)), x.1.2.1)
+  invFun y := ((y.1.2.1, (y.2, y.1.1)), y.1.2.2)
+  left_inv _ := rfl
+  right_inv _ := rfl
+
+/-- data 段抬升到統一狀態（`Profile` spectator）。 -/
+def dataLift : (M.UState × Bool) ≃ (M.UState × Bool) :=
+  M.dataView.trans ((Equiv.prodCongr M.dataSeg (Equiv.refl Profile)).trans M.dataView.symm)
+
+/-- **統一單步 `L`**：先 data（依當前相位動作）、再 control（推進相位）——
+標準「當相位動作 → 前進」順序。可逆性 `Equiv.trans` 免費。 -/
+def unifiedStepL : (M.UState × Bool) ≃ (M.UState × Bool) :=
+  M.dataLift.trans M.ctrlLift
+
+/-- 統一單步可逆（`Equiv` 見證）。 -/
+theorem unifiedStepL_reversible : Function.Bijective M.unifiedStepL :=
+  M.unifiedStepL.bijective
+
+/-- **單步計算引理（C4b 核心之一）**：在 `mstep` 相位，統一單步對工作分量
+做 Feistel M-step（推進 M 的計算一步），並把相位推進到 `pushG`。
+`(工作, 帶位)` 經 `feistelPiece` 更新、`Profile` 不變、相位 `mstep → pushG`。 -/
+theorem unifiedStepL_mstep (mb : M.MBuf) (prof : Profile) (b : Bool) :
+    M.unifiedStepL ((mb, (prof, UPhase.mstep)), b) =
+      (((M.feistelPiece (mb, b)).1, (prof, UPhase.pushG)), (M.feistelPiece (mb, b)).2) := by
+  simp only [unifiedStepL, dataLift, ctrlLift, Equiv.trans_apply, Equiv.prodCongr_apply,
+    Equiv.coe_refl, Prod.map_apply, id_eq, dataView, ctrlView, Equiv.coe_fn_mk,
+    Equiv.coe_fn_symm_mk, dataSeg_fires_at_mstep, ctrlSegment_fiber, ctrlUFwd, uNext]
+
 end BitTM
 
 end
