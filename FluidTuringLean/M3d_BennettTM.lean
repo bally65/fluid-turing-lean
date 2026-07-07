@@ -404,6 +404,44 @@ def seedCtrl : SPhase ≃ SPhase :=
 /-- 種子相位環無固定點（每相位真前進——環閉合的健全性檢查，`decide`）。 -/
 theorem seedFwd_no_fixpoint : ∀ p : SPhase, seedFwd p ≠ p := by decide
 
+/-! ### 真控制空間上的表（offset 鎖步；skew-product 雙射）
+
+**關鍵結構**：控制段**保持帶位**（guard = `Dir.stay` 不寫帶）、緩衝當 spectator，
+故控制段是每 (`Profile`, 帶位) 區塊上 (相位, offset) 的置換。相位走骨架環
+（`seedFwd` 的 5-循環）、move 相位 `pushM`/`ret` 以 `offInc`/`offDec` 鎖步 offset。
+形如 `(p, o) ↦ (σ p, τ_p o)`（σ 相位雙射、每 τ_p offset 雙射）＝ **skew product**、
+自動雙射 —— `decide` 驗互逆確認。
+
+**未含（下一輪增補）**：guard 相位對帶位的真分支（帶位在區塊內、每帶值各自
+雙射）、`Profile` 剖面對回縮/推送的參數化分派、one-hot 環計數器終止。 -/
+
+/-- 完整控制空間（rev.3）：帶位 × 相位 × offset。 -/
+abbrev CtrlSpace : Type := Bool × SPhase × ShuttleOffset
+
+/-- 骨架控制表正向：相位環 + move 相位 offset 鎖步（`pushM` 進、`ret` 退）。 -/
+def ctrl0Fwd : CtrlSpace → CtrlSpace
+  | (b, .ready, o) => (b, .mstep, o)
+  | (b, .mstep, o) => (b, .pushG, o)
+  | (b, .pushG, o) => (b, .pushM, o)
+  | (b, .pushM, o) => (b, .ret, offInc o)
+  | (b, .ret, o)   => (b, .ready, offDec o)
+
+/-- 骨架控制表反向（相位環反轉 + offset 動作反轉，手寫）。 -/
+def ctrl0Bwd : CtrlSpace → CtrlSpace
+  | (b, .mstep, o) => (b, .ready, o)
+  | (b, .pushG, o) => (b, .mstep, o)
+  | (b, .pushM, o) => (b, .pushG, o)
+  | (b, .ret, o)   => (b, .pushM, offDec o)
+  | (b, .ready, o) => (b, .ret, offInc o)
+
+/-- **骨架控制表是置換**（`decide` 驗互逆 —— C1b 式仲裁在真控制空間跑通、
+offset 鎖步含在內）。 -/
+def ctrl0 : CtrlSpace ≃ CtrlSpace :=
+  ctrlEquivOfInverse ctrl0Fwd ctrl0Bwd (by decide) (by decide)
+
+/-- 控制段保持帶位（`Dir.stay` 不寫帶的形式化健全性檢查，`decide`）。 -/
+theorem ctrl0Fwd_preserves_bit : ∀ c : CtrlSpace, (ctrl0Fwd c).1 = c.1 := by decide
+
 /-! ## 機器級構造 -/
 
 namespace BitTM
