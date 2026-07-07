@@ -1134,6 +1134,56 @@ theorem unifiedStepL_macro2_blank (q : Fin M.m → Bool) (prof : Profile) (a : B
 
 end BitTM
 
+/-! ## C4b 無界方向 gating：連續走位可逆性（方案 C 核心主張，2026-07-08）
+
+**方案 C 的心臟**：rev.1-3 的 skip-count 障礙源自走位**跳過帶相依的塊**（跳數帶相依
+⟹ 合流奇偶帶相依 ⟹ 不可逆）。但**乾淨連續走位**（走到本地標記為止、不跳任何塊）
+**本身可逆**——本節以最小模型機器證明此核心主張，是 C 方向「比 rev.1-4 有機會」的
+具體 gating 證據（非完整構造；完整構造仍需處理 M 帶平移 vs 靜止垃圾，屬未來 session）。
+
+模型：讀寫頭在有限段 `Fin 5` 上，`home` 標記在位 4、`frontier` 標記在位 0。
+一個「傾倒週期」= 從 home 走到 frontier（walkDown）、傾倒、走回 home（walkUp）。 -/
+
+/-- 走位狀態：端點 `home`/`frontier` 不帶位置（在固定標記），走位相位帶位置。
+**關鍵設計教訓**（decide 抓出）：ofPerm 全空間置換要求**不可達狀態也雙射處理** ——
+`down 4`/`up 0` 走位不會到（下行從 3 起、上行到 4 止），故 park 成 fixpoint。 -/
+inductive WalkState
+  | home            -- 在 home 標記（位 4）
+  | frontier        -- 在 frontier 標記（位 0）
+  | down (p : Fin 5) -- 下行中，位 p
+  | up (p : Fin 5)   -- 上行中，位 p
+  deriving DecidableEq, Fintype, Repr
+
+/-- 走位正向（乾淨連續、標記終止、無跳過）：home 下行到 frontier、傾倒、上行回 home；
+不可達的 `down 4`/`up 0` park 成 fixpoint。 -/
+def walkFwd : WalkState → WalkState
+  | .home => .down 3
+  | .down p => if p = 0 then .frontier else if p = 4 then .down 4 else .down (p - 1)
+  | .frontier => .up 1
+  | .up p => if p = 4 then .home else if p = 0 then .up 0 else .up (p + 1)
+
+/-- 走位反向（手寫逆）。 -/
+def walkBwd : WalkState → WalkState
+  | .home => .up 4
+  | .frontier => .down 0
+  | .down p => if p = 3 then .home else if p = 4 then .down 4 else .down (p + 1)
+  | .up p => if p = 1 then .frontier else if p = 0 then .up 0 else .up (p - 1)
+
+/-- **連續走位可逆**（`decide` 驗互逆——C 方向核心主張的機器背書）：
+乾淨連續走位（走到本地標記、無跳過）是置換、in-degree 恰 1。這正是 rev.1-3
+栽的合流障礙在**無跳過連續儲存**下**不出現**的具體 gating 證據。 -/
+theorem walk_reversible :
+    (∀ s, walkBwd (walkFwd s) = s) ∧ (∀ s, walkFwd (walkBwd s) = s) := by
+  constructor <;> decide
+
+/-- 走位是自同構（打包）。 -/
+def walkEquiv : WalkState ≃ WalkState :=
+  ⟨walkFwd, walkBwd, walk_reversible.1, walk_reversible.2⟩
+
+/-- **走位真的抵達兩端點**（非退化空轉）：從 home 走 5 步抵 frontier。 -/
+theorem walk_reaches_frontier :
+    (walkFwd)^[5] WalkState.home = WalkState.frontier := by decide
+
 end
 
 end FluidTuring
