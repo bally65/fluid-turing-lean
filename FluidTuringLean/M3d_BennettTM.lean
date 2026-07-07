@@ -1081,6 +1081,25 @@ theorem unifiedStepL_mstep (mb : M.MBuf) (prof : Profile) (b : Bool) :
     Equiv.coe_refl, Prod.map_apply, id_eq, dataView, ctrlView, Equiv.coe_fn_mk,
     Equiv.coe_fn_symm_mk, dataSeg_fires_at_mstep, ctrlSegment_fiber, ctrlUFwd, uNext]
 
+/-- **單步引理（`ready` 相位）**：`ready` 不計算（`data` 恆等）、`control` 推進
+`ready → mstep`。工作/緩衝/`Profile`/帶位皆不變。 -/
+theorem unifiedStepL_ready (mb : M.MBuf) (prof : Profile) (b : Bool) :
+    M.unifiedStepL ((mb, (prof, UPhase.ready)), b) = ((mb, (prof, UPhase.mstep)), b) := by
+  simp only [unifiedStepL, dataLift, ctrlLift, Equiv.trans_apply, Equiv.prodCongr_apply,
+    Equiv.coe_refl, Prod.map_apply, id_eq, dataView, ctrlView, Equiv.coe_fn_mk,
+    Equiv.coe_fn_symm_mk, dataSeg,
+    uDispatch_other _ _ _ _ (by decide : UPhase.ready ≠ UPhase.mstep),
+    ctrlSegment_fiber, ctrlUFwd, uNext]
+
+/-- **有界宏步（無迴圈，2 步）**：從 `ready`＋任意緩衝出發，2 個統一單步做一次
+Feistel M-step、相位到 `pushG`。工作/帶位經 `feistelPiece` 更新。這是字面機器的
+**有界宏步**（單趟、無傾倒迴圈）—— 配 `feistelCore_blank` 即「機器 2 步算 M 一步」。 -/
+theorem unifiedStepL_macro2 (mb : M.MBuf) (prof : Profile) (b : Bool) :
+    (M.unifiedStepL)^[2] ((mb, (prof, UPhase.ready)), b) =
+      (((M.feistelPiece (mb, b)).1, (prof, UPhase.pushG)), (M.feistelPiece (mb, b)).2) := by
+  change M.unifiedStepL (M.unifiedStepL ((mb, (prof, UPhase.ready)), b)) = _
+  rw [M.unifiedStepL_ready, M.unifiedStepL_mstep]
+
 end BitTM
 
 end
