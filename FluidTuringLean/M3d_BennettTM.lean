@@ -1063,6 +1063,14 @@ def unifiedStepL : (M.UState × Bool) ≃ (M.UState × Bool) :=
 theorem unifiedStepL_reversible : Function.Bijective M.unifiedStepL :=
   M.unifiedStepL.bijective
 
+/-- **Feistel 核心空白引理（機器真算 M）**：空白緩衝上，Feistel M-step 核心對
+`(q, a)` 恰做 M 的實際局部更新 —— 工作狀態 → `M.next q a`、寫入位 → `M.write q a`、
+被丟棄的 `(q, a)` 存進緩衝。這是「字面機器計算的是 M（而非某個抽象 Feistel）」
+的核心見證，對應 M3c `bufferedStep_blank`。 -/
+theorem feistelCore_blank (q : Fin M.m → Bool) (a : Bool) :
+    M.feistelCore ((q, (fun _ ↦ false, false)), a) = ((M.next q a, (q, a)), M.write q a) := by
+  simp only [feistelCore, Equiv.coe_fn_mk, Bool.xor_false]
+
 /-- **單步計算引理（C4b 核心之一）**：在 `mstep` 相位，統一單步對工作分量
 做 Feistel M-step（推進 M 的計算一步），並把相位推進到 `pushG`。
 `(工作, 帶位)` 經 `feistelPiece` 更新、`Profile` 不變、相位 `mstep → pushG`。 -/
