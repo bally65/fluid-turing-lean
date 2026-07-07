@@ -484,6 +484,70 @@ theorem ctrlGFwd_pushG_branches (o : ShuttleOffset) :
     (ctrlGFwd (true, .pushG, o)).2.1 = SPhase.pushM ∧
     (ctrlGFwd (false, .pushG, o)).2.1 = SPhase.ret := ⟨rfl, rfl⟩
 
+/-! ### Profile 參數化分派：extend/retract 經路徑位 π 消歧（合流障礙的解）
+
+**這是切割艦隊標的難點（C1d 家族）**：rev.3 的 extend/retract 兩路徑在進入
+合流相位時 `(狀態, 帶位)` 像完全相同 ⟹ `ofPerm` 要全空間置換 ⟹ 合流 = 非單射
+= 構造直接不成立。**解 = 路徑位 π（在 `Profile.pathBit`）**：回縮路徑翻自家
+causeway 位的同步翻 π=1，兩路徑從此在 `Profile` 可分。
+
+**機器示範**（聚焦相位型別 `MrgPhase`，不動上面已驗的表）：控制表對
+`Profile` 參數化，合流相位 `atMerge` 依 `prof.pathBit` 分派到不同續程
+（π=0 走 extend 續程、π=1 走 retract 續程），另一續程在該 profile 停為 fixpoint。
+**可逆關鍵**：控制段保持 `Profile`（spectator），故對每個 profile 各自是置換 ——
+`decide` 驗全 16 個 profile 的互逆確認分派未破壞雙射性。 -/
+
+/-- 合流示範相位：`atMerge` 合流點、`extCont`/`retCont` 兩路徑續程、`settled` 匯合後。 -/
+inductive MrgPhase
+  | atMerge
+  | extCont
+  | retCont
+  | settled
+  deriving DecidableEq, Fintype, Repr
+
+/-- Profile 參數化控制表正向：`atMerge` 依 `π = prof.pathBit` 分派；
+每 profile 內是 3-循環 + 另一續程停 fixpoint（該 π 下不可達）。 -/
+def ctrlPFwd (prof : Profile) : MrgPhase → MrgPhase := fun p =>
+  match prof.pathBit, p with
+  | true,  .atMerge => .retCont
+  | true,  .retCont => .settled
+  | true,  .settled => .atMerge
+  | true,  .extCont => .extCont
+  | false, .atMerge => .extCont
+  | false, .extCont => .settled
+  | false, .settled => .atMerge
+  | false, .retCont => .retCont
+
+/-- Profile 參數化控制表反向（逐 π-block 反轉）。 -/
+def ctrlPBwd (prof : Profile) : MrgPhase → MrgPhase := fun p =>
+  match prof.pathBit, p with
+  | true,  .retCont => .atMerge
+  | true,  .settled => .retCont
+  | true,  .atMerge => .settled
+  | true,  .extCont => .extCont
+  | false, .extCont => .atMerge
+  | false, .settled => .extCont
+  | false, .atMerge => .settled
+  | false, .retCont => .retCont
+
+/-- 互逆（全 16 profile × 4 相位，`decide`）。 -/
+theorem ctrlPFwd_leftInv : ∀ (prof : Profile) (p : MrgPhase),
+    ctrlPBwd prof (ctrlPFwd prof p) = p := by decide
+
+theorem ctrlPFwd_rightInv : ∀ (prof : Profile) (p : MrgPhase),
+    ctrlPFwd prof (ctrlPBwd prof p) = p := by decide
+
+/-- **Profile 參數化控制表：每 profile 一個置換**（π 分派未破壞雙射性）。 -/
+def ctrlP (prof : Profile) : MrgPhase ≃ MrgPhase :=
+  ctrlEquivOfInverse (ctrlPFwd prof) (ctrlPBwd prof)
+    (ctrlPFwd_leftInv prof) (ctrlPFwd_rightInv prof)
+
+/-- **π 真的分派 extend vs retract**：合流點依路徑位走不同續程 ——
+消歧語意的健全性檢查（π=0→extend、π=1→retract）。 -/
+theorem ctrlP_dispatches :
+    ctrlPFwd (false, false, false, false) .atMerge = MrgPhase.extCont ∧
+    ctrlPFwd (false, true, false, false) .atMerge = MrgPhase.retCont := ⟨rfl, rfl⟩
+
 /-! ## 機器級構造 -/
 
 namespace BitTM
