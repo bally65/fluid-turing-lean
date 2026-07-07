@@ -337,6 +337,73 @@ theorem card_eq : Fintype.card Profile = 16 := by decide
 
 end Profile
 
+/-! ## Milestone C1a — 控制表機器（decide 仲裁）+ 相位骨架（2026-07-08 起，增量）
+
+**誠實界線**：完整 quadruple 編舞（~34 相位）需 table→`decide`→反例迭代，
+前三輪（rev.1/2/3）皆栽於此、非一次成型。本節先立**可重用機器**＋**相位型別
+與 guard/move 可判定分區**＋**種子驗證表**（真 `decide` 過），完整編舞逐相位
+增補、每次 `decide` 重驗；move 相位入度 1（C1pre 唯一殘留風險）正由此 `decide`
+當場裁。SPhase 構造子集會隨入度審計增減 —— 故 C0 `Profile` 刻意不含相位。 -/
+
+/-- **控制表機器**：`Fintype` 上一對 `decide`-驗互逆的 `(fwd, bwd)` 打包成置換。
+這是 C1a→C1b→C2 的介面 —— 換表時只有 `fwd/bwd` 內容變，此打包不變；
+`decide` 驗 `bwd∘fwd = id ∧ fwd∘bwd = id` 是「L 在控制層單射」的有限仲裁。 -/
+def ctrlEquivOfInverse {C : Type*} (fwd bwd : C → C)
+    (hl : ∀ c, bwd (fwd c) = c) (hr : ∀ c, fwd (bwd c) = c) : C ≃ C :=
+  ⟨fwd, bwd, hl, hr⟩
+
+@[simp] theorem ctrlEquivOfInverse_apply {C : Type*} (fwd bwd : C → C) (hl hr) (c : C) :
+    ctrlEquivOfInverse fwd bwd hl hr c = fwd c := rfl
+
+/-- Quadruple 相位骨架（**種子**；完整編舞逐相位增補）。quadruple 紀律：
+guard 相位 = `Dir.stay` 步讀格並轉相位（不移）；move 相位 = 純平移、入度 1。 -/
+inductive SPhase
+  /-- M-step 前，讀寫頭在 home 工作格。 -/
+  | ready
+  /-- Feistel M-step（guard：讀工作位）。 -/
+  | mstep
+  /-- 垃圾推送 guard（讀垃圾標記，決定續推或停）。 -/
+  | pushG
+  /-- 垃圾推送 move（前進一格，入度 1）。 -/
+  | pushM
+  /-- 返家 move（回 home，入度 1）。 -/
+  | ret
+  deriving DecidableEq, Fintype, Repr
+
+/-- guard/move 可判定分區（quadruple 紀律）：guard = stay 讀寫、move = 純平移。 -/
+def SPhase.isGuard : SPhase → Bool
+  | .ready => true
+  | .mstep => true
+  | .pushG => true
+  | .pushM => false
+  | .ret => false
+
+/-- 種子控制表正向（一 M-step 週期的相位骨架環）：
+`ready → mstep → pushG → pushM → ret → ready`。此為純相位循環種子，
+demonstrate 機器與環閉合；guard 讀位分支、offset 鎖步、Profile 消歧
+是後續逐相位增補的內容。 -/
+def seedFwd : SPhase → SPhase
+  | .ready => .mstep
+  | .mstep => .pushG
+  | .pushG => .pushM
+  | .pushM => .ret
+  | .ret => .ready
+
+/-- 種子控制表反向（環反轉，手寫）。 -/
+def seedBwd : SPhase → SPhase
+  | .mstep => .ready
+  | .pushG => .mstep
+  | .pushM => .pushG
+  | .ret => .pushM
+  | .ready => .ret
+
+/-- **種子表是置換**（`decide` 驗互逆——C1b 式仲裁在種子上跑通）。 -/
+def seedCtrl : SPhase ≃ SPhase :=
+  ctrlEquivOfInverse seedFwd seedBwd (by decide) (by decide)
+
+/-- 種子相位環無固定點（每相位真前進——環閉合的健全性檢查，`decide`）。 -/
+theorem seedFwd_no_fixpoint : ∀ p : SPhase, seedFwd p ≠ p := by decide
+
 /-! ## 機器級構造 -/
 
 namespace BitTM
