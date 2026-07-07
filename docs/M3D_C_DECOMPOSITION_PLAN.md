@@ -86,3 +86,57 @@
 3. 全程沒跑 `lake build`；讀了落地碼（M3d/M3b/M3c/M6）接地簽名，但 C1–C5 是計畫非已測 Lean。
 4. 四提案各有真缺陷（假並行、簽名帶自由變數畸形、障礙洩漏出隔離點）；綜合只留過審碎片，但殘留樂觀可能，尤其 C4a「microstepCount 在 quadruple 下真垃圾無關」＝設計日誌斷言、無人已證。
 5. 週數是從 README 自己的 1500+ 行估與兩輪停損粗三角，非嚴謹工程估。
+
+---
+
+# C1pre_ProfileSoundness — 裁決（對抗艦隊，2026-07-08）
+
+> 5 隻艦隊（1 建構→3 攻→1 裁決，全 sonnet）。使用者已決 Profile 維持小 Fintype；此場驗證那是否 sound。
+
+## 裁決：**SOUND_with_extra_bounded_fields** ｜ C0 = freeze_after_one_fix
+
+**Profile 可以維持小 Fintype，成立。** 三攻全被擋（無一構造出合流反例）：
+
+| 攻擊向量 | 結果 |
+|---|---|
+| 環計數器帶相依 | small_Fintype SURVIVES |
+| move 相位入度 | small_Fintype SURVIVES |
+| Profile 投影有損 | small_Fintype SURVIVES |
+
+守住的核心防禦（且**接地在真 Lean 碼**、非日誌散文）：spectator-data 模式——緩衝/計數器被
+Profile-條件轉移原封帶過（`Equiv.prodShear`/`phaseDispatch`），只由**與 Profile 無關的固定
+雙射**（`feistelCore`/`swapHead`/`rotBuf`）依 `(相位,offset)` 改動；兩態 scan 歷史不同時，
+**未觸動的無限帶本身**就是消歧來源（M3b `ofPerm`/`GenShift.ofLocal` split 已證）。
+
+## 最終 Profile（16 值，O(1)、與 m 及垃圾深度 L 無關）
+
+- `d(buf)`：Feistel/傾倒緩衝 shear 方向（rev.3 已用）
+- `π`：extendL/retractL 合流消歧（rev.3 修，與 twin 奇偶正交、quadruple 下仍需）
+- `ring-at-zero?`：one-hot 環計數器轉滿一圈旗標——**取代**（非追加）`緩衝全零?`（refutation 3 抓到後者冗餘）
+- `guard-phase read-bit b`：stay-guard 步讀的單一帶位——**讓相位分離成立的新成分**
+
+`|Profile| = 2^4 = 16`；`decide` 成本 O(16 × |C|) 固定有限。
+
+## 唯一未擋下的殘留風險（誠實）
+
+**move 相位入度 =1**——建構者自陳最弱環節，**三攻都無法對「真正畫出的 quadruple 表」驗證，
+只以類比辯護**。這是真開放風險：展開完整 ~34 相位表可能露出入度違反，逼加**額外（仍有界）
+相位常數**（如 P5a_fromP0/P5a_fromWL0dep/P5a_fromP6）。
+
+**但這不是阻斷**——入度 1 正是 **`decide` 該裁的事**（C1b 的工作），不是紙上判定能收的。
+畫表→`decide` 驗 `ctrlBwd∘ctrlFwd=id`，違反當場抓（跟當初抓 rev.2/rev.3 合流同機制）。
+所以：**Profile 抽象現在凍、SPhase 最終大小待 C1b 入度審計定**。
+
+## 必須強制的可達不變量（→ IsCleanQuad / C0 義務）
+
+1. offset ≡ 頭絕對位置 mod 5（幾何、排程無關、沿用）
+2. 每 guard 相位讀固定 offset、不隨歷史變
+3. **move 相位入度恰 1**（crux、未驗、見上）
+4. 環計數器在可達態恆 one-hot（需自己的旋轉不變量引理）
+5. **IsClean 的 h=0/連續垃圾必須先一般化到散置垃圾**——非細節：quadruple guard 掃的正是這個幾何
+
+## 對 C0 凍結的具體指令
+
+- **現在凍** Profile = 16 值 Fintype（4 獨立 Bool，丟掉 `緩衝全零?` 冗餘）——此抽象過了三向對抗
+- **別**把入度 1 當已證——它是 C1b `decide` 的第一個工作，畫表時當場驗
+- 條件 5（IsClean 散置一般化 = C3c）其實可 day-1 起、與表無關——建議先開這條銀行早期成果
