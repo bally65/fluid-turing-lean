@@ -752,6 +752,21 @@ def ctrlFullTM : BitTM :=
 theorem ctrlFullTM_reversible : ctrlFullTM.Reversible :=
   BitTM.ofPerm_reversible 7 ctrlFullL (fun _ ↦ Dir.stay)
 
+/-- UPhase 相位分派：相位 = `ph` 時對資料作用 `σ`，否則恆等（`prodShear`，
+每纖維雙射 ⟹ 整體置換）—— `phaseDispatch` 的 UPhase 版，data 段用它把
+Feistel 條件化於特定相位。 -/
+def uDispatch {α : Type*} (ph : UPhase) (σ : α ≃ α) :
+    (UPhase × α) ≃ (UPhase × α) :=
+  Equiv.prodShear (Equiv.refl UPhase) (fun p ↦ if p = ph then σ else Equiv.refl α)
+
+@[simp] theorem uDispatch_same {α : Type*} (ph : UPhase) (σ : α ≃ α) (x : α) :
+    uDispatch ph σ (ph, x) = (ph, σ x) := by
+  simp [uDispatch, Equiv.prodShear]
+
+theorem uDispatch_other {α : Type*} (ph p : UPhase) (σ : α ≃ α) (x : α)
+    (h : p ≠ ph) : uDispatch ph σ (p, x) = (p, x) := by
+  simp [uDispatch, Equiv.prodShear, h]
+
 /-! ## 機器級構造 -/
 
 namespace BitTM
@@ -971,6 +986,36 @@ theorem shuttleEncode_isCleanQuad (c : M.Cfg) :
   obtain ⟨h1, h2, h3, h4, h5, h6⟩ := M.shuttleEncode_isClean c
   refine ⟨h1, h2, h3, h4, fun k ↦ ?_, fun k _ ↦ h6 k ?_⟩ <;>
     · rw [h5 k]; exact decide_eq_false (by omega)
+
+/-! ### 資料段：Feistel M-step 條件化於統一相位 `mstep`
+
+control 段（`ctrlFullTM`）已完成；此為對稱補全的 **data 段**：把 M3d 既有的
+`feistelPiece`（Feistel M-step 搬到 (M-狀態 × 全緩衝) × 帶位）條件化於 UPhase
+的 `mstep` 相位 —— `mstep` 時做 Feistel（推進 M 的計算一步），他相位恆等。
+可逆性由 `uDispatch`/`prodShear` 免費。data 正確性的動力學版見 M3c
+`bufferedStep_blank`（空白緩衝上 Feistel 工作分量 = `M.step`）；此為字面機層對應。 -/
+
+/-- 資料段：`mstep` 相位做 `feistelPiece`、他相位恆等（可逆）。 -/
+def dataSeg :
+    (UPhase × (((Fin M.m → Bool) × (Fin (M.m + 1 + 1) → Bool)) × Bool)) ≃
+    (UPhase × (((Fin M.m → Bool) × (Fin (M.m + 1 + 1) → Bool)) × Bool)) :=
+  uDispatch UPhase.mstep M.feistelPiece
+
+/-- **資料段恰在 `mstep` 觸發 Feistel**（推進 M 計算一步）。 -/
+theorem dataSeg_fires_at_mstep
+    (x : ((Fin M.m → Bool) × (Fin (M.m + 1 + 1) → Bool)) × Bool) :
+    M.dataSeg (UPhase.mstep, x) = (UPhase.mstep, M.feistelPiece x) :=
+  uDispatch_same _ _ _
+
+/-- **資料段在非 `mstep` 相位恆等**（不亂動 M 狀態）。 -/
+theorem dataSeg_idle_off_mstep (p : UPhase)
+    (x : ((Fin M.m → Bool) × (Fin (M.m + 1 + 1) → Bool)) × Bool)
+    (h : p ≠ UPhase.mstep) : M.dataSeg (p, x) = (p, x) :=
+  uDispatch_other _ _ _ _ h
+
+/-- 資料段可逆（`Equiv` 本身即見證）。 -/
+theorem dataSeg_reversible : Function.Bijective M.dataSeg :=
+  M.dataSeg.bijective
 
 end BitTM
 
