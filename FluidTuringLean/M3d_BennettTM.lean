@@ -309,6 +309,34 @@ def withOff {α β δ : Type*} (σ : ((α × β) × Bool) ≃ ((α × β) × Boo
     ((α × (β × δ)) × Bool) ≃ ((α × (β × δ)) × Bool) :=
   parkOff.trans ((Equiv.prodCongr σ (Equiv.refl δ)).trans parkOff.symm)
 
+/-! ## Milestone C0 — 介面凍結：控制表剖面 `Profile`（C1pre 裁決，2026-07-08）
+
+C1pre 對抗艦隊裁決 = `SOUND_with_extra_bounded_fields`：控制表 `ctrlFwd/ctrlBwd`
+只 case 這 4 個布林剖面（`|Profile| = 16`、O(1) 與 `m` 無關），緩衝/環計數器其餘位
+當 spectator 原封帶過（spectator-data 模式，接地 `feistelCore/rotBuf`）。凍結
+2026-07-08；`SPhase` 最終大小待 C1b 入度審計，本型別**不含相位**。三向對抗
+（環計數器帶相依 / move 入度 / Profile 投影有損）全被擋、無反例。 -/
+
+/-- 控制表剖面：4 個布林，欄位序 `(d, π, ringAtZero, guardBit)`。取乘積型別
+以自動獲得 `Fintype`/`DecidableEq`（Bool^4）。 -/
+abbrev Profile : Type := Bool × Bool × Bool × Bool
+
+namespace Profile
+
+/-- 緩衝 shear 方向。 -/
+def d (p : Profile) : Bool := p.1
+/-- 路徑位 π（extendL/retractL 合流消歧；rev.3 修，quadruple 下仍需）。 -/
+def pathBit (p : Profile) : Bool := p.2.1
+/-- one-hot 環計數器轉滿一圈旗標（取代冗餘的「緩衝全零?」旗）。 -/
+def ringAtZero (p : Profile) : Bool := p.2.2.1
+/-- guard-step 讀的單一帶位（讓相位分離成立的新成分）。 -/
+def guardBit (p : Profile) : Bool := p.2.2.2
+
+/-- `|Profile| = 16`：固定有限、與 `m` 及垃圾深度無關 —— `decide` 隔離可行的前提。 -/
+theorem card_eq : Fintype.card Profile = 16 := by decide
+
+end Profile
+
 /-! ## 機器級構造 -/
 
 namespace BitTM
@@ -491,6 +519,43 @@ theorem shuttleEncode_isClean (c : M.Cfg) :
     simp only [shuttleEncodeTape]
     rw [if_neg (by omega : ¬(5 * k + 1) % 5 = 0), if_neg (by omega : ¬(5 * k + 1) = 3),
       if_neg (by omega : ¬(5 * k + 1) = 4)]
+
+/-! ## Milestone C3c — `IsCleanQuad`：垃圾散置一般化（2026-07-08）
+
+現行 `IsClean` 把垃圾標記寫死成**連續**區段 `[-L, 0)`（`decide (-L ≤ k < 0)`）。
+quadruple guard 相位掃的正是任意可達帶幾何，故需把垃圾標記一般化成**任意**
+函數 `g : ℤ → Bool`（散置垃圾）。此節**排程無關、day-1 可起**（不依賴 C1/C2 的
+控制表內容），是承諾範圍 C0→C3 最早能銀行的成果。
+
+證：(1) 連續特例 `IsClean L ⟹ IsCleanQuad`（實例化 `g = 區段指示`）；
+(2) 編碼產出 `IsCleanQuad`（`g = 全 false`，垃圾空）。「未標記格 ⟹ 資料 0」
+不變量在一般 `g` 下逐字保留。 -/
+
+/-- **乾淨組態謂詞（散置垃圾一般化）**：垃圾標記軌 = 任意 `g : ℤ → Bool`，
+其餘（相位/緩衝/工作軌/causeway/哨兵、及「未標記 ⟹ 資料 0」）同 `IsClean`。 -/
+def IsCleanQuad (c : M.bennettTM.Cfg) (q : Fin M.m → Bool) (t : ℤ → Bool)
+    (g : ℤ → Bool) : Prop :=
+  M.shuttleUnpack c.1 = (q, (M.blankBuf, (ph0, off0))) ∧
+  (∀ k : ℤ, c.2 (5 * k) = t k) ∧
+  (∀ k : ℤ, c.2 (5 * k + 3) = decide (k = 0)) ∧
+  (∀ k : ℤ, c.2 (5 * k + 4) = decide (k = 0)) ∧
+  (∀ k : ℤ, c.2 (5 * k + 2) = g k) ∧
+  (∀ k : ℤ, g k = false → c.2 (5 * k + 1) = false)
+
+/-- **連續垃圾是散置的特例**：`IsClean L` 蘊含 `IsCleanQuad`，
+垃圾函數實例化為區段指示 `k ↦ decide (-L ≤ k < 0)`。 -/
+theorem IsClean_toQuad {L : ℕ} {c : M.bennettTM.Cfg} {q : Fin M.m → Bool} {t : ℤ → Bool}
+    (h : M.IsClean L c q t) :
+    M.IsCleanQuad c q t (fun k ↦ decide (-(L : ℤ) ≤ k ∧ k < 0)) := by
+  obtain ⟨h1, h2, h3, h4, h5, h6⟩ := h
+  exact ⟨h1, h2, h3, h4, h5, fun k hk ↦ h6 k (h5 k ▸ hk)⟩
+
+/-- **編碼產出乾淨組態（散置版）**：垃圾標記軌全 `false`（垃圾空）。 -/
+theorem shuttleEncode_isCleanQuad (c : M.Cfg) :
+    M.IsCleanQuad (M.shuttleEncode c) c.1 c.2 (fun _ ↦ false) := by
+  obtain ⟨h1, h2, h3, h4, h5, h6⟩ := M.shuttleEncode_isClean c
+  refine ⟨h1, h2, h3, h4, fun k ↦ ?_, fun k _ ↦ h6 k ?_⟩ <;>
+    · rw [h5 k]; exact decide_eq_false (by omega)
 
 end BitTM
 
