@@ -442,6 +442,48 @@ def ctrl0 : CtrlSpace ≃ CtrlSpace :=
 /-- 控制段保持帶位（`Dir.stay` 不寫帶的形式化健全性檢查，`decide`）。 -/
 theorem ctrl0Fwd_preserves_bit : ∀ c : CtrlSpace, (ctrl0Fwd c).1 = c.1 := by decide
 
+/-! ### 加 guard 分支：`pushG` 讀帶位分岔（bit-block 各自雙射）
+
+`pushG` 成為真 guard：讀當前帶位分岔 —— 位設（垃圾標記在）→ 續推 `pushM`、
+位清 → 返家 `ret`。**關鍵可逆論證**：控制保持帶位，故 (相位,offset) 在
+帶位=false 與 =true 兩區塊**各自獨立**；兩區塊可用**不同**相位置換 σ_false/σ_true
+（false 塊：`pushG→ret`、`pushM` 停為 fixpoint；true 塊：完整推送環），
+只要每塊各自是 (相位,offset) 置換即整體雙射（skew-product 對每 bit-block）。
+`decide` 驗互逆確認分支未破壞雙射性 —— 這正是 in-degree-1 紀律的機器裁決。 -/
+
+/-- guard 版控制表正向：`pushG` 依帶位分岔。 -/
+def ctrlGFwd : CtrlSpace → CtrlSpace
+  | (b, .ready, o) => (b, .mstep, o)
+  | (b, .mstep, o) => (b, .pushG, o)
+  | (true, .pushG, o) => (true, .pushM, o)
+  | (false, .pushG, o) => (false, .ret, o)
+  | (true, .pushM, o) => (true, .ret, offInc o)
+  | (false, .pushM, o) => (false, .pushM, offInc o)
+  | (b, .ret, o) => (b, .ready, offDec o)
+
+/-- guard 版控制表反向（逐 bit-block 反轉，手寫）。 -/
+def ctrlGBwd : CtrlSpace → CtrlSpace
+  | (b, .mstep, o) => (b, .ready, o)
+  | (b, .pushG, o) => (b, .mstep, o)
+  | (true, .pushM, o) => (true, .pushG, o)
+  | (false, .pushM, o) => (false, .pushM, offDec o)
+  | (true, .ret, o) => (true, .pushM, offDec o)
+  | (false, .ret, o) => (false, .pushG, o)
+  | (b, .ready, o) => (b, .ret, offInc o)
+
+/-- **guard 版控制表是置換**（`decide` 驗互逆 —— 真帶位分支未破壞雙射性）。 -/
+def ctrlG : CtrlSpace ≃ CtrlSpace :=
+  ctrlEquivOfInverse ctrlGFwd ctrlGBwd (by decide) (by decide)
+
+/-- guard 保持帶位（分支只讀不寫帶）。 -/
+theorem ctrlGFwd_preserves_bit : ∀ c : CtrlSpace, (ctrlGFwd c).1 = c.1 := by decide
+
+/-- **`pushG` 真的對帶位分岔**（位設→`pushM` 續推、位清→`ret` 返家）——
+guard 語意的健全性檢查，非退化成 bit-無關。 -/
+theorem ctrlGFwd_pushG_branches (o : ShuttleOffset) :
+    (ctrlGFwd (true, .pushG, o)).2.1 = SPhase.pushM ∧
+    (ctrlGFwd (false, .pushG, o)).2.1 = SPhase.ret := ⟨rfl, rfl⟩
+
 /-! ## 機器級構造 -/
 
 namespace BitTM
