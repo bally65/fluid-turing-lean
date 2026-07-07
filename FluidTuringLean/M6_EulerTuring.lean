@@ -224,6 +224,16 @@ theorem bennettTM_suspension_simulates (M : BitTM) :
       Simulates F M.bennettTM.step enc :=
   reversibleTM_suspension_simulates M.bennettTM M.bennettTM_reversible
 
+/-- **C2 端到端（全證）**：把**統一控制表**（M3d C1a，guard 帶位分支 + π 合流
+分派 + 週期閉合、全 `decide` 驗）接成的可逆機器 `ctrlDemoTM`，被緊緻空間上的
+連續 ℝ-流經單射編碼模擬。整條「統一控制表 → `ofPerm` 可逆機 → generalized shift
+→ 同胚 → 懸掛流」的端到端見證 —— C1a 設計的控制表確實落到一台真機器再到流。 -/
+theorem ctrlDemoTM_suspension_simulates :
+    ∃ (X : Type) (_ : TopologicalSpace X) (_ : CompactSpace X)
+      (F : ContinuousFlowOn X) (enc : ctrlDemoTM.Cfg → X),
+      Simulates F ctrlDemoTM.step enc :=
+  reversibleTM_suspension_simulates ctrlDemoTM ctrlDemoTM_reversible
+
 /-! ### 任意（不可逆）位元機 → 流：Bennett 可逆化（M3c）推論
 
 `reversibleTM_suspension_simulates` 需要 `M.Reversible` 假設；M3c 的 history

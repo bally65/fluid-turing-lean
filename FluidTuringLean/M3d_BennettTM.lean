@@ -659,6 +659,59 @@ theorem ctrlU_short_cycle_skips_push :
     (ctrlUFwd (false, false, false, false))^[3] (false, .ready) = (false, UPhase.atMerge) := by
   decide
 
+/-! ### C2（加法式）：統一控制表接成一台真可逆 BitTM
+
+**不動既有 `bennettTM`**（避免動 40+ 已證定理），另建一台把統一控制表當局部
+更新的可逆機器。UPhase 編碼進 3 位元（`uBits`）；固定 profile（先示範核心，
+`Profile` 參數化為後續）；`L` = 控制段共軛到位元狀態；`ofPerm` 給可逆性免費。 -/
+
+/-- UPhase ↔ 3 位元編碼（低位在前二進位；`decide` 驗雙射）。 -/
+def uToBits : UPhase → (Fin 3 → Bool)
+  | .ready   => ![false, false, false]
+  | .mstep   => ![true,  false, false]
+  | .pushG   => ![false, true,  false]
+  | .pushM   => ![true,  true,  false]
+  | .ret     => ![false, false, true ]
+  | .atMerge => ![true,  false, true ]
+  | .extCont => ![false, true,  true ]
+  | .retCont => ![true,  true,  true ]
+
+/-- 3 位元 → UPhase（反編碼）。 -/
+def uFromBits (f : Fin 3 → Bool) : UPhase :=
+  match f 0, f 1, f 2 with
+  | false, false, false => .ready
+  | true,  false, false => .mstep
+  | false, true,  false => .pushG
+  | true,  true,  false => .pushM
+  | false, false, true  => .ret
+  | true,  false, true  => .atMerge
+  | false, true,  true  => .extCont
+  | true,  true,  true  => .retCont
+
+/-- UPhase ≃ 3 位元（`decide` 驗互逆）。 -/
+def uBits : UPhase ≃ (Fin 3 → Bool) where
+  toFun := uToBits
+  invFun := uFromBits
+  left_inv := by decide
+  right_inv := by decide
+
+/-- 固定 profile 的控制局部更新，共軛到位元狀態：
+`((UPhase 位元), 帶位) ≃ 同型`，經 `prodComm`＋`uBits` 共軛 `ctrlU prof`。 -/
+def ctrlDemoL (prof : Profile) : ((Fin 3 → Bool) × Bool) ≃ ((Fin 3 → Bool) × Bool) :=
+  (Equiv.prodComm _ _).trans
+    ((Equiv.prodCongr (Equiv.refl Bool) uBits.symm).trans
+      ((ctrlU prof).trans
+        ((Equiv.prodCongr (Equiv.refl Bool) uBits).trans (Equiv.prodComm _ _))))
+
+/-- **統一控制表作為一台可逆 BitTM**（加法構造，`m = 3`、固定 profile 全零；
+方向占位 `stay`——控制段本不移頭，走位是 data 層後續）。 -/
+def ctrlDemoTM : BitTM :=
+  BitTM.ofPerm 3 (ctrlDemoL (false, false, false, false)) (fun _ ↦ Dir.stay)
+
+/-- **可逆性免費**（`ofPerm` 引擎）：統一控制表機器是可逆 BitTM。 -/
+theorem ctrlDemoTM_reversible : ctrlDemoTM.Reversible :=
+  BitTM.ofPerm_reversible 3 (ctrlDemoL (false, false, false, false)) (fun _ ↦ Dir.stay)
+
 /-! ## 機器級構造 -/
 
 namespace BitTM
