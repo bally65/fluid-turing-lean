@@ -1,4 +1,5 @@
 import FluidTuringLean.M3c_Bennett
+import FluidTuringLean.M3d_BennettTM
 import FluidTuringLean.M5_ReebInterface
 
 /-!
@@ -209,6 +210,19 @@ theorem cnotTM_suspension_simulates :
       (F : ContinuousFlowOn X) (enc : BitTM.cnotTM.Cfg → X),
       Simulates F BitTM.cnotTM.step enc :=
   reversibleTM_suspension_simulates BitTM.cnotTM BitTM.cnotTM_reversible
+
+/-- **C5a（全證）**：字面機器級 shuttle 機 `bennettTM`（M3d，`ofPerm` 構造、
+`bennettTM_reversible` 已證，可逆性與微步排程語意無關）的組態動力學，被緊緻
+空間上的連續 ℝ-流經單射編碼模擬。
+
+**誠實界線**：此模擬的是 `bennettTM.step`（機器**本身**的動力學，含 M3d 現行
+排程）——其**可逆性**足以入流，這是承諾範圍 C0→C3 的字面機器頭條成果。
+「`bennettTM` **正確**模擬原機 `M`」（宏步引理 C4b）已 descope，不在此主張。 -/
+theorem bennettTM_suspension_simulates (M : BitTM) :
+    ∃ (X : Type) (_ : TopologicalSpace X) (_ : CompactSpace X)
+      (F : ContinuousFlowOn X) (enc : M.bennettTM.Cfg → X),
+      Simulates F M.bennettTM.step enc :=
+  reversibleTM_suspension_simulates M.bennettTM M.bennettTM_reversible
 
 /-! ### 任意（不可逆）位元機 → 流：Bennett 可逆化（M3c）推論
 
