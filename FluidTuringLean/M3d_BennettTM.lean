@@ -548,6 +548,85 @@ theorem ctrlP_dispatches :
     ctrlPFwd (false, false, false, false) .atMerge = MrgPhase.extCont ∧
     ctrlPFwd (false, true, false, false) .atMerge = MrgPhase.retCont := ⟨rfl, rfl⟩
 
+/-! ### 統一表：guard 帶位分支 + π 分派合進一張 per-profile 雙射表
+
+前面四機制分開驗；本節把**兩個分支機制**（guard 讀帶位 `ctrlG` + 合流 π 分派
+`ctrlP`）統一進**一張** `Profile → (Bool × UPhase) ≃ …`。統一相位 `UPhase` 走
+單趟 shuttle 週期：`ready→mstep→pushG→(guard b)→[pushM→ret→atMerge | atMerge]
+→(dispatch π)→[extCont | retCont]→ready`，離路徑的相位在該 (π,b) 區塊停 fixpoint。
+
+**可逆關鍵**：控制保持帶位與 `Profile`（皆 spectator），故對每 (`prof`, 帶位)
+各自是 `UPhase` 上置換（skew-product / parking）；`decide` 驗全 16 profile × 2 帶位
+互逆確認**兩分支同時開仍雙射**。
+
+**未含（誠實界線）**：(1) offset 鎖步已在 `ctrl0` 分開 demo、此表 offset 從略；
+(2) **傾倒迴圈**（重複 push 直到無標記）＝ `pushG` 入度 2（初入 vs 迴圈回入）——
+要 one-hot 環計數器破入度，而環計數器在 data 層、控制表單獨不雙射 ⟹ 這正是
+**已 descope 的 C4b 複合單射邊界**；本統一表為**單趟**（無迴圈），迴圈留 C4b。 -/
+
+/-- 統一相位（單趟 shuttle 週期 + 合流）。 -/
+inductive UPhase
+  | ready | mstep | pushG | pushM | ret | atMerge | extCont | retCont
+  deriving DecidableEq, Fintype, Repr
+
+/-- 統一相位轉移 σ（依 `π`=pathBit 與帶位 `b` 分支；離路徑相位 fixpoint）。 -/
+def uNext (pi b : Bool) : UPhase → UPhase
+  | .ready => .mstep
+  | .mstep => .pushG
+  | .pushG => if b then .pushM else .atMerge
+  | .pushM => if b then .ret else .pushM
+  | .ret => if b then .atMerge else .ret
+  | .atMerge => if pi then .retCont else .extCont
+  | .extCont => if pi then .extCont else .ready
+  | .retCont => if pi then .ready else .retCont
+
+/-- 統一相位轉移逆 σ⁻¹（逐 (π,b) 區塊反轉）。 -/
+def uPrev (pi b : Bool) : UPhase → UPhase
+  | .mstep => .ready
+  | .pushG => .mstep
+  | .pushM => if b then .pushG else .pushM
+  | .ret => if b then .pushM else .ret
+  | .atMerge => if b then .ret else .pushG
+  | .extCont => if pi then .extCont else .atMerge
+  | .retCont => if pi then .atMerge else .retCont
+  | .ready => if pi then .retCont else .extCont
+
+/-- 統一控制空間（帶位 × 統一相位；offset 從略見上）。 -/
+abbrev UCtrl : Type := Bool × UPhase
+
+/-- 統一控制表正向（保持帶位，相位走 `uNext prof.pathBit 帶位`）。 -/
+def ctrlUFwd (prof : Profile) (c : UCtrl) : UCtrl :=
+  (c.1, uNext prof.pathBit c.1 c.2)
+
+/-- 統一控制表反向。 -/
+def ctrlUBwd (prof : Profile) (c : UCtrl) : UCtrl :=
+  (c.1, uPrev prof.pathBit c.1 c.2)
+
+/-- 互逆（全 16 profile × 2 帶位 × 8 相位，`decide` —— 兩分支同開仍雙射）。 -/
+theorem ctrlUFwd_leftInv : ∀ (prof : Profile) (c : UCtrl),
+    ctrlUBwd prof (ctrlUFwd prof c) = c := by decide
+
+theorem ctrlUFwd_rightInv : ∀ (prof : Profile) (c : UCtrl),
+    ctrlUFwd prof (ctrlUBwd prof c) = c := by decide
+
+/-- **統一控制表：每 profile 一置換**（guard 帶位分支 + π 分派同開仍雙射）。 -/
+def ctrlU (prof : Profile) : UCtrl ≃ UCtrl :=
+  ctrlEquivOfInverse (ctrlUFwd prof) (ctrlUBwd prof)
+    (ctrlUFwd_leftInv prof) (ctrlUFwd_rightInv prof)
+
+/-- 統一表保持帶位。 -/
+theorem ctrlUFwd_preserves_bit : ∀ (prof : Profile) (c : UCtrl),
+    (ctrlUFwd prof c).1 = c.1 := by decide
+
+/-- **一張表同時做 guard 分支與 π 分派**（統一的健全性見證）：
+`pushG` 依帶位分岔（b→pushM / ¬b→atMerge），`atMerge` 依 π 分派（π→retCont / ¬π→extCont）。 -/
+theorem ctrlU_guard_and_dispatch :
+    ctrlUFwd (false, false, false, false) (true, .pushG) = (true, UPhase.pushM) ∧
+    ctrlUFwd (false, false, false, false) (false, .pushG) = (false, UPhase.atMerge) ∧
+    ctrlUFwd (false, false, false, false) (false, .atMerge) = (false, UPhase.extCont) ∧
+    ctrlUFwd (false, true, false, false) (false, .atMerge) = (false, UPhase.retCont) :=
+  ⟨rfl, rfl, rfl, rfl⟩
+
 /-! ## 機器級構造 -/
 
 namespace BitTM
