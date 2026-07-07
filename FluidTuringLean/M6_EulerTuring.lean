@@ -234,6 +234,15 @@ theorem ctrlDemoTM_suspension_simulates :
       Simulates F ctrlDemoTM.step enc :=
   reversibleTM_suspension_simulates ctrlDemoTM ctrlDemoTM_reversible
 
+/-- **C2 全 Profile 端到端（全證）**：`profile` 從狀態讀（非固定）的統一控制表
+機器 `ctrlFullTM`（M3d，`m = 7`、經 `ctrlSegment` 分派）被連續 ℝ-流模擬。
+guard 帶位分支 + π 合流分派**都在狀態層生效**的完整控制段 → 真可逆機 → 流。 -/
+theorem ctrlFullTM_suspension_simulates :
+    ∃ (X : Type) (_ : TopologicalSpace X) (_ : CompactSpace X)
+      (F : ContinuousFlowOn X) (enc : ctrlFullTM.Cfg → X),
+      Simulates F ctrlFullTM.step enc :=
+  reversibleTM_suspension_simulates ctrlFullTM ctrlFullTM_reversible
+
 /-! ### 任意（不可逆）位元機 → 流：Bennett 可逆化（M3c）推論
 
 `reversibleTM_suspension_simulates` 需要 `M.Reversible` 假設；M3c 的 history

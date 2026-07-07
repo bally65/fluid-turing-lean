@@ -712,6 +712,46 @@ def ctrlDemoTM : BitTM :=
 theorem ctrlDemoTM_reversible : ctrlDemoTM.Reversible :=
   BitTM.ofPerm_reversible 3 (ctrlDemoL (false, false, false, false)) (fun _ ↦ Dir.stay)
 
+/-! #### 全 Profile 參數化 C2：profile 從狀態讀（非固定）
+
+`ctrlDemoTM` 固定 profile 全零；此處把 `Profile`（4 位元）也放進狀態，`L` 從
+狀態讀 profile 再分派 —— 用 `ctrlSegment`（`Profile × UCtrl` 的單一置換）。
+狀態 = Profile(4 位) × UPhase(3 位) = 7 位。 -/
+
+/-- Profile ↔ 4 位元編碼（`decide` 驗雙射）。 -/
+def pBits : Profile ≃ (Fin 4 → Bool) where
+  toFun p := ![p.1, p.2.1, p.2.2.1, p.2.2.2]
+  invFun f := (f 0, f 1, f 2, f 3)
+  left_inv := by decide
+  right_inv := by decide
+
+/-- 7 位元狀態 ≃ Profile × UPhase。 -/
+def statePackU : (Fin 7 → Bool) ≃ (Profile × UPhase) :=
+  (bitsSplit 4 3).trans (Equiv.prodCongr pBits.symm uBits.symm)
+
+/-- 重排：`(Profile × UPhase) × 帶位 ≃ Profile × (帶位 × UPhase)`（= `ctrlSegment` 定義域）。 -/
+def shufU : ((Profile × UPhase) × Bool) ≃ (Profile × (Bool × UPhase)) where
+  toFun x := (x.1.1, (x.2, x.1.2))
+  invFun y := ((y.1, y.2.2), y.2.1)
+  left_inv _ := rfl
+  right_inv _ := rfl
+
+/-- 全 Profile 控制局部更新，共軛到 7 位元狀態：`L` 從狀態讀 profile、
+經 `ctrlSegment` 分派（保持 profile 與帶位），再打包回位元。 -/
+def ctrlFullL : ((Fin 7 → Bool) × Bool) ≃ ((Fin 7 → Bool) × Bool) :=
+  (Equiv.prodCongr statePackU (Equiv.refl Bool)).trans
+    (shufU.trans
+      (ctrlSegment.trans
+        (shufU.symm.trans (Equiv.prodCongr statePackU.symm (Equiv.refl Bool)))))
+
+/-- **全 Profile 統一控制表機器**（`m = 7`；profile 從狀態讀）：真可逆 BitTM。 -/
+def ctrlFullTM : BitTM :=
+  BitTM.ofPerm 7 ctrlFullL (fun _ ↦ Dir.stay)
+
+/-- **可逆性免費**：全 Profile 統一控制表機器可逆。 -/
+theorem ctrlFullTM_reversible : ctrlFullTM.Reversible :=
+  BitTM.ofPerm_reversible 7 ctrlFullL (fun _ ↦ Dir.stay)
+
 /-! ## 機器級構造 -/
 
 namespace BitTM
