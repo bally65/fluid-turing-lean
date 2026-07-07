@@ -181,6 +181,14 @@ def bufSplitPi (m : ℕ) : (Fin (m + 1 + 1) → Bool) ≃ (((Fin m → Bool) × 
   (bitsSplit (m + 1) 1).trans
     (Equiv.prodCongr (bufSplit m) (Equiv.funUnique (Fin 1) Bool))
 
+/-- 常數位向量拆分還是常數（`bitsSplit` 對 `fun _ ↦ c` 兩分量皆 `fun _ ↦ c`）。 -/
+theorem bitsSplit_const (a b : ℕ) (c : Bool) :
+    bitsSplit a b (fun _ ↦ c) = (fun _ ↦ c, fun _ ↦ c) := rfl
+
+/-- 空白全緩衝拆分：`bufSplitPi` 對常數 `false` = `((fun _ ↦ false, false), false)`。 -/
+theorem bufSplitPi_const_false (m : ℕ) :
+    bufSplitPi m (fun _ ↦ false) = ((fun _ ↦ false, false), false) := rfl
+
 /-! ## 相位與 offset 暫存器 -/
 
 /-- shuttle 機相位暫存器：5 位（32 槽；C rev.2 FSM 用 17 個）。 -/
@@ -1071,6 +1079,17 @@ theorem feistelCore_blank (q : Fin M.m → Bool) (a : Bool) :
     M.feistelCore ((q, (fun _ ↦ false, false)), a) = ((M.next q a, (q, a)), M.write q a) := by
   simp only [feistelCore, Equiv.coe_fn_mk, Bool.xor_false]
 
+/-- **feistelPiece 空白引理**：空白全緩衝上，`feistelPiece` 的工作狀態 = `M.next q a`、
+帶位 = `M.write q a` —— 把有界宏步顯式對上 M.step 的局部更新。 -/
+theorem feistelPiece_blank (q : Fin M.m → Bool) (a : Bool) :
+    (M.feistelPiece ((q, M.blankBuf), a)).1.1 = M.next q a ∧
+    (M.feistelPiece ((q, M.blankBuf), a)).2 = M.write q a := by
+  have hbuf : (bufSplitPi M.m) M.blankBuf = ((fun _ ↦ false, false), false) :=
+    bufSplitPi_const_false M.m
+  constructor <;>
+    simp only [feistelPiece, feistelCore, Equiv.trans_apply, Equiv.prodCongr_apply, Prod.map_apply,
+      Equiv.coe_refl, id_eq, parkOff, Equiv.coe_fn_mk, Equiv.coe_fn_symm_mk, hbuf, Bool.xor_false]
+
 /-- **單步計算引理（C4b 核心之一）**：在 `mstep` 相位，統一單步對工作分量
 做 Feistel M-step（推進 M 的計算一步），並把相位推進到 `pushG`。
 `(工作, 帶位)` 經 `feistelPiece` 更新、`Profile` 不變、相位 `mstep → pushG`。 -/
@@ -1099,6 +1118,19 @@ theorem unifiedStepL_macro2 (mb : M.MBuf) (prof : Profile) (b : Bool) :
       (((M.feistelPiece (mb, b)).1, (prof, UPhase.pushG)), (M.feistelPiece (mb, b)).2) := by
   change M.unifiedStepL (M.unifiedStepL ((mb, (prof, UPhase.ready)), b)) = _
   rw [M.unifiedStepL_ready, M.unifiedStepL_mstep]
+
+/-- **有界宏步顯式對上 M.step（C4b 有界版收尾）**：從**乾淨起點**（空白緩衝、
+`ready` 相位）出發，字面統一機器 2 個微步做 M 的實際局部更新 —— 工作狀態
+= `M.next q a`、帶位 = `M.write q a`、相位到 `pushG`（緩衝分量 = Bennett 垃圾、
+存在外顯）。這是「字面機器 2 步算 M 一步」的完整見證（單趟、無傾倒迴圈）。 -/
+theorem unifiedStepL_macro2_blank (q : Fin M.m → Bool) (prof : Profile) (a : Bool) :
+    ((M.unifiedStepL)^[2] (((q, M.blankBuf), (prof, UPhase.ready)), a)).1.1.1 = M.next q a ∧
+      ((M.unifiedStepL)^[2] (((q, M.blankBuf), (prof, UPhase.ready)), a)).2 = M.write q a ∧
+        ((M.unifiedStepL)^[2] (((q, M.blankBuf), (prof, UPhase.ready)), a)).1.2 =
+          (prof, UPhase.pushG) := by
+  rw [M.unifiedStepL_macro2]
+  obtain ⟨h1, h2⟩ := M.feistelPiece_blank q a
+  exact ⟨h1, h2, rfl⟩
 
 end BitTM
 
