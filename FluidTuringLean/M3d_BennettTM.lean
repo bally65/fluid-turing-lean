@@ -639,6 +639,26 @@ def ctrlSegment : (Profile × UCtrl) ≃ (Profile × UCtrl) :=
 @[simp] theorem ctrlSegment_fiber (prof : Profile) (c : UCtrl) :
     ctrlSegment (prof, c) = (prof, ctrlUFwd prof c) := rfl
 
+/-- **shuttle 週期閉合**（`decide`）：統一控制表從 `ready` 出發，帶位=1 走
+完整推送週期（7 步 `ready→mstep→pushG→pushM→ret→atMerge→extCont→ready`），
+帶位=0 走短週期（5 步，跳過 pushM/ret 直接合流）—— 皆回到 `ready`。
+排程有意義的前提（cycle 真閉合、非發散），C3 單步不變量歸納的骨架。 -/
+theorem ctrlU_cycle_closes :
+    (ctrlUFwd (false, false, false, false))^[7] (true, .ready) = (true, UPhase.ready) ∧
+    (ctrlUFwd (false, false, false, false))^[5] (false, .ready) = (false, UPhase.ready) := by
+  decide
+
+/-- **週期真的經過推送相位**（帶位=1 時 shuttle 確實 push）：第 3 步在 `pushM`。
+排除週期退化成空轉的健全性檢查。 -/
+theorem ctrlU_cycle_visits_push :
+    (ctrlUFwd (false, false, false, false))^[3] (true, .ready) = (true, UPhase.pushM) := by
+  decide
+
+/-- **短週期真的跳過推送**（帶位=0 時直接合流）：第 3 步已在 `atMerge`（非 pushM）。 -/
+theorem ctrlU_short_cycle_skips_push :
+    (ctrlUFwd (false, false, false, false))^[3] (false, .ready) = (false, UPhase.atMerge) := by
+  decide
+
 /-! ## 機器級構造 -/
 
 namespace BitTM
