@@ -4,6 +4,22 @@
 **Euler 穩態解（Beltrami 場）的動力學具備圖靈完備性**
 （對應 Cardona–Miranda–Peralta-Salas–Presas 2021, PNAS 118(19), Theorem 1）。
 
+## ⚠️ 誠實範圍聲明（2026-07-08）——這個形式化證了什麼、沒證什麼
+
+**已證（零 sorry、僅標準三公理）**：**離散→連續模擬鏈**——圖靈機/可逆機器/generalized
+shift 的離散計算，可被**緊空間上的連續 ℝ-流**經單射編碼模擬（M1-M4 + 懸掛 + 康托爾編碼
++ Bennett 可逆化，全機器驗證）。這是真實、非空洞的形式化貢獻。
+
+**未證（誠實）**：把該連續流實現為**真實的 Euler-Beltrami 流**（真黎曼 3-流形上的真
+`curl`/`div`）。本專案的 `VectorCalculus3` 是**抽象簽名**（curl/div 未詮釋），在此層
+`IsBeltrami` **trivially 可滿足**（`reebBeltramiRealization_trivial` 機器證明此空洞性）。
+故主定理 `euler_flow_turing_complete`（條件於 `ReebBeltramiRealization` 假設、零 sorry）
+**本身不建立真實流體的圖靈完備**——真物理內容需真微分幾何詮釋（mathlib 無），即
+Cardona et al. 2021 紙上證的、本專案未形式化的部分。
+
+**一句話誠實讀法**：離散計算可被連續動力系統模擬＝**已全證**；那系統是真 Euler-Beltrami
+流＝**紙上幾何輸入（明寫假設）**。不誇大成「已證真流體圖靈完備」。
+
 - Lean `v4.32.0-rc1` + mathlib（pin 於 `lakefile.toml`）
 - 建置：`lake build`（首次先 `lake exe cache get`）
 
