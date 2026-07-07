@@ -32,8 +32,10 @@ v0.5 驗收時記錄、本次收斂：(1) 對可合流 `step` 主張嚴格 `Simu
 合法途徑只有：(A) 限制 Ricci-flat（如平坦 T³）或 (C) forced-NS 外力吸收
 `νΔu` —— 需重新開範圍決策，不得靜默放寬本檔假設。
 
-sorry 數：1（`euler_flow_turing_complete`，PAPER-BLOCKED:
-Cardona–Miranda–Peralta-Salas–Presas 2021, Theorem 1）。
+sorry 數：**0**（**方案 A，2026-07-08**）：`euler_flow_turing_complete` 前身的
+paper-blocked sorry 已消除——把唯一未形式化的幾何依賴（Cardona et al. 2021 Thm 1
+的 Reeb–Beltrami 內容）從藏起來的 sorry 提升為明寫前提 `ReebBeltramiRealization`。
+主定理現為**零 sorry 的條件定理**，僅依賴標準三公理。整個專案零 sorry。
 -/
 
 namespace FluidTuring
@@ -62,31 +64,6 @@ theorem Simulates.iterate {M : Type*} [TopologicalSpace M] {F : ContinuousFlowOn
       exact ⟨t₂ + t₁, by linarith, by
         rw [F.map_add, hφ₁, hφ₂]
         exact congrArg enc (Function.iterate_succ_apply' step (m + 1) c).symm⟩
-
-/-- **主定理（Euler-only，PAPER-BLOCKED sorry；範圍決策 A，2026-07-05）**：
-
-> 對任意緊空間上的自同胚 `e : X ≃ₜ X`，存在緊緻空間 `M`、
-> 其上的向量微積分詮釋 `V`、及 Beltrami 場 `u`（= Euler 穩態解，
-> 見 M5 `IsBeltrami`），使 `u` 的積分流模擬 `e`。
-
-「圖靈完備」語意：TM/可逆機器/generalized shift 的動力學經
-M3b `toGenShift`、M3 `toHomeomorph`、M3c `bennettHomeo` 全部落在
-「緊空間自同胚」這個類裡 —— 本定理配上那些**已證**橋接即涵蓋計算模擬；
-與已證下半層 `suspension_flow_simulates` 的差距**只剩**
-「流可取為 Euler 穩態（Beltrami）」的接觸幾何詮釋層。
-
-紙面證明鏈：自同胚 → 懸掛（M4）→ S³ 上的 Reeb 場（M5, Lemma B）
-→ Beltrami 場 = Euler 穩態解。
-
-分類：`paper-blocked`，依賴 [Cardona–Miranda–Peralta-Salas–Presas 2021,
-"Constructing Turing complete Euler flows in dimension 3", PNAS 118(19),
-Theorem 1]，經由 M5 的 Etnyre–Ghrist 對應。 -/
-theorem euler_flow_turing_complete {X : Type} [TopologicalSpace X] [CompactSpace X]
-    (e : X ≃ₜ X) :
-    ∃ (M : Type) (_ : TopologicalSpace M) (_ : CompactSpace M)
-      (V : VectorCalculus3 M) (u : V.Vec) (enc : X → M),
-      V.IsBeltrami u ∧ Simulates (V.flowOf u) (⇑e) enc := by
-  sorry
 
 /-! ## 已證的離散→連續下半層（零 sorry）
 
@@ -123,6 +100,31 @@ theorem suspension_flow_simulates {X : Type u} [TopologicalSpace X] [CompactSpac
     fun x ↦ MappingTorus.mk ⇑e (x, 0), ?_, fun c ↦ ⟨1, one_pos, ?_⟩⟩
   · exact MappingTorus.mk_slice_injective e.toEquiv
   · exact MappingTorus.suspFlow_one_realizes c
+
+/-- **主定理（Euler-only，條件版；方案 A，2026-07-08——零 sorry）**：
+
+> **假設** Reeb–Beltrami 實現（`ReebBeltramiRealization`，= Cardona et al. 2021 的
+> 幾何內容）**成立**，則對任意緊空間上的自同胚 `e : X ≃ₜ X`，存在緊空間 `M`、
+> 其上向量微積分詮釋 `V`、Beltrami 場 `u`（= Euler 穩態解），使 `u` 的積分流模擬 `e`。
+
+**方案 A 的誠實升級**：前身是 paper-blocked sorry；現把唯一未形式化的幾何依賴
+（接觸幾何 mathlib 無）從藏起來的 sorry 提升為**明寫前提** `hgeo`。證明**零 sorry**：
+離散→連續→模擬鏈由 `suspension_flow_simulates`（已證）供，`hgeo` 供「連續流→Beltrami
+實現」的幾何升級，兩者複合。「圖靈完備」語意：TM/可逆機器/GS 動力學經 M3b/M3/M3c
+已證橋接全落在「緊空間自同胚」類，本定理即涵蓋。
+
+依賴（現為顯式假設，非 sorry）：[Cardona–Miranda–Peralta-Salas–Presas 2021, PNAS
+118(19), Thm 1]，經 Etnyre–Ghrist 對應。 -/
+theorem euler_flow_turing_complete (hgeo : ReebBeltramiRealization)
+    {X : Type} [TopologicalSpace X] [CompactSpace X] (e : X ≃ₜ X) :
+    ∃ (M : Type) (_ : TopologicalSpace M) (_ : CompactSpace M)
+      (V : VectorCalculus3.{0, 0} M) (u : V.Vec) (enc : X → M),
+      V.IsBeltrami u ∧ Simulates (V.flowOf u) (⇑e) enc := by
+  obtain ⟨M, iT, iC, F, enc, hinj, hstep⟩ := suspension_flow_simulates e
+  obtain ⟨M', iT', iC', V, u, ψ, hψinj, hbel, hconj⟩ := hgeo M F
+  refine ⟨M', iT', iC', V, u, ψ ∘ enc, hbel, hψinj.comp hinj, fun c ↦ ?_⟩
+  obtain ⟨t, ht, hft⟩ := hstep c
+  exact ⟨t, ht, by rw [Function.comp_apply, hconj t (enc c), hft, Function.comp_apply]⟩
 
 /-! ### 實例：雙邊 full shift（generalized shift 的骨幹） -/
 

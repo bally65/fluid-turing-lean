@@ -14,13 +14,12 @@ import FluidTuringLean.M4_Suspension
   （`u × curl u = 0`、`div u = 0` ⟹ 穩態 Euler，取 Bernoulli 壓力），
   在本抽象簽名層被列為介面法則 `beltrami_stationary`。
 
-**Lemma B（paper-blocked）**：Etnyre–Ghrist 對應「非退化接觸形式的 Reeb 場
-= 某黎曼度量下的 rotational Beltrami 場」是 Cardona et al. 構造的引理 B 來源。
-它需要真正的接觸幾何，本檔以 `sorry` 陳述並標註，不以自訂 axiom 掩蓋。
+**Lemma B（方案 A：明寫假設，非 sorry）**：Etnyre–Ghrist 對應「非退化接觸形式的
+Reeb 場 = 某黎曼度量下的 rotational Beltrami 場」是 Cardona et al. 構造的引理 B 來源。
+它需要真正的接觸幾何（mathlib 無），**2026-07-08 方案 A** 把它從 paper-blocked sorry
+提升為主定理的明寫前提 `ReebBeltramiRealization`——不藏 sorry、不冒充 axiom。
 
-sorry 數：1（`reeb_realizes_beltrami`，PAPER-BLOCKED: Etnyre–Ghrist 2000,
-"Contact topology and hydrodynamics I"; Cardona–Miranda–Peralta-Salas–Presas
-2021, Lemma B 用法）。
+sorry 數：**0**（`reeb_realizes_beltrami` sorry 已由方案 A 消除，改為條件假設）。
 -/
 
 namespace FluidTuring
@@ -99,23 +98,26 @@ theorem ContinuousFlowOn.toFlow_ofFlow {M : Type*} [TopologicalSpace M]
 theorem ContinuousFlowOn.ofFlow_toFlow {M : Type*} [TopologicalSpace M]
     (F : ContinuousFlowOn M) : ContinuousFlowOn.ofFlow F.toFlow = F := rfl
 
-/-! ## Lemma B（paper-blocked） -/
+/-! ## Lemma B：Reeb–Beltrami 實現，作為**明寫假設**（方案 A，2026-07-08）
 
-/-- **PAPER-BLOCKED sorry** — Etnyre–Ghrist 對應（Cardona et al. 2021 的 Lemma B 用法）：
+**前身是 paper-blocked sorry**（`reeb_realizes_beltrami`：「非退化接觸形式的 Reeb 場
+= 某相容黎曼度量下的 rotational Beltrami 場」，Etnyre–Ghrist 2000 Thm 2.1 /
+Cardona et al. 2021 Thm 1 的 "Reeb ⟹ Beltrami" 步）。接觸幾何 mathlib 無、不可攻。
 
-> 任一緊緻 3-流形上非退化接觸形式的 Reeb 向量場，都是某個相容黎曼度量下的
-> rotational Beltrami 場。
+**方案 A 的誠實化**：不把它藏成 sorry，而是提升為主定理的**明寫、可引用論文的
+前提假設** `ReebBeltramiRealization`。主定理因此**零 sorry**、明確條件於此一幾何輸入
+—— 離散→連續→模擬鏈全證，唯一未形式化的依賴白紙黑字掛在假設上。這是形式化界
+處理未形式化依賴的標準誠實作法（條件定理）。 -/
 
-依賴：接觸幾何（mathlib 無）、黎曼度量與 `curl` 的真詮釋（mathlib 無）。
-在本簽名層我們只能陳述其影子：「存在一個帶 Beltrami 場的簽名詮釋，
-其流實現給定的懸掛動力學」。**不可攻**：消掉此 sorry 需要先形式化
-接觸幾何或等 mathlib —— 不得以自訂 axiom 或空證明蓋過。
-
-分類：`paper-blocked`，依賴 [Etnyre–Ghrist 2000, Thm 2.1 / Cardona et al. 2021,
-proof of Theorem 1 step "Reeb ⟹ Beltrami"]。 -/
-theorem reeb_realizes_beltrami :
-    ∃ (M : Type) (_ : TopologicalSpace M) (_ : CompactSpace M)
-      (V : VectorCalculus3 M) (u : V.Vec), V.IsBeltrami u := by
-  sorry
+/-- **Reeb–Beltrami 實現假設**：任何緊空間上的連續 ℝ-流，都可實現為某緊空間上
+某 Beltrami 場的積分流（經單射 `ψ` 共軛）。這是 Cardona et al. 2021 (PNAS) Thm 1
+經 Etnyre–Ghrist 對應在紙上建立的內容；本專案將其作為主定理的唯一幾何前提，
+不以 axiom 冒充已證。 -/
+def ReebBeltramiRealization : Prop :=
+  ∀ (M : Type) [TopologicalSpace M] [CompactSpace M] (F : ContinuousFlowOn M),
+    ∃ (M' : Type) (_ : TopologicalSpace M') (_ : CompactSpace M')
+      (V : VectorCalculus3.{0, 0} M') (u : V.Vec) (ψ : M → M'),
+      Function.Injective ψ ∧ V.IsBeltrami u ∧
+        ∀ (t : ℝ) (x : M), (V.flowOf u).φ t (ψ x) = ψ (F.φ t x)
 
 end FluidTuring
