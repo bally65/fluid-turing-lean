@@ -627,6 +627,18 @@ theorem ctrlU_guard_and_dispatch :
     ctrlUFwd (false, true, false, false) (false, .atMerge) = (false, UPhase.retCont) :=
   ⟨rfl, rfl, rfl, rfl⟩
 
+/-- **控制段作為單一置換**（C2 接口物件）：`Profile` 參數化分派經 `prodShear`
+組成 `(Profile × UCtrl) ≃ (Profile × UCtrl)` —— 保持 `Profile`（spectator）、
+纖維套 `ctrlU prof`。可逆性由 `prodShear`（每纖維雙射 ⟹ 整體置換）顯式保證，
+與 milestone A 的 `phaseDispatch` 同手法。這是 C2 把控制段接進 `shuttleL` 時
+複合的那個 `Equiv`。 -/
+def ctrlSegment : (Profile × UCtrl) ≃ (Profile × UCtrl) :=
+  Equiv.prodShear (Equiv.refl Profile) ctrlU
+
+/-- 控制段保持 `Profile`（spectator —— 緩衝/剖面不被控制段改）。 -/
+@[simp] theorem ctrlSegment_fiber (prof : Profile) (c : UCtrl) :
+    ctrlSegment (prof, c) = (prof, ctrlUFwd prof c) := rfl
+
 /-! ## 機器級構造 -/
 
 namespace BitTM
