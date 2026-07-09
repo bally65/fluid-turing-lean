@@ -1,5 +1,6 @@
 import Mathlib.Tactic
 import Mathlib.Data.Fin.Basic
+import Mathlib.Computability.TuringMachine.ToPartrec
 
 /-!
 # Module 17 — TM2→BitTM 帶佈局基元（(ii) B2a 第一塊）
@@ -51,5 +52,34 @@ theorem multiTrackEnc_injective {n : ℕ} {tr tr' : Fin (n + 1) → ℤ → Bool
   funext t k
   have := congrFun h ((n + 1) * k + (t : ℤ))
   rwa [multiTrackEnc_get, multiTrackEnc_get] at this
+
+/-! ## Γ' 位編碼：TM2 堆疊字母 `Γ'`（4 符號）↔ 2 位元
+
+mathlib `Turing.PartrecToTM2.Γ'` = `{consₗ, cons, bit0, bit1}`（4 符號、Fintype）。
+編碼成 2 位元供帶佈局（每堆疊格 = 2 個 Bool 軌）。 -/
+
+open Turing.PartrecToTM2 in
+/-- Γ' → 2 位元。 -/
+def Γ'toBits : Γ' → Bool × Bool
+  | .consₗ => (false, false)
+  | .cons  => (false, true)
+  | .bit0  => (true, false)
+  | .bit1  => (true, true)
+
+open Turing.PartrecToTM2 in
+/-- 2 位元 → Γ'（手寫逆）。 -/
+def bitsToΓ' : Bool × Bool → Γ'
+  | (false, false) => .consₗ
+  | (false, true)  => .cons
+  | (true, false)  => .bit0
+  | (true, true)   => .bit1
+
+open Turing.PartrecToTM2 in
+/-- **Γ' ≃ 2 位元**（TM2 堆疊字母的位帶編碼）。 -/
+def Γ'BitEquiv : Γ' ≃ (Bool × Bool) where
+  toFun := Γ'toBits
+  invFun := bitsToΓ'
+  left_inv g := by cases g <;> rfl
+  right_inv := by rintro ⟨a, b⟩; cases a <;> cases b <;> rfl
 
 end FluidTuring
