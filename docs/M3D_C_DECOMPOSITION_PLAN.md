@@ -356,4 +356,8 @@ naive `(相位×位置)` 模型把端點相位跨全位置塌縮=非置換;`down
 ## 方案 C 執行進度（2026-07-08）
 - **C-α 固定頭 TM 模型 ✅**（commit 3c7cae0，新檔 `M3e_FixedTM.lean`）：`FixedTM`（狀態位向量+靜止帶 ℤ→Bool+頭位置 ℤ）+ `step`（讀頭格/寫/換態/移頭）+ `step_tape_at_head`/`step_tape_off_head`（頭格寫入正確、頭外不動）。零 sorry。**兩流 crux 鑰匙落地**：帶靜止使垃圾可堆疊。
 - 走位地基（M3d 已驗）：`walk_reversible`（走位是置換）+ `walk_roundtrip_closes`（淨零往返閉合）。
-- **剩**：C-β 靜止帶佈局+走位 macrostep、C-γ 雙標記走位 in-degree-1（關鍵閘、需參數化證明）、C-δ 宏步正確+接 M6。多日 research。
+- **架構基線 ✅**（commit 092bb9d，M3e docstring）：3 軌帶佈局（格 k ↔ 位 3k/3k+1/3k+2 = M 帶/頭標記/垃圾）+ macrostep 6 微步序列（home→走到頭標記→M-step→走到 frontier→傾倒→走回淨零）+ 逐塊實作順序。**互鎖硬核先定案整體、再逐塊**（rev.1-4 教訓）。
+- **C-β 續 3 軌編碼 ✅**（commit 092bb9d）：`fixedEnc3`（帶/頭標記/垃圾 交錯到一條 ℤ→Bool）+ `fixedEnc3_zero/one/two`（三軌取回）+ `fixedEnc3_injective`（三軌 → (t,h,g) 唯一決定）。零 sorry。
+- **C-γ 走位引擎 ✅**（commit 092bb9d）：`walkTM` 雙標記彈跳走位 BitTM（`ofPerm` 建）。**關鍵洞見**=無界走位的可逆性是**有限局部置換檢查、非無界軌跡歸納**，故 `walkTM_reversible` 經 `ofPerm_reversible` **一次付清（免費）**。`walkStep(p,a)=(xor p a,a)` CNOT 式對合。語意 decide 驗：空白格續走同向 / 標記格反向（`walkTM_blank_goR`/`walkTM_marker_goR`/`walkTM_goL_cases`）。零 sorry、標準三公理。
+  - **註**：C-γ 原憂「in-degree-1 需參數化證明」——實際上 `ofPerm` 已把可逆性做成一次付清的置換打包，走位可逆性免費；**剩下的難點下移到 C-δ**（走位語意正確地接合 M-step + 垃圾傾倒 + 宏步歸納）。
+- **剩**：C-δ 宏步正確+接 M6（macrostep 可逆+精確模擬一 M-step、乾淨組態→∃n 微步→下一乾淨組態、鏡射 `bennettAut_iterate`；接 M6 `reversibleTM_suspension_simulates`）。**互鎖歸納、多日 research**——垃圾軌延伸排程 + 走位到 frontier + M-step 接合要一起設計。
