@@ -141,4 +141,41 @@ theorem stackDecode_stackContent (s : List Γ') :
     rw [show ((⟨n, by simpa [stackDecode] using h1⟩ : Fin s.length) : ℤ) = (n : ℤ) from rfl,
       stackContent_get s n hn, Equiv.symm_apply_apply]
 
+/-! ## 單堆疊-op 的編碼層正確性（(ii) B2a 子塊 2）
+
+M_tr 的堆疊微步（push / pop）在位帶上 = **有界局部編輯 + 標記移一格**。本塊證這個局部編輯
+**在編碼層是對的**：push 只寫頂位、下層原封不動；pop（`dropLast`）留住下層；且 decode 忠實
+還原 push/pop 後的堆疊。這是「編輯**該**產生什麼」的規格——BitTM 走位+位編輯的機械（子塊 3）
+以此為正確性目標。 -/
+
+open Turing.PartrecToTM2 in
+/-- **push 下層不變**：`j < len` 的格不受 append 影響（push 只動頂位 `len`，見
+`stackContent_push_top`）。 -/
+theorem stackContent_push_lower (s : List Γ') (x : Γ') {j : ℤ} (h : j.toNat < s.length) :
+    stackContent (s ++ [x]) j = stackContent s j := by
+  simp only [stackContent]
+  rw [List.getD_append s [x] Γ'.consₗ j.toNat h]
+
+open Turing.PartrecToTM2 in
+/-- **pop 留住下層**：`dropLast` 對 `j < len-1` 的格與原堆疊同（pop 只砍頂符號 + 移標記）。 -/
+theorem stackContent_dropLast_eq (s : List Γ') {j : ℤ} (h : j.toNat < s.length - 1) :
+    stackContent s.dropLast j = stackContent s j := by
+  simp only [stackContent]
+  rw [List.getD_eq_getElem?_getD, List.getD_eq_getElem?_getD, List.getElem?_dropLast]
+  simp [h]
+
+open Turing.PartrecToTM2 in
+/-- **push 後解碼忠實**：長度 `len+1` + push 後的內容軌 → 唯一還原 `s ++ [x]`。 -/
+theorem stackDecode_push (s : List Γ') (x : Γ') :
+    stackDecode (s.length + 1) (stackContent (s ++ [x])) = s ++ [x] := by
+  have := stackDecode_stackContent (s ++ [x])
+  simpa using this
+
+open Turing.PartrecToTM2 in
+/-- **pop 後解碼忠實**：長度 `len-1` + pop 後的內容軌 → 唯一還原 `s.dropLast`。 -/
+theorem stackDecode_pop (s : List Γ') :
+    stackDecode (s.length - 1) (stackContent s.dropLast) = s.dropLast := by
+  have := stackDecode_stackContent s.dropLast
+  rwa [List.length_dropLast] at this
+
 end FluidTuring
