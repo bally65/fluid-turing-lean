@@ -1,4 +1,5 @@
 import FluidTuringLean.M3b_ReversibleTM
+import FluidTuringLean.M3d_BennettTM
 
 /-!
 # Module 3e — 固定頭圖靈機（方案 C 地基，C-α，2026-07-08）
@@ -411,5 +412,38 @@ def trackWalkTM (t : Fin 4) : BitTM := BitTM.ofPerm 3 (trackWalkL t) trackWalkMu
 （含穿越 run，已 `trackWalk_reversible` decide 裁為置換）的無界軌跡可逆性一次付清。 -/
 theorem trackWalkTM_reversible (t : Fin 4) : (trackWalkTM t).Reversible :=
   BitTM.ofPerm_reversible 3 (trackWalkL t) trackWalkMu
+
+/-! ### C-δ：deposit 迴圈本體（ring-controlled，2026-07-09，對抗設計艦隊 wf_a19b206c 修法）
+
+設計艦隊揪出原「spectator ringAtZero + decide-on-Profile」deposit 機制**錯**（ring 計數器在
+data 層、Profile 1-bit 脫鉤→非單射，= M3d:570-573 已 descope 的 C4b 複合單射邊界）。**修法（驗
+2）= ring-controlled**：deposit 迴圈本體 = 一次 tick 復用 `garbagePiece` 的原語（`swapHead`
+buffer↔帶位交換 + `rotBuf` buffer 旋轉）**加 `finRotate` 推進 ring**，全是已證 `Equiv` 的複合
+⟹ 本體自動是 `Equiv` ⟹ **可逆免費**（無 decide-on-Profile、無脫鉤覆寫）。ring(m+1) 驅動終止
+（滿一圈回 home）當上層 `prodShear` gate（下階）。狀態 = `((ring × buffer) × 帶位)`。 -/
+
+/-- **deposit 迴圈本體**（ring-controlled per-tick `Equiv`）：`finRotate` 推進 ring；
+`swapHead`+`rotBuf`（= `garbagePiece` 的原語）把 buffer 首位搬上帶位、buffer 旋轉一格。
+複合已證 `Equiv` ⟹ 自身 `Equiv` ⟹ 可逆免費（艦隊修法的核心：ring 真推進、非脫鉤 1-bit）。 -/
+def depositTick (m : ℕ) :
+    ((Fin (m + 1) × (Fin (m + 1) → Bool)) × Bool) ≃ ((Fin (m + 1) × (Fin (m + 1) → Bool)) × Bool) :=
+  (Equiv.prodAssoc (Fin (m + 1)) (Fin (m + 1) → Bool) Bool).trans
+    ((Equiv.prodCongr (finRotate (m + 1))
+        ((swapHead m).trans (Equiv.prodCongr (rotBuf m) (Equiv.refl Bool)))).trans
+      (Equiv.prodAssoc (Fin (m + 1)) (Fin (m + 1) → Bool) Bool).symm)
+
+/-- **語意**：ring 分量每 tick 由 `finRotate` 推進（真推進、非脫鉤旗標）——這是艦隊修法
+相對「spectator ringAtZero」的關鍵差異。 -/
+theorem depositTick_ring (m : ℕ) (r : Fin (m + 1)) (buf : Fin (m + 1) → Bool) (a : Bool) :
+    (depositTick m ((r, buf), a)).1.1 = finRotate (m + 1) r := rfl
+
+/-- **語意**：帶位分量取回 buffer 首位（`garbagePiece` 的搬運：`swapHead` 令帶位 ← buffer[0]）
+——一 tick 搬一位記錄上帶。 -/
+theorem depositTick_tape (m : ℕ) (r : Fin (m + 1)) (buf : Fin (m + 1) → Bool) (a : Bool) :
+    (depositTick m ((r, buf), a)).2 = buf 0 := rfl
+
+/-- deposit 迴圈本體可逆（免費，`Equiv` 自帶逆 `symm`）——無界 deposit 深度的可逆性一次付清。 -/
+theorem depositTick_symm_apply (m : ℕ) (x) :
+    (depositTick m).symm (depositTick m x) = x := (depositTick m).symm_apply_apply x
 
 end FluidTuring

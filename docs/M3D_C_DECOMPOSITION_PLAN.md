@@ -382,3 +382,19 @@ naive `(相位×位置)` 模型把端點相位跨全位置塌縮=非置換;`down
 - **frontier-find 真牆已 decide 機器化解 ✅（commit 91890ee）**：唯一確認真牆的前提=**memoryless 走位**（穿越相同標記 run 需 self-loop→鴿籠吃唯一前像槽→非置換）。化解=走位帶 **offset-mod-4 計數器**（=帶位址 mod4=fixedEnc4 軌別）：穿越非目標軌的 1 變 `(dir,off,a)→(dir,off±1,a)` 的 offset 遞增雙射（**非 self-loop→鴿籠消失**）；目標=唯一 sentinel，`(off=t ∧ a)` 偵測、不需 run-length。`trackWalkFwd/Bwd`+**`trackWalk_reversible` decide 全 64 例裁互逆=in-degree-1**+`trackWalkEquiv`。**機器背書=該牆對 memoryless 走位成立、對 offset-augmented 走位不成立**（正是艦隊 deposit/completeness 複驗者收斂的 sentinel 修法之走位側）。零 sorry、標準三公理。
 - **走位升級真 BitTM ✅（commit faf48d1）**：`trackWalk_cross`/`trackWalk_bounce`（wall-dodge 語意顯式化：非目標軌無論讀位都 directional cross、目標軌唯一標記才翻向）+ `packCtrl`/`unpackCtrl`（(方向×軌別)≃3 位元，`pack_unpack` decide 驗）+ `ctrlBits`/`trackWalkL`/`trackWalkMu` + **`trackWalkTM t = ofPerm 3 (trackWalkL t) trackWalkMu` = 真可逆 BitTM**（`t=1` 走頭標記、`t=3` 走 sentinel），`trackWalkTM_reversible` 經 `ofPerm_reversible` 免費。
 - **仍待（多日、有界非牆）**：記錄寬 m+1 打包 + 有界複製相位、deposit in-degree、宏步 soundness 歸納（乾淨組態→∃n 微步→下一乾淨組態、接 M6 `reversibleTM_suspension_simulates`）。
+
+### C-δ 宏步組裝對抗設計裁決 + 收斂設計（2026-07-09，艦隊 wf_a19b206c-eb0，6 agents/839k tok）
+
+3 藍圖（reuse-maximal / decide-first / induction-first）各對抗驗 deposit in-degree + 歸納閉合。**三驗一致：P1/P2 皆無「無界量塞不進 Fintype」牆**（第 3 次確認 C-δ 可建；固定頭殺兩流 crux、offset 計數器殺穿越 run skip-count、唯一 sentinel + 固定 m+1 ring 殺 deposit skip-count，皆 local 機器級已驗）。**找到可修的洞（非牆）**：
+- **deposit 機制錯（驗 1/2）**：藍圖「spectator ringAtZero + decide-on-Profile 表（照抄 ctrlU）」**不成立**——ring 計數器（mod m+1、m-相依）在 data 層，Profile 只讀 1-bit `ringAtZero`（M3d:339）脫鉤，同步它需非單射覆寫 → L 非 Equiv。此即 M3d:570-573 已 descope 的 C4b 複合單射邊界。
+- **修法（驗 2，精確）= ring-CONTROLLED prodShear**：ring（m+1 態）當 base、`g_true`/`g_false` 兩相位置換當 fiber，gate 讀真 ring 的 atZero，是 `prodShear` 通用引理可證的真 Equiv（**非** decide over m 態；decide 只留 O(1) 相位置換）。
+- **stride 幾何（驗 3）**：deposit 是 ~5w 微步（garbagePiece 只在 offset=2 觸發），mod-5 offset 計數器 NESTED mod-(m+1) ring 計數器，皆有界。「w 微步/單 ring」描述錯、in-degree-1 仍成立。
+- **多日真 crux（皆無牆、三驗同意）**：變長走位可達性歸納（走到唯一標記於資料相依距離 ~5d、net-zero 閉合）= Int 算術參數化歸納，repo 只有定長 toy decide（walk_reaches_frontier 5 步）。這是核心多日 research。
+
+**收斂設計決策（依裁決定、移除開放項）**：
+1. **砍 home 軌**：`ready` co-locate 在頭格、回程走頭標記（t=1）即可，**4 軌 fixedEnc4 夠**、不建 fixedEnc5（驗 3 hole 2）。
+2. **無 π、buffer = m+1**（固定頭 sentinel 單調只進不退、無 extend/retract 合流→π 不需；decide-confirmable）。
+3. **deposit = ring(m+1)-controlled prodShear**，garbagePiece 在 offset=2 觸發、ring 驅動終止；復用 swapHead/rotBuf/finRotate（皆已證 Equiv）。
+4. **M-step 要 bundle 頭標記 ±1 遷移**（驗 3 hole 3：feistelPiece_blank 只做 track0/state、沒搬頭標記）。
+5. **IsClean 要顯式含「兩計數器（ring mod m+1、offset mod 5）在迴圈外皆歸 home」**（驗 3 hole 5，否則 decide 如 rev.1-3 失敗）。
+6. **立即可建（三驗同意 mechanical）**：unconditional 半邊 = fixedC := ofPerm → 可逆免費 → suspension = literal copy of bennettTM_suspension_simulates。
