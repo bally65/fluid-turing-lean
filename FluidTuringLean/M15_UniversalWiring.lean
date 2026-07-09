@@ -1,5 +1,8 @@
 import Mathlib.Computability.TuringMachine.Config
 import Mathlib.Computability.StateTransition
+import Mathlib.Computability.PartrecCode
+import Mathlib.Computability.PartrecBasis
+import Mathlib.Computability.Halting
 
 /-!
 # Module 15 — 通用機器接線 I（huniv 的機器側：mathlib TM 語意 → M14 停機形狀）
@@ -98,5 +101,48 @@ theorem stepT_halts_iff_code_eval_dom (c : Code) (v : List ℕ) :
   · intro h
     exact Part.dom_iff_mem.mpr
       ⟨Cfg.halt ((c.eval v).get h), Part.mem_map _ (Part.get_mem h)⟩
+
+/-! ## 通用碼（(i) 完成）：`Nat.Partrec.Code` 停機 ⟺ `ToPartrec` 機器停機
+
+把 M14 `huniv` 的另一半接起來：對 M10/M14 用的 `Nat.Partrec.Code`，構造 mathlib
+`ToPartrec` 機器的初始組態族 `init`，使**機器迭代停機 ⟺ `(code.eval n₀).Dom`**。
+鏈 = `eval_part`（通用 eval 自身 partrec）→ `Nat.Partrec'.part_iff₁` →
+`ToPartrec.Code.exists_code`（通用碼存在）→ M15 停機介面。 -/
+
+/-- **★通用機器接線（`huniv` 形狀完全落地）★**：存在初始組態族 `init`，使每個
+`Nat.Partrec.Code` 的 `ToPartrec` 機器迭代停機 ⟺ `(code.eval n₀).Dom`。
+= M14 `coupled_blowup_undecidable` 的 `huniv` 假設對 mathlib 真機器可滿足
+（`Γ = Option Cfg`、`step = stepT`、`H = {none}`、吸收性 = `stepT_none`）。 -/
+theorem univ_wiring (n₀ : ℕ) :
+    ∃ init : Nat.Partrec.Code → Option Cfg,
+      ∀ code : Nat.Partrec.Code,
+        (∃ k : ℕ, stepT^[k + 1] (init code) = none) ↔ (code.eval n₀).Dom := by
+  have hf : Partrec fun m : ℕ ↦
+      Nat.Partrec.Code.eval (Denumerable.ofNat Nat.Partrec.Code m) n₀ :=
+    Nat.Partrec.Code.eval_part.comp (Computable.ofNat _) (Computable.const n₀)
+  obtain ⟨cu, hcu⟩ := Turing.ToPartrec.Code.exists_code (Nat.Partrec'.part_iff₁.mpr hf)
+  refine ⟨fun code ↦ some (stepNormal cu Cont.halt [Encodable.encode code]), fun code ↦ ?_⟩
+  rw [stepT_halts_iff_code_eval_dom]
+  have hv := hcu (Encodable.encode code ::ᵥ List.Vector.nil)
+  simp only [List.Vector.head_cons, Denumerable.ofNat_encode] at hv
+  have hv' : cu.eval [Encodable.encode code] = pure <$> code.eval n₀ := hv
+  rw [hv']
+  exact Iff.rfl
+
+/-- **★機器層停機不可判定（無條件、零假設）★**：存在初始組態族，使「`ToPartrec`
+機器迭代是否停機」**無演算法可判定**——`univ_wiring` + mathlib `halting_problem`
+直接合成，不需任何幾何假設。這是 (i) 的無條件 capstone；(ii)（機器的緊空間同胚
+實現）接上後，同一不可判定性經 M14 傳到耦合流家族的爆破觸發。 -/
+theorem stepT_halting_undecidable (n₀ : ℕ) :
+    ∃ init : Nat.Partrec.Code → Option Cfg,
+      ¬ ComputablePred fun code : Nat.Partrec.Code =>
+          ∃ k : ℕ, stepT^[k + 1] (init code) = none := by
+  obtain ⟨init, hiff⟩ := univ_wiring n₀
+  refine ⟨init, ?_⟩
+  have heq : (fun code : Nat.Partrec.Code => ∃ k : ℕ, stepT^[k + 1] (init code) = none)
+      = fun code : Nat.Partrec.Code => (code.eval n₀).Dom :=
+    funext fun code ↦ propext (hiff code)
+  rw [heq]
+  exact ComputablePred.halting_problem n₀
 
 end FluidTuring
