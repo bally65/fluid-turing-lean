@@ -376,7 +376,7 @@ naive `(相位×位置)` 模型把端點相位跨全位置塌縮=非置換;`down
 
 **淨判決 = 現行 3 軌編碼有確認缺陷（frontier-find 真牆），但非結構死牆。修法（兩獨立複驗者收斂）= frontier 改用專屬軌的一位元 sentinel（唯一 1、walkTM 可 bounce），不穿越垃圾內容區 → 真牆閃過。** 記錄額外殘留（皆有界非牆）：垃圾記錄寬 = HistRec m+1 位需 m+1 連續格 + 有界 mod-(m+1) 複製相位；deposit in-degree（un-deposit 唯一前驅）需 sentinel 定位。**主線不需要（方案 A 已零 sorry）；C-δ = 真開放多日 capstone，非 blocked 非 safe。**
 
-### 修法落地 ✅（sentinel 軌，commit 待填）
+### 修法落地 ✅（sentinel 軌，commit 4430085）
 - **`fixedEnc4`（4 軌）**：M帶/頭標記/垃圾內容/**frontier sentinel**（位 4k/4k+1/4k+2/4k+3）+ `fixedEnc4_injective`。
 - **關鍵：`fixedEnc4_head_track`/`fixedEnc4_frontier_track`** 證頭標記軌與 frontier 軌**皆 = `headMark` 結構（唯一 1）** → **兩走位都復用已證的 `walkTM`**（bounce 到唯一標記），frontier-find 真牆在原語層閃過（走位靠 sentinel 軌、不穿越垃圾內容 run）。
 - **仍待（多日、有界非牆）**：記錄寬 m+1 打包 + 有界複製相位、deposit in-degree、宏步 soundness 歸納。
