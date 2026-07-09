@@ -514,6 +514,44 @@ theorem trackWalkTM_step_nonmarker (t : Fin 4) (dir : Bool) (off : Fin 4) (tape 
     trackWalkTM_move_nonmarker t dir off (tape 0) h, trackWalkTM_write t dir off (tape 0)]
   rfl
 
+/-- offset 前進 `N` 格（每步 `+1`，以 `Function.iterate` 避開 `Fin 4` 的 `NatCast`）。 -/
+def offAdvance (N : ℕ) (off : Fin 4) : Fin 4 := (· + 1)^[N] off
+
+theorem offAdvance_zero (off : Fin 4) : offAdvance 0 off = off := rfl
+
+theorem offAdvance_succ (N : ℕ) (off : Fin 4) :
+    offAdvance (N + 1) off = offAdvance N off + 1 :=
+  Function.iterate_succ_apply' _ _ _
+
+/-- **可達性歸納核心（右移 bulk-cross）**：向右（`dir = false`）走 `N` 步，只要沿途
+每格都非唯一標記（用**原帶**表達：第 `i` 步讀 `tape i`、offset = `offAdvance i off`），
+則 `N` 步後 offset 前進 `N`、帶前向純移位 `N`（`tape' n = tape (n+N)`，`n ≥ 0`；負位
+尾跡不影響走位、以 `∃tape'` 略去）。可達性 = 取 `N` = 到標記距離、下一步即 bounce。 -/
+theorem trackWalkTM_iter_right (t : Fin 4) (off : Fin 4) (tape : ℤ → Bool) (N : ℕ)
+    (h : ∀ i : ℕ, i < N → ¬(offAdvance i off = t ∧ tape (i : ℤ) = true)) :
+    ∃ tape', ((trackWalkTM t).step)^[N] (ctrlBits (false, off), tape)
+               = (ctrlBits (false, offAdvance N off), tape')
+             ∧ ∀ n : ℤ, 0 ≤ n → tape' n = tape (n + N) := by
+  induction N with
+  | zero => exact ⟨tape, rfl, fun n _ ↦ by simp⟩
+  | succ k ih =>
+    obtain ⟨tk, hk, hkf⟩ := ih (fun i hi ↦ h i (Nat.lt_succ_of_lt hi))
+    have hread : tk 0 = tape (k : ℤ) := by simpa using hkf 0 (le_refl 0)
+    have hnm : ¬(offAdvance k off = t ∧ tk 0 = true) := by
+      rw [hread]; exact h k (Nat.lt_succ_self k)
+    have hstep : ((trackWalkTM t).step)^[k + 1] (ctrlBits (false, off), tape)
+        = (ctrlBits (false, offAdvance (k + 1) off),
+           fun n ↦ if n + (bif false then Dir.left else Dir.right).toInt = 0 then tk 0
+                   else tk (n + (bif false then Dir.left else Dir.right).toInt)) := by
+      rw [Function.iterate_succ_apply', hk, offAdvance_succ]
+      exact trackWalkTM_step_nonmarker t false (offAdvance k off) tk hnm
+    refine ⟨_, hstep, fun n hn ↦ ?_⟩
+    have hd : (bif false then Dir.left else Dir.right).toInt = 1 := rfl
+    simp only [hd]
+    rw [if_neg (show ¬(n + 1 = 0) by omega), hkf (n + 1) (by omega)]
+    congr 1
+    push_cast; ring
+
 /-! ### C-δ：deposit 迴圈本體（ring-controlled，2026-07-09，對抗設計艦隊 wf_a19b206c 修法）
 
 設計艦隊揪出原「spectator ringAtZero + decide-on-Profile」deposit 機制**錯**（ring 計數器在
