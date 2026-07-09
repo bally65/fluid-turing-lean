@@ -20,6 +20,19 @@ Cardona et al. 2021 紙上證的、本專案未形式化的部分。
 **一句話誠實讀法**：離散計算可被連續動力系統模擬＝**已全證**；那系統是真 Euler-Beltrami
 流＝**紙上幾何輸入（明寫假設）**。不誇大成「已證真流體圖靈完備」。
 
+### Navier–Stokes 層（M7，2026-07-09，依源頭論文 Dyhr et al. 2025/2026）
+
+依 **arXiv:2507.07696**（PNAS Nexus 5(5), pgag131）**Proposition 4.1 + Theorem A** 加了 NS 版：
+- **`prop_4_1`（黏滯免疫）**：**調和向量場**（`Δ_H X = 0`）是不可壓縮 NS 定常解、**對任意 `ν`**。
+  關鍵 = 黏滯項的 `Δ` 取 **Hodge Laplacian `dd*+d*d`**（前提 A、非 Bochner），調和 ⟹ `ΔX=0`
+  ⟹ 黏滯項消，**不需 Ricci-flat**。（更正前身 M6 docstring 基於 Bochner 的錯誤否定。）
+- **`navier_stokes_turing_complete`（capstone，方案 A 條件定理）**：給定調和場實現假設
+  `ReebHarmonicRealization`，存在**圖靈完備的定常 NS 解、對任意 `ν`**。
+- **同樣誠實範圍**：M7 是**抽象簽名**（Hodge Laplacian/Cartan 恆等式當簽名法則、mathlib 無），
+  `trivialNS_vacuous`/`reebHarmonicRealization_trivial` 機器證抽象層**空洞**。證的是**推導結構**
+  （黏滯項為何對任意 ν 消失），**非真流體 NS 物理**。前提 A（Hodge）/B（Hodge-admissibility）
+  釘死；Chern–Hamilton 注意（某些流形度量形變不可行）寫進假設 docstring。**不冒充真 NS 圖靈完備。**
+
 - Lean `v4.32.0-rc1` + mathlib（pin 於 `lakefile.toml`）
 - 建置：`lake build`（首次先 `lake exe cache get`）
 
