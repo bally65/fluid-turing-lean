@@ -12,3 +12,4 @@ import FluidTuringLean.M6_EulerTuring
 import FluidTuringLean.M7_NavierStokes
 import FluidTuringLean.M8_FixedMachine
 import FluidTuringLean.M9_Undecidability
+import FluidTuringLean.M10_BlowupUndecidable
