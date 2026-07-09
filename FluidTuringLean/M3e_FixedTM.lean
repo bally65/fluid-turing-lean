@@ -353,10 +353,63 @@ theorem trackWalk_reversible :
       trackWalkBwd t (trackWalkFwd t s) = s ∧ trackWalkFwd t (trackWalkBwd t s) = s := by
   decide
 
-/-- 軌選擇走位打包成置換（餵 `ofPerm` 得可逆 BitTM 的控制層；位元編碼 `Bool×Fin4`
-≃ `Fin 3→Bool` 後接 `ofPerm` 是機械下一步）。 -/
+/-- 軌選擇走位打包成置換。 -/
 def trackWalkEquiv (t : Fin 4) : (Bool × Fin 4 × Bool) ≃ (Bool × Fin 4 × Bool) :=
   ⟨trackWalkFwd t, trackWalkBwd t,
     fun s ↦ (trackWalk_reversible t s).1, fun s ↦ (trackWalk_reversible t s).2⟩
+
+/-- **語意（wall-dodge 顯式化）**：非目標軌（`off ≠ t`）上，**無論讀位 `a`**（含
+`a=true`，即穿越垃圾/資料軌的 `1`）都 cross——保持方向、offset 隨方向 ±1、位不變。
+這正是對抗艦隊 frontier-find 真牆的反面：穿越一段相同標記的 run 是 offset 遞增的
+**directional cross（非 self-loop）**。 -/
+theorem trackWalk_cross (t : Fin 4) (dir : Bool) (off : Fin 4) (a : Bool) (h : off ≠ t) :
+    trackWalkFwd t (dir, off, a) = (dir, bif dir then off - 1 else off + 1, a) := by
+  simp only [trackWalkFwd, decide_eq_false h, Bool.and_false, Bool.xor_false]
+
+/-- **語意**：目標軌唯一標記（`off = t ∧ a = true`）→ bounce（翻方向）。 -/
+theorem trackWalk_bounce (t : Fin 4) (dir : Bool) :
+    trackWalkFwd t (dir, t, true) = (!dir, bif !dir then t - 1 else t + 1, true) := by
+  cases dir <;> simp [trackWalkFwd]
+
+/-! #### 軌選擇走位 → 真可逆 BitTM（ofPerm feed）
+
+控制 `Bool × Fin 4`（方向×軌別）編碼成 3 位元 `Fin 3 → Bool`，共軛 `trackWalkEquiv`
+餵 `ofPerm` → 真 BitTM，`ofPerm_reversible` 免費給可逆性。方向表 μ 讀方向位。 -/
+
+/-- 控制打包：(方向, 軌別) → 3 位元（位 0=方向、位 1/2=軌別二進位）。 -/
+def packCtrl (s : Bool × Fin 4) : Fin 3 → Bool :=
+  ![s.1, decide (s.2 = 1 ∨ s.2 = 3), decide (s.2 = 2 ∨ s.2 = 3)]
+
+/-- 控制解包（手寫逆）。 -/
+def unpackCtrl (f : Fin 3 → Bool) : Bool × Fin 4 :=
+  (f 0, (bif f 1 then 1 else 0) + (bif f 2 then 2 else 0))
+
+theorem pack_unpack :
+    (∀ s, unpackCtrl (packCtrl s) = s) ∧ (∀ f, packCtrl (unpackCtrl f) = f) := by
+  constructor <;> decide
+
+/-- 控制 `Bool × Fin 4` ≃ 3 位元。 -/
+def ctrlBits : (Bool × Fin 4) ≃ (Fin 3 → Bool) :=
+  ⟨packCtrl, unpackCtrl, pack_unpack.1, pack_unpack.2⟩
+
+/-- 軌選擇走位的 ofPerm 控制置換（3 位元狀態）。 -/
+def trackWalkL (t : Fin 4) : ((Fin 3 → Bool) × Bool) ≃ ((Fin 3 → Bool) × Bool) :=
+  (Equiv.prodCongr ctrlBits.symm (Equiv.refl Bool)).trans
+    ((Equiv.prodAssoc Bool (Fin 4) Bool).trans
+      ((trackWalkEquiv t).trans
+        ((Equiv.prodAssoc Bool (Fin 4) Bool).symm.trans
+          (Equiv.prodCongr ctrlBits (Equiv.refl Bool)))))
+
+/-- 方向表：方向位（位 0）true=左、false=右。 -/
+def trackWalkMu : (Fin 3 → Bool) → Dir := fun bits ↦ bif bits 0 then Dir.left else Dir.right
+
+/-- **軌選擇彈跳走位 = 真可逆 BitTM**（4 軌 `fixedEnc4` 上兩段 macrostep 走位的引擎、
+`t=1` 走頭標記、`t=3` 走 frontier sentinel）。 -/
+def trackWalkTM (t : Fin 4) : BitTM := BitTM.ofPerm 3 (trackWalkL t) trackWalkMu
+
+/-- **可逆（免費）**：`ofPerm_reversible` 給任意控制置換的可逆性 ⟹ 軌選擇走位
+（含穿越 run，已 `trackWalk_reversible` decide 裁為置換）的無界軌跡可逆性一次付清。 -/
+theorem trackWalkTM_reversible (t : Fin 4) : (trackWalkTM t).Reversible :=
+  BitTM.ofPerm_reversible 3 (trackWalkL t) trackWalkMu
 
 end FluidTuring
