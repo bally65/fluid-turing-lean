@@ -56,6 +56,38 @@
 4. **B4 — 終定理 splice**：`coupled_blowup_undecidable` 餵 B1∘B2 傳輸的 huniv +
    忠實懸掛 → **★流家族爆破觸發不可判定（無條件）★**。
 
+### B2 對抗設計裁決（2026-07-09，艦隊 wf_7bf26d1d-802，6 agents/918k tok）
+
+3 藍圖（reuse-方案C / bennett-first / layout-first）各對抗驗（丟失有界/堆疊宏步/停機吸收+splice）。
+**三驗一致：無「無界量塞不進 Fintype」牆；Route A 正確；可建、多 session。**
+
+- **(A) 丟失有界 = SOUND**（三驗對真 mathlib 碼核過）：每個 `tr l` ≤1 pop + ≤1 peek + ≤2 push
+  後 goto/halt（逐案檢查）。每步丟 = 舊 label（∈ `codeSupp cu Cont'.halt` = 固定 `Finset Λ'`、
+  forward-closed，mathlib `tr_supports`/`codeSupp_supports` 已證）+ 舊 var(`Option Γ'` 5 值)+
+  popped(`Option Γ'` 5 值)。**全有界、真不像 ToPartrec.step 的無界 continuation frame** →
+  route A over route B 正確。
+- **★重大 reframe（bennett-first、改變 B2 計劃）★**：`M3c.bufferedStep` 是**無條件 Equiv**
+  （對 M 零假設）+ size-generic + `bufferedStep_blank`=空白緩衝上恰 `M.step`。⟹ **可逆性由
+  M3c 整批買下、作用在任意「不可逆掃描解釋器」上**。**故 B2 不需方案 C 的 ofPerm/decide
+  可逆性苦工**：建普通（不可逆）掃描解釋器 `M_tr : BitTM`（模擬 tr）、M3c 把它變可逆 +
+  `bennettHomeo` 緊空間同胚、`bennettAut_iterate` 給 n 步。方案 C 的 in-degree 牆在此 moot
+  （無界量住帶 ℤ→Bool、有限態只放 offset/相位/緩衝）。
+- **(B) 宏步 = HOLE（非 WALL）**：`trackWalkTM_reaches_marker` 真接得上（4 堆疊各獨立唯一標記
+  軌、無跨堆疊無界量），且因可不可逆走位更簡單。**THE CRUX HOLE = 宏步正確不變量 `R`
+  (`M_tr`↔`TM2.Cfg`) + 歸納**（C-δ 味、但無可逆性約束）= 多 session 核心、無牆。
+- **(C) 停機吸收+splice = HOLE**：可逆層的緩衝使停機非字面 fixpoint（in-degree 陷阱）→
+  用**吸收區 parking**（`H_Γ:={控制=qhalt}`、qhalt 給 reversible 空轉不離 H_Γ；= M14 `hH`）。
+  simulation 引理（`M_tr.step^[n_k]`=一 TM2 步、halt↔halt）傳 `tm2_halting_undecidable`。
+
+**具體修（皆有界非牆）**：record popped 用 3 位（`Option Γ'` 5 值、非 2 位）；`|codeSupp|`
+可能上百態 → 控制用 `feistelCore`（xor-based、**無 decide**、size-generic）避 decide 爆，
+勿用 `ctrlEquivOfInverse`（decide 會炸）。
+
+**修訂建置順序（依裁決）**：B2a 建不可逆掃描解釋器 `M_tr : BitTM`（模擬 tr、多 session 核心，
+走位存取堆疊頂、bounded-loss record）→ B2b M3c 可逆化+緊同胚（免費、literal copy）→
+B2c 宏步正確不變量 `R`+歸納（真核心）→ B3 忠實懸掛 → B4 終定理。**放棄「直接建可逆
+BitTM」，改「不可逆解釋器 + M3c 整批可逆化」= 大幅省工。**
+
 ### 風險/提醒
 
 - B2 是唯一大核。TM2 每步有界丟失 = Bennett 前提 ✓；堆疊頂存取距離資料相依 =
