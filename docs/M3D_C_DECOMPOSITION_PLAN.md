@@ -398,3 +398,25 @@ naive `(相位×位置)` 模型把端點相位跨全位置塌縮=非置換;`down
 4. **M-step 要 bundle 頭標記 ±1 遷移**（驗 3 hole 3：feistelPiece_blank 只做 track0/state、沒搬頭標記）。
 5. **IsClean 要顯式含「兩計數器（ring mod m+1、offset mod 5）在迴圈外皆歸 home」**（驗 3 hole 5，否則 decide 如 rev.1-3 失敗）。
 6. **立即可建（三驗同意 mechanical）**：unconditional 半邊 = fixedC := ofPerm → 可逆免費 → suspension = literal copy of bennettTM_suspension_simulates。
+
+## ★ 宏步組裝 KICKOFF 規格（下 session、lean-lsp 生效後照此執行，2026-07-09）
+
+**狀態**：走位可達性 crux **已完攻**（`trackWalkTM_reaches_marker` = 走到唯一標記於資料相依距離並彈跳，M3e，commit d8983aa）。真牆已拆、設計已收斂。剩=**接合工程、無牆**。lean-lsp 已裝且 Connected（下 session 有互動 goal state + mathlib 搜尋，克服 `.Cfg` 不可約 / `Fin 4` NatCast 那類反覆坑）。
+
+**收斂設計（不再重議）**：4 軌 fixedEnc4、`ready` co-locate 頭格、2 走位目標（t=1 頭標記 / t=3 sentinel）、deposit=ring(m+1)-controlled prodShear、無 π、buffer=m+1。
+
+**已備地基（下 session 直接復用）**：
+- 走位：`trackWalkTM`（ofPerm 真可逆 BitTM）+ `trackWalkTM_step_cross/nonmarker/bounce`（帶層步進）+ `trackWalkTM_reaches_marker`（右移到標記+彈跳）+ `offAdvance`。
+- deposit：`depositTick`（ring-controlled per-tick Equiv、finRotate 推進真 ring + swapHead/rotBuf 搬 buffer 上帶）。
+- splice：`M8 trackWalkTM_suspends`（可逆 BitTM→流的模板）+ M6 `reversibleTM_suspension_simulates`。
+- M-step 原語：M3d `feistelPiece`/`feistelCore_blank`（算 M.next/write）；M3c `bufferedStep_blank`。
+
+**KICKOFF 有序 bricks（下 session 起手順序）**：
+1. **左移對稱走位**（機械鏡射 iter_right/reaches_marker，dir=true）：`trackWalkTM_iter_left` + `..._reaches_marker_left`。回程走位需要。lean-lsp 加速。
+2. **M-step + 頭標記 ±1 遷移**（補驗 3 hole 3）：Feistel 算 M.next/write（reuse feistelPiece）+ track1 唯一 1 由 h 搬到 h±1（有界局部寫/子走位）。
+3. **deposit 機器完成**：把 `depositTick`（迴圈本體）套進 ring-controlled prodShear gate（ring≠home 續傾倒、ring=home 出圈）+ sentinel 前進。證 Equiv + 傾倒恰一記錄。`finRotate^[m+1]=id` 迴圈閉合此時補（lean-lsp 幫查 finRotate order 引理，繞過先前 NatCast 坑）。
+4. **macrostep 排程**：組 walk(t=1)→M-step→walk(t=3)→deposit→walk(t=1 回新頭) 成完整字面機控制 L（macro-phase 用 phaseDispatch/prodShear 分派）。
+5. **IsClean(4 軌、ready@頭、兩計數器歸 home) + 宏步 soundness**：乾淨→∃n 微步→下一乾淨、算一 FixedTM.step。走位相位用 `reaches_marker`。
+6. **splice**：組好的可逆 BitTM 餵 `reversibleTM_suspension_simulates`（M8 模板）→ 流模擬 FixedTM。得字面機完整結果。
+
+**風險/提醒**：steps 4-5 互鎖（排程↔不變量↔soundness），一起設計；step 3 的 gate in-degree 是驗 2 標的（ring-controlled 非 decide-on-Profile）。全程 `scripts/check.sh` 收尾守硬規則。主線不需要（方案 A 已零 sorry）=錦上添花完整。
