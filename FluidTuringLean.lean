@@ -24,3 +24,4 @@ import FluidTuringLean.M18_MtrControl
 import FluidTuringLean.M19_MtrEncoder
 
 import FluidTuringLean.M20_FlowCapstone
+import FluidTuringLean.M21_MtrConfig
