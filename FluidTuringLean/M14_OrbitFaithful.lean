@@ -94,4 +94,58 @@ theorem coupled_blowup_undecidable {M : Type} [TopologicalSpace M] {F : Continuo
     (fun code t ↦ F.φ t (enc (init code)))
     (fun traj ↦ ∃ t : ℝ, 0 < t ∧ traj t ∈ enc '' H) n hred
 
+/-! ## 忠實性實例：懸掛流真的忠實（假設 ① 變定理）
+
+`OrbitFaithful` 對 M6 實際構造的懸掛流**成立**：軌道 `φ t [c,0] = [c,t]` 打中切片
+`{[γ,0]}` ⟺ M4 完整不變量 `torusRep = (e^⌊t⌋ x, fract t)` 逼出 `fract t = 0` ⟺ `t` 是
+（正）整數 ⟺ 落點 = `[e^⌊t⌋ c, 0]` = **正確迭代的編碼**。幾何內容 = 懸掛構造的
+纖維結構：切片只在整數時間被打中、打中即跳正確步數。 -/
+
+/-- **★懸掛流忠實模擬★（`suspension_flow_simulates` 的加強版）**：緊空間自同胚的
+懸掛流不只模擬（M6）、且**軌道忠實**（M14 假設 ① 對此構造成立）。與
+`coupled_blowup_undecidable` 合用時，懸掛家族只剩 `huniv`（通用機器接線）一條假設。 -/
+theorem suspension_flow_simulates_faithful {X : Type u} [TopologicalSpace X] [CompactSpace X]
+    (e : X ≃ₜ X) :
+    ∃ (M : Type u) (_ : TopologicalSpace M) (_ : CompactSpace M)
+      (F : ContinuousFlowOn M) (enc : X → M),
+      Simulates F (⇑e) enc ∧ OrbitFaithful F (⇑e) enc := by
+  refine ⟨MappingTorus ⇑e, inferInstance, MappingTorus.compactSpace e.toEquiv,
+    { φ := MappingTorus.suspFlow
+      continuous := MappingTorus.continuous_suspFlow_uncurried e
+      map_zero := MappingTorus.suspFlow_zero
+      map_add := MappingTorus.suspFlow_add },
+    fun x ↦ MappingTorus.mk ⇑e (x, 0),
+    ⟨MappingTorus.mk_slice_injective e.toEquiv,
+      fun c ↦ ⟨1, one_pos, MappingTorus.suspFlow_one_realizes c⟩⟩, ?_⟩
+  intro c t ht hmem
+  obtain ⟨γ, hγ⟩ := hmem
+  have hφ : MappingTorus.suspFlow t (MappingTorus.mk ⇑e (c, 0))
+      = MappingTorus.mk ⇑e (c, 0 + t) := MappingTorus.suspFlow_mk t c 0
+  have hγ' : MappingTorus.mk ⇑e (γ, 0) = MappingTorus.mk ⇑e (c, 0 + t) := by
+    rw [← hφ]; exact hγ
+  have hrep := (MappingTorus.mk_eq_mk_iff e.toEquiv (γ, 0) (c, 0 + t)).1 hγ'
+  simp only [MappingTorus.torusRep, Int.floor_zero, zpow_zero, Equiv.Perm.coe_one, id_eq,
+    Int.fract_zero, zero_add] at hrep
+  have hfr : Int.fract t = 0 := (Prod.ext_iff.mp hrep).2.symm
+  have hteq0 : ((⌊t⌋ : ℤ) : ℝ) = t := by
+    have haf := Int.fract_add_floor t
+    rw [hfr] at haf
+    linarith
+  have hzpos : 0 < ⌊t⌋ := by
+    have : (0 : ℝ) < ((⌊t⌋ : ℤ) : ℝ) := by rw [hteq0]; exact ht
+    exact_mod_cast this
+  refine ⟨⌊t⌋.toNat, ?_⟩
+  have hcast : ((⌊t⌋.toNat : ℕ) : ℝ) = t := by
+    have h1 : ((⌊t⌋.toNat : ℕ) : ℝ) = ((⌊t⌋ : ℤ) : ℝ) := by
+      exact_mod_cast Int.toNat_of_nonneg hzpos.le
+    rw [h1, hteq0]
+  have hbridge : (e.toEquiv ^ ⌊t⌋.toNat) c = (⇑e)^[⌊t⌋.toNat] c :=
+    congrFun (Equiv.Perm.coe_pow e.toEquiv ⌊t⌋.toNat) c
+  calc MappingTorus.suspFlow t (MappingTorus.mk ⇑e (c, 0))
+      = MappingTorus.mk ⇑e (c, 0 + t) := hφ
+    _ = MappingTorus.mk ⇑e (c, 0 + ((⌊t⌋.toNat : ℕ) : ℝ)) := by rw [hcast]
+    _ = MappingTorus.mk ⇑e ((e.toEquiv ^ ⌊t⌋.toNat) c, 0) :=
+        MappingTorus.mk_add_nat e.toEquiv ⌊t⌋.toNat c 0
+    _ = MappingTorus.mk ⇑e ((⇑e)^[⌊t⌋.toNat] c, 0) := by rw [hbridge]
+
 end FluidTuring
