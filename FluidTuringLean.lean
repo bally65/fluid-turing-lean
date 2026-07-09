@@ -5,6 +5,7 @@ import FluidTuringLean.M3_Encoding
 import FluidTuringLean.M3b_ReversibleTM
 import FluidTuringLean.M3c_Bennett
 import FluidTuringLean.M3d_BennettTM
+import FluidTuringLean.M3e_FixedTM
 import FluidTuringLean.M4_Suspension
 import FluidTuringLean.M5_ReebInterface
 import FluidTuringLean.M6_EulerTuring
