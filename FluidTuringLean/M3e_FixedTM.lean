@@ -313,4 +313,50 @@ theorem walkTM_goL_cases :
     walkTM.next goL true = goR ∧ walkTM.move goL true = Dir.right := by
   refine ⟨?_, ?_, ?_, ?_⟩ <;> decide
 
+/-! ### C-δ：軌選擇彈跳走位控制表（4 軌上，decide 裁 frontier-find 真牆）
+
+對抗艦隊（wf_481a605d-b94）唯一確認真牆 frontier-find 的**前提是 memoryless 走位**：
+穿越一段相同標記的 run 需 self-loop `(scan,1)→(scan,1)`，鴿籠吃掉唯一前像槽 → 非置換。
+
+**化解**：走位帶一個 **offset-mod-4 計數器**（= 帶位址 mod 4 = 4 軌 `fixedEnc4` 的軌別）。
+於是「穿越非目標軌的 1」變成 `(dir, off, a) → (dir, off±1, a)` 的 **offset 遞增雙射更新**
+（**非 self-loop → 鴿籠消失**）。目標=唯一 sentinel 標記（`fixedEnc4_frontier_track`），
+用 `(offset = 目標軌 t ∧ a = true)` 偵測，**不需 run-length**。此設計正是艦隊 deposit/
+completeness 複驗者收斂的 sentinel 修法之走位側。**是不是真置換由 `decide` 客觀裁**
+（記憶教訓：控制表 + decide 反例迭代 = 正確工作迴路，紙上推不完）。
+
+控制狀態 `Bool × Fin 4 × Bool` = 方向(false=R/true=L) × offset(軌別) × 讀位。 -/
+
+/-- 軌選擇走位前向：偵測唯一標記（`off = t ∧ a`）則 bounce（翻向）、否則 cross
+（續走、offset 隨新方向 ±1、位不變）。offset 移動綁新方向使穿越保持雙射。 -/
+def trackWalkFwd (t : Fin 4) (s : Bool × Fin 4 × Bool) : Bool × Fin 4 × Bool :=
+  let dir := s.1; let off := s.2.1; let a := s.2.2
+  let bounce := a && decide (off = t)
+  let ndir := xor dir bounce
+  let noff := bif ndir then off - 1 else off + 1
+  (ndir, noff, a)
+
+/-- 軌選擇走位逆向（手寫逆、供 `decide` 裁互逆）。 -/
+def trackWalkBwd (t : Fin 4) (s : Bool × Fin 4 × Bool) : Bool × Fin 4 × Bool :=
+  let ndir := s.1; let noff := s.2.1; let a := s.2.2
+  let off := bif ndir then noff + 1 else noff - 1
+  let bounce := a && decide (off = t)
+  let dir := xor ndir bounce
+  (dir, off, a)
+
+/-- **軌選擇彈跳走位是置換（decide 裁，全 4 目標軌 × 16 控制 = 64 例）**：`trackWalkFwd`
+與 `trackWalkBwd` 互逆 ⟹ in-degree-1。**此即機器級證明：offset 計數器把穿越 run
+變雙射、化解對抗艦隊 frontier-find 真牆的鴿籠**（該牆對 memoryless 走位成立，對此
+offset-augmented 走位不成立）。 -/
+theorem trackWalk_reversible :
+    ∀ (t : Fin 4) (s : Bool × Fin 4 × Bool),
+      trackWalkBwd t (trackWalkFwd t s) = s ∧ trackWalkFwd t (trackWalkBwd t s) = s := by
+  decide
+
+/-- 軌選擇走位打包成置換（餵 `ofPerm` 得可逆 BitTM 的控制層；位元編碼 `Bool×Fin4`
+≃ `Fin 3→Bool` 後接 `ofPerm` 是機械下一步）。 -/
+def trackWalkEquiv (t : Fin 4) : (Bool × Fin 4 × Bool) ≃ (Bool × Fin 4 × Bool) :=
+  ⟨trackWalkFwd t, trackWalkBwd t,
+    fun s ↦ (trackWalk_reversible t s).1, fun s ↦ (trackWalk_reversible t s).2⟩
+
 end FluidTuring
