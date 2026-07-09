@@ -439,6 +439,39 @@ theorem trackWalkTM_next_bounce (t : Fin 4) (dir : Bool) :
   change (trackWalkL t (ctrlBits (dir, t), true)).1 = _
   rw [trackWalkL_pack, trackWalk_bounce t dir]
 
+/-- 打包控制的方向位（位 0）= 方向。 -/
+theorem ctrlBits_bit0 (dir : Bool) (off : Fin 4) : (ctrlBits (dir, off)) 0 = dir := rfl
+
+/-- 控制層：走位**不改讀位**（`trackWalkFwd` 的第三分量 = 輸入讀位）。 -/
+theorem trackWalkFwd_bit (t : Fin 4) (s : Bool × Fin 4 × Bool) :
+    (trackWalkFwd t s).2.2 = s.2.2 := rfl
+
+/-- **機器層：走位不改帶位**（`write = 讀位`）——走位純導航、不寫資料。 -/
+theorem trackWalkTM_write (t : Fin 4) (dir : Bool) (off : Fin 4) (a : Bool) :
+    (trackWalkTM t).write (ctrlBits (dir, off)) a = a := by
+  change (trackWalkL t (ctrlBits (dir, off), a)).2 = _
+  rw [trackWalkL_pack, trackWalkFwd_bit]
+
+/-- **機器層 move（cross）**：讀非目標軌 → 平移方向 = 相位方向（`dir` true=左 / false=右）。 -/
+theorem trackWalkTM_move_cross (t : Fin 4) (dir : Bool) (off : Fin 4) (a : Bool) (h : off ≠ t) :
+    (trackWalkTM t).move (ctrlBits (dir, off)) a = bif dir then Dir.left else Dir.right := by
+  change trackWalkMu (trackWalkL t (ctrlBits (dir, off), a)).1 = _
+  rw [trackWalkL_pack, trackWalk_cross t dir off a h]
+  simp only [trackWalkMu, ctrlBits_bit0]
+
+/-- **帶層 cross 步進（可達性迭代 workhorse）**：機器在非目標軌（`off ≠ t`）一步 =
+控制保持方向、offset±1（打包），帶依相位方向平移一格（寫回讀位=純導航）。組
+`step_eval` + 三元件（next/move/write）。可達性歸納（∃N 步到唯一標記）即迭代此步。 -/
+theorem trackWalkTM_step_cross (t : Fin 4) (dir : Bool) (off : Fin 4) (tape : ℤ → Bool)
+    (h : off ≠ t) :
+    (trackWalkTM t).step (ctrlBits (dir, off), tape)
+      = (ctrlBits (dir, bif dir then off - 1 else off + 1),
+         fun n ↦ if n + (bif dir then Dir.left else Dir.right).toInt = 0 then tape 0
+                 else tape (n + (bif dir then Dir.left else Dir.right).toInt)) := by
+  rw [BitTM.step_eval, trackWalkTM_next_cross t dir off (tape 0) h,
+    trackWalkTM_move_cross t dir off (tape 0) h, trackWalkTM_write t dir off (tape 0)]
+  rfl
+
 /-! ### C-δ：deposit 迴圈本體（ring-controlled，2026-07-09，對抗設計艦隊 wf_a19b206c 修法）
 
 設計艦隊揪出原「spectator ringAtZero + decide-on-Profile」deposit 機制**錯**（ring 計數器在
