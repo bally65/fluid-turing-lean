@@ -134,3 +134,37 @@ BitTM」，改「不可逆解釋器 + M3c 整批可逆化」= 大幅省工。**
 
 **提醒**：offset 泛化 Fin 4→Fin P 要一般證（非 decide，P 變數）；label 用 feistelCore 式 xor（非
 decide，|codeSupp| 大）；先做子塊 1（純案例列舉、可 day-1）暖身。
+
+---
+
+## M_tr step 進度更新（子塊 1-4）
+
+- **子塊 1 ✅（M18）** 控制有限性：`trLabels c := codeSupp c Cont'.halt`（Finset Λ'）+
+  `tr_supports_trLabels`（= mathlib `tr_supports`，`TM2.Supports`）+ `trLabelEquivFin`
+  （label ≃ Fin card）= route A 有限控制地基。
+- **子塊 2 ✅（M17）** 單堆疊-op 編碼正確性：`stackContent_push_lower`（push 下層不變）+
+  `stackContent_dropLast_eq`（pop 留下層）+ `stackDecode_push/pop`（decode 忠實）= push/pop
+  局部編輯的編碼層規格（子塊 3 的正確性目標）。
+- **子塊 3 ✅（M19）** encStacks 全組態編碼器 + 忠實性：`kEquiv:K'≃Fin 4` + `stackTracks`（3 軌）
+  + `allTracks`（12 軌）+ `encStacks := multiTrackEnc` + `encStacks_injective`（位帶唯一決定
+  全 4 堆疊）= M17 單堆疊 round-trip 抬到全組態。
+
+- **子塊 4 動力學組裝 ✅（M20）+ M_tr 本體 = 唯一剩餘缺口**。
+  **關鍵發現**：到「懸掛流有限時間 blowup 觸發不可判定」的**下游全鏈已證且已接**
+  （M3c bennett + M4 suspension + M14 忠實 + M10 blowup + M16 TM2 停機不可判定）。M20 組裝：
+  - `suspension_blowup_trigger_undecidable`：任意緊自同胚 `e` + 前向可達不可判定 ⟹ 懸掛流
+    blowup 觸發不可判定（M14 兩定理 3 行組合）。
+  - `bitTM_bennett_blowup_undecidable`：實例化到 `e := bennettHomeo M`，`huniv` 由
+    `bennettAut_iterate`（無時間膨脹）從機器級 `M.step` 停機證出。**剩兩條 crisp 義務**：
+    (1) `hmachine`：`M.step` 模擬通用 TM2 停機（配 M16）；(2) `hHclosed`：停機集 bennett-不變。
+
+  ⟹ **整個流體端不可判定性 = 造一個位元機 `M_tr` 使 `M_tr.step` 模擬通用 TM2 `stepAux` 樹走**
+  （+ 不變停機集）。這是 M_tr 建構本體：定義 `M_tr : BitTM`（控制 = M18 Fin 編碼、帶 = M19
+  encStacks；`next/write/move` = 解釋器迴圈：讀 (l,v) → 逐 `tr l` 的堆疊 op → M3e 走位取頂 +
+  局部編輯 → 回 home）+ 證 `∃N, M_tr.step^[N](encCfg c) = encCfg (TM2.step tr c)`（對 Stmt 樹歸納）。
+  **非 paper-blocked**（mathlib 有全零件：`tr`/`stepAux`/`codeSupp`/M3e 走位可達性）、**非可 fake**、
+  是**大型多 session 工程**。M20 把它誠實外顯為唯一缺口（方案 A 條件化，同 M7 NS 幾何依賴手法）。
+
+  **M_tr 本體下 session 起手點**：(4a) 定 `encCfg : Cfg' → M_tr.Cfg`（控制用 M18 trLabelEquivFin
+  塞 Fin m→Bool、帶用 M19 encStacks）；(4b) 逐 Stmt 建構子（goto/load = 純控制、push/pop/peek =
+  走位+編輯）的單微步引理；(4c) Stmt 樹歸納組 macrostep；(4d) halt↔halt + 用 M16 兌現 hmachine。
