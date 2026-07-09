@@ -21,3 +21,4 @@ import FluidTuringLean.M15_UniversalWiring
 import FluidTuringLean.M16_TM2Wiring
 import FluidTuringLean.M17_TM2Layout
 import FluidTuringLean.M18_MtrControl
+import FluidTuringLean.M19_MtrEncoder
