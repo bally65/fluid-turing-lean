@@ -1184,6 +1184,12 @@ def walkEquiv : WalkState ≃ WalkState :=
 theorem walk_reaches_frontier :
     (walkFwd)^[5] WalkState.home = WalkState.frontier := by decide
 
+/-- **淨零往返閉合**（方案 C 核心機制）：一整趟傾倒週期（home→frontier→home）
+共 10 步回到 home —— bennettTM「走出去再走回、net shift = 0」使其帶跨 macrostep
+靜止，正是化解「M 帶平移 vs 靜止垃圾」兩流 crux 的關鍵。`decide` 驗閉合。 -/
+theorem walk_roundtrip_closes :
+    (walkFwd)^[10] WalkState.home = WalkState.home := by decide
+
 end
 
 end FluidTuring
