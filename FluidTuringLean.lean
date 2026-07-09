@@ -14,3 +14,4 @@ import FluidTuringLean.M8_FixedMachine
 import FluidTuringLean.M9_Undecidability
 import FluidTuringLean.M10_BlowupUndecidable
 import FluidTuringLean.M11_BlowupODE
+import FluidTuringLean.M12_HaltBlowupBridge
