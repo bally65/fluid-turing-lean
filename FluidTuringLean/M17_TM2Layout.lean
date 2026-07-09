@@ -82,4 +82,45 @@ def Γ'BitEquiv : Γ' ≃ (Bool × Bool) where
   left_inv g := by cases g <;> rfl
   right_inv := by rintro ⟨a, b⟩; cases a <;> cases b <;> rfl
 
+/-! ## 堆疊 → 軌：一個 TM2 堆疊 `List Γ'` 編碼成（內容軌 + 頂標記軌）
+
+堆疊 `s`（bottom = cell 0、top = cell `len-1`、next-push = cell `len`）：
+- **內容軌** `stackContent s`：cell `j` 放 `s[j]` 的 2 位（`Γ'BitEquiv`）。
+- **頂標記軌** `stackMark s`：唯一 1 在 cell `len`（= 下次 push 位；空堆疊在 0）。
+push = append（標記 `len → len+1`）、pop = dropLast（`len → len-1`）——皆有界局部編輯 +
+標記移一格，正是不可逆解釋器 `M_tr` 的堆疊操作。 -/
+
+/-- 頂標記軌：唯一 1 在 `len`（= 堆疊深度 / 下次 push 位）。 -/
+def stackMark (len : ℕ) : ℤ → Bool := fun j ↦ decide (j = (len : ℤ))
+
+theorem stackMark_self (len : ℕ) : stackMark len (len : ℤ) = true := by simp [stackMark]
+
+theorem stackMark_ne (len : ℕ) {j : ℤ} (h : j ≠ (len : ℤ)) : stackMark len j = false := by
+  simp [stackMark, h]
+
+/-- push/pop 移標記一格（深度 ±1）。 -/
+theorem stackMark_push (len : ℕ) : stackMark (len + 1) = stackMark len ∘ (· - 1) := by
+  funext j
+  simp only [stackMark, Function.comp_apply, Nat.cast_add, Nat.cast_one]
+  exact decide_eq_decide.mpr (by omega)
+
+open Turing.PartrecToTM2 in
+/-- 內容軌：cell `j` 放 `s[j]` 的 2 位（越界取 `consₗ`、被標記遮蔽）。 -/
+def stackContent (s : List Γ') (j : ℤ) : Bool × Bool :=
+  Γ'BitEquiv (s.getD j.toNat Γ'.consₗ)
+
+open Turing.PartrecToTM2 in
+/-- **內容 readback**（`j < len`）：取回 `s[j]`。 -/
+theorem stackContent_get (s : List Γ') (j : ℕ) (h : j < s.length) :
+    stackContent s (j : ℤ) = Γ'BitEquiv s[j] := by
+  simp only [stackContent, Int.toNat_natCast, List.getD_eq_getElem s _ h]
+
+open Turing.PartrecToTM2 in
+/-- **push 語意**：新符號 `x` 落在舊頂位 `len`（= 舊 next-push slot），舊內容不變。 -/
+theorem stackContent_push_top (s : List Γ') (x : Γ') :
+    stackContent (s ++ [x]) (s.length : ℤ) = Γ'BitEquiv x := by
+  simp only [stackContent, Int.toNat_natCast, List.getD_eq_getElem?_getD,
+    List.getElem?_append_right (le_refl s.length), Nat.sub_self]
+  rfl
+
 end FluidTuring
