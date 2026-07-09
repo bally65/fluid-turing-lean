@@ -96,3 +96,41 @@ BitTM」，改「不可逆解釋器 + M3c 整批可逆化」= 大幅省工。**
 - 每塊 `scripts/check.sh` 收尾守硬規則（零 sorry + 標準三公理）。
 - 誠實界線持續：本線的「流」是懸掛流（緊空間連續 ℝ-流）；接真 Euler/NS 幾何仍走
   M5/M7 的明寫假設（paper-blocked、與本線正交）。
+
+## B2a 進度 + M_tr step 本體 KICKOFF（下 session 專攻）
+
+**B2a 佈局層完備 ✅（M17，全零 sorry/標準三公理）**：
+- `multiTrackEnc` / `trackIdx`：P=n+1 軌交錯 + readback + 單射（泛化 fixedEnc4）。
+- `Γ'BitEquiv`：TM2 字母 Γ'(4 符號) ↔ 2 位元（零公理）。
+- `stackContent` / `stackMark`：一堆疊 List Γ' → (內容軌 + 唯一頂標記軌)；
+  `stackContent_get`(readback) / `stackContent_push_top`(push 落頂) / `stackMark_self/ne/push`(唯一 + 移標記 ±1)。
+- `stackDecode` / `stackDecode_stackContent`：**編碼忠實性 round-trip**（組態由位帶唯一決定）。
+
+**剩 = M_tr step 函數本體（唯一大核、下 session 專攻起點）。**
+
+### M_tr step KICKOFF 規格
+
+目標：定 `M_tr : BitTM`（不可逆 OK），其 step 逐步模擬 mathlib `Turing.PartrecToTM2.tr` 的
+一個 TM2 步（= `stepAux (tr l) v S`）。**不需可逆**（M3c bufferedStep 之後整批買可逆性）。
+
+**狀態（`Fin m → Bool`，有限、bounded-loss 的關鍵）**：packs
+`(label idx ∈ Fin |codeSupp cu Cont'.halt| , local var : Option Γ' [3 位], phase, offset mod P, buffer)`。
+`codeSupp cu Cont'.halt : Finset Λ'`（mathlib、forward-closed `tr_supports`）給 label 的有限性；
+`cu` = M16 `tm2_univ_wiring` 的固定通用碼。
+
+**帶（`ℤ → Bool`）**：M17 `multiTrackEnc` 把 4 堆疊（main/rev/aux/stack，各 = stackContent 2 軌
++ stackMark 1 軌 = 3 軌 × 4 = 12 軌，+home/垃圾）交錯。
+
+**step 排程（macrostep = ∃n microsteps）**：讀 (l,v) in-state → 逐 `tr l` 的 ≤const 堆疊 op：
+走位到該堆疊頂標記（M3e `trackWalkTM` + `trackWalkTM_reaches_marker`，offset 泛化 Fin 4→Fin P）
+→ 有界局部編輯（stackContent push/pop + stackMark ±1，用 stackContent_push_top/stackMark_push）
+→ 淨零回 home。丟失（舊 label/var/popped）存 buffer（供 B2b Bennett）。
+
+**有序子塊**：
+1. `tr` 的案例分解引理：`tr l` 逐案（move/clear/copy/succ/pred/ret*）的堆疊 op 列表（讀 mathlib ToPartrec.lean:302-342）。
+2. 單堆疊-op 的 BitTM 微步實現（走位 + 編輯）+ 正確性（用 M17 stack 引理 + M3e 走位可達性）。
+3. 組成 M_tr.step（phase 排程）+ `encTM2 : TM2.Cfg → M_tr.Cfg`（用 multiTrackEnc + stackDecode 忠實）。
+4. **macrostep 正確**：`∃n, M_tr.step^[n] (encTM2 c) = encTM2 (TM2 一步 c)` + halt↔halt（B2c）。
+
+**提醒**：offset 泛化 Fin 4→Fin P 要一般證（非 decide，P 變數）；label 用 feistelCore 式 xor（非
+decide，|codeSupp| 大）；先做子塊 1（純案例列舉、可 day-1）暖身。
