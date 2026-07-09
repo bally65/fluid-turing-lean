@@ -180,6 +180,78 @@ theorem fixedEnc3_injective {t t' g g' : ℤ → Bool} {h h' : ℤ}
     exact of_decide_eq_true hh.symm
   · have := congrFun heq (3 * k + 2); rwa [fixedEnc3_two, fixedEnc3_two] at this
 
+/-! ### C-δ sentinel 修法（4 軌，2026-07-09，對抗艦隊 wf_481a605d-b94 裁決後）
+
+**對抗裁決**：6 視角艦隊（12 agents）判 3 軌 `fixedEnc3` 的「frontier=連續垃圾區
+遠端邊緣」設計撞**唯一確認真牆（frontier-find）**：`ofPerm` 免費可逆走位**無法可逆
+穿越一段相同標記的 run**（CNOT bounce 在第一個 `1` 就反向；穿越需 self-loop
+`(scan,1)→(scan,1)`，鴿籠吃掉唯一前像槽 → 非有限置換 → ofPerm 不適用）。5/6 視角
+判無結構死牆（真開放多日）。**兩獨立複驗者收斂修法=frontier 改用專屬軌的一位元
+sentinel**：格 `k` ↔ 位 `4k`(帶)/`4k+1`(頭標記)/`4k+2`(垃圾內容)/`4k+3`(frontier
+sentinel)。**頭標記軌與 sentinel 軌皆唯一-1 標記軌 → 兩段走位都復用已證的 `walkTM`**
+（bounce 到唯一標記、不穿越垃圾內容 run）→ frontier-find 真牆在原語層閃過。
+仍待（多日、有界非牆）：記錄寬 m+1 打包+有界複製相位、deposit in-degree、宏步歸納。 -/
+
+/-- **4 軌乾淨編碼**（frontier sentinel 修法）。 -/
+def fixedEnc4 (t : ℤ → Bool) (h : ℤ) (g : ℤ → Bool) (f : ℤ) : ℤ → Bool :=
+  fun i ↦ if i % 4 = 0 then t (i / 4)
+    else if i % 4 = 1 then decide ((i - 1) / 4 = h)
+    else if i % 4 = 2 then g ((i - 2) / 4)
+    else decide ((i - 3) / 4 = f)
+
+theorem fixedEnc4_zero (t g : ℤ → Bool) (h f k : ℤ) : fixedEnc4 t h g f (4 * k) = t k := by
+  simp only [fixedEnc4]
+  rw [if_pos (by omega : (4 * k) % 4 = 0),
+    Int.mul_ediv_cancel_left k (by norm_num : (4 : ℤ) ≠ 0)]
+
+theorem fixedEnc4_one (t g : ℤ → Bool) (h f k : ℤ) :
+    fixedEnc4 t h g f (4 * k + 1) = decide (k = h) := by
+  simp only [fixedEnc4]
+  rw [if_neg (by omega : ¬(4 * k + 1) % 4 = 0), if_pos (by omega : (4 * k + 1) % 4 = 1),
+    show 4 * k + 1 - 1 = 4 * k from by ring,
+    Int.mul_ediv_cancel_left k (by norm_num : (4 : ℤ) ≠ 0)]
+
+theorem fixedEnc4_two (t g : ℤ → Bool) (h f k : ℤ) : fixedEnc4 t h g f (4 * k + 2) = g k := by
+  simp only [fixedEnc4]
+  rw [if_neg (by omega : ¬(4 * k + 2) % 4 = 0), if_neg (by omega : ¬(4 * k + 2) % 4 = 1),
+    if_pos (by omega : (4 * k + 2) % 4 = 2),
+    show 4 * k + 2 - 2 = 4 * k from by ring,
+    Int.mul_ediv_cancel_left k (by norm_num : (4 : ℤ) ≠ 0)]
+
+theorem fixedEnc4_three (t g : ℤ → Bool) (h f k : ℤ) :
+    fixedEnc4 t h g f (4 * k + 3) = decide (k = f) := by
+  simp only [fixedEnc4]
+  rw [if_neg (by omega : ¬(4 * k + 3) % 4 = 0), if_neg (by omega : ¬(4 * k + 3) % 4 = 1),
+    if_neg (by omega : ¬(4 * k + 3) % 4 = 2),
+    show 4 * k + 3 - 3 = 4 * k from by ring,
+    Int.mul_ediv_cancel_left k (by norm_num : (4 : ℤ) ≠ 0)]
+
+/-- **4 軌編碼單射**：四軌各自取回 → (帶,頭,垃圾,frontier) 由編碼帶唯一決定。 -/
+theorem fixedEnc4_injective {t t' g g' : ℤ → Bool} {h h' f f' : ℤ}
+    (heq : fixedEnc4 t h g f = fixedEnc4 t' h' g' f') :
+    t = t' ∧ h = h' ∧ g = g' ∧ f = f' := by
+  refine ⟨funext fun k ↦ ?_, ?_, funext fun k ↦ ?_, ?_⟩
+  · have := congrFun heq (4 * k); rwa [fixedEnc4_zero, fixedEnc4_zero] at this
+  · have hh := congrFun heq (4 * h + 1)
+    rw [fixedEnc4_one, fixedEnc4_one, decide_eq_true (rfl : h = h)] at hh
+    exact of_decide_eq_true hh.symm
+  · have := congrFun heq (4 * k + 2); rwa [fixedEnc4_two, fixedEnc4_two] at this
+  · have hf := congrFun heq (4 * f + 3)
+    rw [fixedEnc4_three, fixedEnc4_three, decide_eq_true (rfl : f = f)] at hf
+    exact of_decide_eq_true hf.symm
+
+/-- 頭標記軌 = `headMark h`（唯一 1）。 -/
+theorem fixedEnc4_head_track (t g : ℤ → Bool) (h f k : ℤ) :
+    fixedEnc4 t h g f (4 * k + 1) = headMark h k := by
+  rw [fixedEnc4_one]; rfl
+
+/-- **frontier sentinel 軌 = `headMark f`（唯一 1）** → 走到 frontier 的走位與走到頭
+標記的走位**同結構**（皆 bounce 到唯一-1 標記），復用已證的 `walkTM`、不穿越垃圾內容
+run。此即對抗艦隊 frontier-find 真牆的原語層閃過。 -/
+theorem fixedEnc4_frontier_track (t g : ℤ → Bool) (h f k : ℤ) :
+    fixedEnc4 t h g f (4 * k + 3) = headMark f k := by
+  rw [fixedEnc4_three]; rfl
+
 end FixedTM
 
 /-! ### C-γ：可逆雙標記彈跳走位（ofPerm-BitTM，可逆免費）

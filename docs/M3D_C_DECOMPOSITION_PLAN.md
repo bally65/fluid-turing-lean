@@ -361,3 +361,22 @@ naive `(相位×位置)` 模型把端點相位跨全位置塌縮=非置換;`down
 - **C-γ 走位引擎 ✅**（commit 092bb9d）：`walkTM` 雙標記彈跳走位 BitTM（`ofPerm` 建）。**關鍵洞見**=無界走位的可逆性是**有限局部置換檢查、非無界軌跡歸納**，故 `walkTM_reversible` 經 `ofPerm_reversible` **一次付清（免費）**。`walkStep(p,a)=(xor p a,a)` CNOT 式對合。語意 decide 驗：空白格續走同向 / 標記格反向（`walkTM_blank_goR`/`walkTM_marker_goR`/`walkTM_goL_cases`）。零 sorry、標準三公理。
   - **註**：C-γ 原憂「in-degree-1 需參數化證明」——實際上 `ofPerm` 已把可逆性做成一次付清的置換打包，走位可逆性免費；**剩下的難點下移到 C-δ**（走位語意正確地接合 M-step + 垃圾傾倒 + 宏步歸納）。
 - **剩**：C-δ 宏步正確+接 M6（macrostep 可逆+精確模擬一 M-step、乾淨組態→∃n 微步→下一乾淨組態、鏡射 `bennettAut_iterate`；接 M6 `reversibleTM_suspension_simulates`）。**互鎖歸納、多日 research**——垃圾軌延伸排程 + 走位到 frontier + M-step 接合要一起設計。
+
+## C-δ 設計健全性對抗裁決（2026-07-09，艦隊 wf_481a605d-b94，12 agents/1.26M tok，GO/NO-GO 驗牆）
+
+6 視角多樣懷疑者各攻 macrostep 健全性 → 每攻擊獨立複驗（真牆 or 被閃）。判準嚴：真牆=正確更新可證需**無界帶內容量、塞不進有限 Fintype**（殺 rev.1-4 者）。
+
+**複驗層判決（權威）：5/6 判無真牆（真開放、多日、非 blocked）；1/6 判真牆。**
+- deposit-indegree：naive 連續區死、但 **one-hot frontier sentinel 閃過** → wall FALSE。
+- **frontier-find：真牆 TRUE（唯一）**——`ofPerm` 免費可逆走位**無法可逆穿越一段相同標記的連續區**（CNOT bounce 第一個 `1` 就反向；穿越需 self-loop (scan,1)→(scan,1)，鴿籠吃掉唯一前像槽→非有限置換→ofPerm 不適用；消歧量=run-length residue mod(m+2)=無界）。**但只殺「frontier=連續垃圾區遠端邊緣」設計**。
+- home-return：投影謬誤（h/d 寫在保留的可逆帶上、非暫存器；full config 仍 in-degree-1）→ FALSE。
+- mstep-walk-interleave：176 碰撞全 entry-vs-transit 有界可修、無 skip-count → FALSE。
+- global-invariant：causeway skip-count 是**死的 moving-tape 設計（M3d）的量**，固定頭 M3e 無 causeway 軌 → **SOUND**。
+- completeness-critic：加 home sentinel→地標終止走位免計數（同已證的頭標記走位）→ FALSE。
+
+**淨判決 = 現行 3 軌編碼有確認缺陷（frontier-find 真牆），但非結構死牆。修法（兩獨立複驗者收斂）= frontier 改用專屬軌的一位元 sentinel（唯一 1、walkTM 可 bounce），不穿越垃圾內容區 → 真牆閃過。** 記錄額外殘留（皆有界非牆）：垃圾記錄寬 = HistRec m+1 位需 m+1 連續格 + 有界 mod-(m+1) 複製相位；deposit in-degree（un-deposit 唯一前驅）需 sentinel 定位。**主線不需要（方案 A 已零 sorry）；C-δ = 真開放多日 capstone，非 blocked 非 safe。**
+
+### 修法落地 ✅（sentinel 軌，commit 待填）
+- **`fixedEnc4`（4 軌）**：M帶/頭標記/垃圾內容/**frontier sentinel**（位 4k/4k+1/4k+2/4k+3）+ `fixedEnc4_injective`。
+- **關鍵：`fixedEnc4_head_track`/`fixedEnc4_frontier_track`** 證頭標記軌與 frontier 軌**皆 = `headMark` 結構（唯一 1）** → **兩走位都復用已證的 `walkTM`**（bounce 到唯一標記），frontier-find 真牆在原語層閃過（走位靠 sentinel 軌、不穿越垃圾內容 run）。
+- **仍待（多日、有界非牆）**：記錄寬 m+1 打包 + 有界複製相位、deposit in-degree、宏步 soundness 歸納。
