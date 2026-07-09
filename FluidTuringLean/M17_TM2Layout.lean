@@ -123,4 +123,22 @@ theorem stackContent_push_top (s : List Γ') (x : Γ') :
     List.getElem?_append_right (le_refl s.length), Nat.sub_self]
   rfl
 
+open Turing.PartrecToTM2 in
+/-- **堆疊解碼**：給長度 `len`，從內容軌讀回 `len` 個符號的堆疊。 -/
+def stackDecode (len : ℕ) (content : ℤ → Bool × Bool) : List Γ' :=
+  List.ofFn fun j : Fin len ↦ Γ'BitEquiv.symm (content (j : ℤ))
+
+open Turing.PartrecToTM2 in
+/-- **★編碼忠實性（round-trip）★**：從（長度 + 內容軌）**唯一復原**原堆疊。這是不可逆
+`M_tr` 正確性歸納的地基——組態由其位帶編碼唯一決定。 -/
+theorem stackDecode_stackContent (s : List Γ') :
+    stackDecode s.length (stackContent s) = s := by
+  apply List.ext_getElem
+  · simp [stackDecode]
+  · intro n h1 _
+    have hn : n < s.length := by simpa [stackDecode] using h1
+    simp only [stackDecode, List.getElem_ofFn]
+    rw [show ((⟨n, by simpa [stackDecode] using h1⟩ : Fin s.length) : ℤ) = (n : ℤ) from rfl,
+      stackContent_get s n hn, Equiv.symm_apply_apply]
+
 end FluidTuring
