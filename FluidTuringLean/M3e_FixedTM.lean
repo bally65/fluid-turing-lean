@@ -552,6 +552,44 @@ theorem trackWalkTM_iter_right (t : Fin 4) (off : Fin 4) (tape : ℤ → Bool) (
     congr 1
     push_cast; ring
 
+/-- 機器層 move（bounce）：讀目標軌唯一標記 → 平移方向 = 反相位方向（翻向）。 -/
+theorem trackWalkTM_move_bounce (t : Fin 4) (dir : Bool) :
+    (trackWalkTM t).move (ctrlBits (dir, t)) true = bif !dir then Dir.left else Dir.right := by
+  change trackWalkMu (trackWalkL t (ctrlBits (dir, t), true)).1 = _
+  rw [trackWalkL_pack, trackWalk_bounce t dir]
+  simp only [trackWalkMu, ctrlBits_bit0]
+
+/-- **帶層 bounce 步進**：機器在目標軌唯一標記（`tape 0 = true`）一步 = 控制翻方向、
+offset 反向 ±1，帶依反方向平移一格。可達性收尾的最後一步。 -/
+theorem trackWalkTM_step_bounce (t : Fin 4) (dir : Bool) (tape : ℤ → Bool) (ht : tape 0 = true) :
+    (trackWalkTM t).step (ctrlBits (dir, t), tape)
+      = (ctrlBits (!dir, bif !dir then t - 1 else t + 1),
+         fun n ↦ if n + (bif !dir then Dir.left else Dir.right).toInt = 0 then true
+                 else tape (n + (bif !dir then Dir.left else Dir.right).toInt)) := by
+  rw [BitTM.step_eval, ht, trackWalkTM_next_bounce t dir, trackWalkTM_move_bounce t dir,
+    trackWalkTM_write t dir t true]
+  rfl
+
+/-- **★走位可達性（收尾）★**：向右走位，沿途每格非唯一標記、offset 於距離 `p` 對齊到
+目標軌（`offAdvance p off = t`）、該處是標記（`tape p = true`），則恰 `p + 1` 步後機器
+**已抵達標記並彈跳**（方向由 `false`(右) 翻成 `true`(左)）。= iter_right（`p` 步穿越）
+接 step_bounce（第 `p+1` 步彈跳）。這是「走到唯一標記於資料相依距離」的完整證明。 -/
+theorem trackWalkTM_reaches_marker (t : Fin 4) (off : Fin 4) (tape : ℤ → Bool) (p : ℕ)
+    (hpath : ∀ i : ℕ, i < p → ¬(offAdvance i off = t ∧ tape (i : ℤ) = true))
+    (halign : offAdvance p off = t) (hmark : tape (p : ℤ) = true) :
+    ∃ (off' : Fin 4) (tape' : ℤ → Bool),
+      ((trackWalkTM t).step)^[p + 1] (ctrlBits (false, off), tape)
+        = (ctrlBits (true, off'), tape') := by
+  obtain ⟨tp, hp, hpf⟩ := trackWalkTM_iter_right t off tape p hpath
+  have htp0 : tp 0 = true := by rw [hpf 0 (le_refl 0)]; simpa using hmark
+  have hfull : ((trackWalkTM t).step)^[p + 1] (ctrlBits (false, off), tape)
+      = (ctrlBits (!false, bif !false then t - 1 else t + 1),
+         fun n ↦ if n + (bif !false then Dir.left else Dir.right).toInt = 0 then true
+                 else tp (n + (bif !false then Dir.left else Dir.right).toInt)) := by
+    rw [Function.iterate_succ_apply', hp, halign]
+    exact trackWalkTM_step_bounce t false tp htp0
+  exact ⟨_, _, hfull⟩
+
 /-! ### C-δ：deposit 迴圈本體（ring-controlled，2026-07-09，對抗設計艦隊 wf_a19b206c 修法）
 
 設計艦隊揪出原「spectator ringAtZero + decide-on-Profile」deposit 機制**錯**（ring 計數器在
