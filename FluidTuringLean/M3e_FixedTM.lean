@@ -112,6 +112,133 @@ theorem fixedEncTape_injective {t t' : ℤ → Bool} {h h' : ℤ}
   rw [fixedEncTape_odd, fixedEncTape_odd, decide_eq_true (rfl : h = h)] at hodd
   exact of_decide_eq_true hodd.symm
 
+/-! ### 方案 C 焦點 session：整體架構設計基線（2026-07-08，先設計後實作）
+
+**互鎖硬核紀律**：C-β 續(垃圾軌)/C-γ(走位表)/C-δ(宏步)互咬,單塊拆會設計出接不起來
+的碎片(rev.1-4 教訓)。故先把整體架構定案,再逐塊實作、每塊 decide/build 驗。
+
+**架構**:
+- 被模擬機器 = `FixedTM M`(狀態 q、靜止帶 t、頭 h)。
+- 字面機 `bennettFixed : BitTM`(moving-tape、頭固定 0、帶平移=走位)。
+- bennettFixed 帶佈局(每 FixedTM 格 k ↔ BitTM 位 3k/3k+1/3k+2 三軌):
+  軌 0=t k(M 帶)、軌 1=頭標記(唯一 1 在 h)、軌 2=垃圾(連續新鮮、初始空)。
+- bennettFixed 狀態 = M-狀態 q(m 位)+走位相位+緩衝(裝被丟棄的 (q,a))。
+- **一個 macrostep(=一 M-step)的微步序列**:
+  1. 從 home(BitTM 位 0=格 0 軌 0)出發。
+  2. **走到頭標記**(軌 1=1):帶平移到頭標記在位 0 下(net 平移=3h)。
+  3. **M-step**:讀軌 0、Feistel(算 next q、寫位、緩衝 (q,a))、頭標記 ±1(M 的 move)。
+  4. **走到垃圾 frontier**(軌 2 連續區底):帶平移到 frontier。
+  5. **傾倒**:緩衝 (q,a) 寫進新鮮垃圾格、frontier 延伸一格。
+  6. **走回 home**(淨零:總平移歸零,`walk_roundtrip_closes` 已驗此性質)。
+- 每個走位=標記終止、可逆(ofPerm 免費);macrostep 淨零、可逆;垃圾連續新鮮
+  (frontier 確定、無跳過=rev.1-3 障礙不現、`walk_reversible` 已驗核心)。
+
+**實作順序(逐塊 verified)**:
+- C-β 續:3 軌乾淨編碼 `fixedEnc3`(帶/頭/垃圾)+單射(擴上方 2 軌技術)。
+- C-γ:走位設計成 ofPerm-BitTM(讀標記軌、非標記移動、標記轉相位)→可逆免費
+  (ofPerm_reversible);語意=走到正確標記(decide 局部驗)。
+- C-δ:macrostep 正確(乾淨組態→∃n 微步→下一乾淨組態、算 M.step、垃圾外顯)
+  鏡射 `bennettAut_iterate`;+接 M6 `reversibleTM_suspension_simulates`。
+
+**誠實**:主線不需要(M3c 已閉)=字面機錦上添花;多日、但架構定案後碎片會接得起來。 -/
+theorem fixedC_architecture_note : True := trivial
+
+/-- **3 軌乾淨編碼**（C-β 續）：FixedTM 格 `k` ↔ BitTM 位 `3k`(帶)/`3k+1`(頭標記)/
+`3k+2`(垃圾)。字面機的完整帶編碼（初始垃圾 `g` 全 false）。 -/
+def fixedEnc3 (t : ℤ → Bool) (h : ℤ) (g : ℤ → Bool) : ℤ → Bool :=
+  fun i ↦ if i % 3 = 0 then t (i / 3)
+    else if i % 3 = 1 then decide ((i - 1) / 3 = h)
+    else g ((i - 2) / 3)
+
+theorem fixedEnc3_zero (t : ℤ → Bool) (h : ℤ) (g : ℤ → Bool) (k : ℤ) :
+    fixedEnc3 t h g (3 * k) = t k := by
+  simp only [fixedEnc3]
+  rw [if_pos (by omega : (3 * k) % 3 = 0),
+    Int.mul_ediv_cancel_left k (by norm_num : (3 : ℤ) ≠ 0)]
+
+theorem fixedEnc3_one (t : ℤ → Bool) (h : ℤ) (g : ℤ → Bool) (k : ℤ) :
+    fixedEnc3 t h g (3 * k + 1) = decide (k = h) := by
+  simp only [fixedEnc3]
+  rw [if_neg (by omega : ¬(3 * k + 1) % 3 = 0), if_pos (by omega : (3 * k + 1) % 3 = 1),
+    show 3 * k + 1 - 1 = 3 * k from by ring,
+    Int.mul_ediv_cancel_left k (by norm_num : (3 : ℤ) ≠ 0)]
+
+theorem fixedEnc3_two (t : ℤ → Bool) (h : ℤ) (g : ℤ → Bool) (k : ℤ) :
+    fixedEnc3 t h g (3 * k + 2) = g k := by
+  simp only [fixedEnc3]
+  rw [if_neg (by omega : ¬(3 * k + 2) % 3 = 0), if_neg (by omega : ¬(3 * k + 2) % 3 = 1),
+    show 3 * k + 2 - 2 = 3 * k from by ring,
+    Int.mul_ediv_cancel_left k (by norm_num : (3 : ℤ) ≠ 0)]
+
+/-- **3 軌編碼單射**：三軌各自取回 → (帶,頭,垃圾) 由編碼帶唯一決定。 -/
+theorem fixedEnc3_injective {t t' g g' : ℤ → Bool} {h h' : ℤ}
+    (heq : fixedEnc3 t h g = fixedEnc3 t' h' g') : t = t' ∧ h = h' ∧ g = g' := by
+  refine ⟨funext fun k ↦ ?_, ?_, funext fun k ↦ ?_⟩
+  · have := congrFun heq (3 * k); rwa [fixedEnc3_zero, fixedEnc3_zero] at this
+  · have hh := congrFun heq (3 * h + 1)
+    rw [fixedEnc3_one, fixedEnc3_one, decide_eq_true (rfl : h = h)] at hh
+    exact of_decide_eq_true hh.symm
+  · have := congrFun heq (3 * k + 2); rwa [fixedEnc3_two, fixedEnc3_two] at this
+
 end FixedTM
+
+/-! ### C-γ：可逆雙標記彈跳走位（ofPerm-BitTM，可逆免費）
+
+方案 C 走位可逆性的核心。走位在 ℤ 上距離**資料相依**（無界，頭 `h` 可任意遠），
+但可逆性不是無界軌跡問題、而是**有限的局部置換檢查**。設計成 `ofPerm`-BitTM，
+`ofPerm_reversible`（M3b 已證）就**一次付清**整條無界走位的可逆性。
+
+**雙標記彈跳**：相位 = 1 位（`false`=向右 goR / `true`=向左 goL）。讀標記軌位 `a`：
+空白格（`a=false`）續走同向、標記格（`a=true`）反向。局部更新
+`walkStep (p,a) = (fun i ↦ xor (p i) a, a)`——受 `a` 控制翻轉相位、位不變
+（CNOT 式**對合**），故是 `(相位 × 位)` 的置換 ⟹ `walkTM` 可逆。方向 `μ` 查新相位。
+
+這是 C-γ 的可獨立驗證地基：**無界走位的可逆性=免費**（結構=有限置換，不需歸納
+無界軌跡）。走位的語意正確（走到正確標記、垃圾 frontier）= C-δ 宏步層的事。 -/
+
+/-- 走位局部更新：讀位 `a` 控制翻轉相位（位不變）。CNOT 式對合。 -/
+def walkStep (pa : (Fin 1 → Bool) × Bool) : (Fin 1 → Bool) × Bool :=
+  (fun i ↦ xor (pa.1 i) pa.2, pa.2)
+
+theorem walkStep_involutive : Function.Involutive walkStep := by
+  rintro ⟨p, a⟩
+  simp only [walkStep]
+  refine Prod.ext ?_ rfl
+  funext i
+  cases a <;> simp
+
+/-- 走位局部置換（由對合建）。 -/
+def walkPerm : ((Fin 1 → Bool) × Bool) ≃ ((Fin 1 → Bool) × Bool) :=
+  walkStep_involutive.toPerm
+
+/-- 走位方向表：goL(`true`)→左、goR(`false`)→右。 -/
+def walkMu : (Fin 1 → Bool) → Dir := fun p ↦ if p 0 then Dir.left else Dir.right
+
+/-- **彈跳走位 BitTM**（方案 C 走位引擎）。 -/
+def walkTM : BitTM := BitTM.ofPerm 1 walkPerm walkMu
+
+/-- **走位可逆（免費）**：`ofPerm` 任意置換即可逆 ⟹ 無界走位的可逆性一次付清，
+不需對無界軌跡歸納。此即 C-γ 消解「兩流 crux 可逆性」的關鍵。 -/
+theorem walkTM_reversible : walkTM.Reversible :=
+  BitTM.ofPerm_reversible 1 walkPerm walkMu
+
+/-- goR 相位（向右）。 -/
+def goR : Fin 1 → Bool := fun _ ↦ false
+/-- goL 相位（向左）。 -/
+def goL : Fin 1 → Bool := fun _ ↦ true
+
+/-- **語意①**：空白格（`a=false`）續走同向——goR 保持 goR、向右移。 -/
+theorem walkTM_blank_goR : walkTM.next goR false = goR ∧ walkTM.move goR false = Dir.right := by
+  constructor <;> decide
+
+/-- **語意②**：標記格（`a=true`）反向——goR 翻成 goL、改向左移。 -/
+theorem walkTM_marker_goR : walkTM.next goR true = goL ∧ walkTM.move goR true = Dir.left := by
+  constructor <;> decide
+
+/-- **語意③**：對稱地，goL 在空白續向左、在標記翻回 goR 向右。 -/
+theorem walkTM_goL_cases :
+    walkTM.next goL false = goL ∧ walkTM.move goL false = Dir.left ∧
+    walkTM.next goL true = goR ∧ walkTM.move goL true = Dir.right := by
+  refine ⟨?_, ?_, ?_, ?_⟩ <;> decide
 
 end FluidTuring
