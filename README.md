@@ -33,6 +33,34 @@ Cardona et al. 2021 紙上證的、本專案未形式化的部分。
   （黏滯項為何對任意 ν 消失），**非真流體 NS 物理**。前提 A（Hodge）/B（Hodge-admissibility）
   釘死；Chern–Hamilton 注意（某些流形度量形變不可行）寫進假設 docstring。**不冒充真 NS 圖靈完備。**
 
+### 不可判定線（M9–M15，2026-07-09；全線地圖見 `docs/UNDECIDABILITY_LINE.md`）
+
+把「流體能計算」推到它最有記憶點的後果——**不可判定性**——並在**兩側**機器化
+（軌道可達性 = 積分/全域側；有限時間爆破 = 微分/局部側）：
+
+- **M9** `halts_imp_orbitReaches`：停機 ⟹ 流軌道抵達編碼停機區（由 `Simulates.iterate`）。
+- **M10** `finite_time_blowup_undecidable`：若某族連續系統的爆破 ⟺ 停機（Graça 2009 /
+  Huynh 2024 的 ODE 構造、明寫假設），則**爆破偵測無演算法可判定**（複用 mathlib
+  已證 `halting_problem`）。
+- **M11–M13** 停機觸發爆破橋：顯式 `y'=y²` 爆破原子 → 混成開關 → **光滑化**
+  （`Real.smoothTransition`：停機前恰 1、整段單一 C^∞、光滑 Riccati `z'=h(t)z²`、
+  停機後有限時間爆）。`halts_imp_smooth_blowup`。
+- **M14** 閉環：`OrbitFaithful`（軌道打中編碼集必打中正確迭代）⟹ **可達 ⟺ 停機**
+  ⟹ `coupled_blowup_undecidable`（耦合家族爆破觸發不可判定）。且
+  **`suspension_flow_simulates_faithful`：忠實性對懸掛流是定理**（M4 完整不變量）。
+- **M15** 通用接線：mathlib 真 TM（`ToPartrec`）停機 ⟺ `Code.eval` 有定義 +
+  通用碼 `univ_wiring` + **`stepT_halting_undecidable`（無條件、零假設：機器家族
+  停機不可判定）**。
+
+**假設帳本**：忠實性 = 定理 ✅；通用機器 = 定理 ✅；**唯一剩餘 = (ii) 機器的緊空間
+同胚實現**（`ToPartrec` ↔ `BitTM` 橋，kickoff 規格在 `docs/UNDECIDABILITY_LINE.md`）。
+接上後「懸掛流家族的爆破觸發不可判定」成**無條件定理**。
+
+**誠實界線**：M10 的真 ODE 構造（TM→光滑向量場）paper-blocked（analog computation、
+mathlib 無）；本線的「流」= 懸掛流，接真 Euler/NS 幾何仍走 M5/M7 明寫假設。
+爆破不可判定與千禧年難題**正交**（定常/可達性 vs 時間演化/blowup 的爆與不爆），
+不宣稱逼近後者。
+
 - Lean `v4.32.0-rc1` + mathlib（pin 於 `lakefile.toml`）
 - 建置：`lake build`（首次先 `lake exe cache get`）
 
