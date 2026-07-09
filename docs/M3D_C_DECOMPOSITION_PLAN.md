@@ -352,3 +352,8 @@ naive `(相位×位置)` 模型把端點相位跨全位置塌縮=非置換;`down
 - C-δ 宏步正確+接合:macrostep 可逆+精確模擬一 M-step、接 M6。歸納、高。
 
 **誠實範圍**:產出字面機結果、主線不需要(M3c 同胚版已閉)=錦上添花完整;多日 research(架構改+雙標記走位+宏步歸納);但路線清楚了(固定頭 M=鑰匙、walk_reversible=已驗地基)。**建議先攻 C-γ gating**(這條路能否走通的關鍵)。接觸幾何=等 mathlib 補微分幾何、非工程可推。
+
+## 方案 C 執行進度（2026-07-08）
+- **C-α 固定頭 TM 模型 ✅**（commit 3c7cae0，新檔 `M3e_FixedTM.lean`）：`FixedTM`（狀態位向量+靜止帶 ℤ→Bool+頭位置 ℤ）+ `step`（讀頭格/寫/換態/移頭）+ `step_tape_at_head`/`step_tape_off_head`（頭格寫入正確、頭外不動）。零 sorry。**兩流 crux 鑰匙落地**：帶靜止使垃圾可堆疊。
+- 走位地基（M3d 已驗）：`walk_reversible`（走位是置換）+ `walk_roundtrip_closes`（淨零往返閉合）。
+- **剩**：C-β 靜止帶佈局+走位 macrostep、C-γ 雙標記走位 in-degree-1（關鍵閘、需參數化證明）、C-δ 宏步正確+接 M6。多日 research。
