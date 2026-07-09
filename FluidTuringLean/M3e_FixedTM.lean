@@ -71,6 +71,47 @@ theorem step_tape_off_head (c : M.Cfg) {i : ℤ} (hi : i ≠ c.2.2) :
 訪頭標記與垃圾 frontier。完整橋接（`BitTM ≃ FixedTM` 動力學）留 C-β/後續。 -/
 theorem fixedTM_vs_bitTM_note : True := trivial
 
+/-! ### C-β 地基：靜止帶 + 頭標記的單射編碼
+
+字面 Bennett 機把 FixedTM 的（靜止帶, 頭位置）裝進一條帶：**雙軌交錯**——
+偶位 `2k` = FixedTM 帶格 `k`，奇位 `2k+1` = 「頭在 `k`?」標記（唯一在 `h`）。
+垃圾軌之後再加（本 brick 只做帶+頭的編碼與單射，垃圾/走位屬 C-β 續與 C-γ）。 -/
+
+/-- 頭標記軌：唯一 `true` 在頭位置 `h`。 -/
+def headMark (h : ℤ) : ℤ → Bool := fun k ↦ decide (k = h)
+
+/-- 帶+頭雙軌編碼：偶位載帶、奇位載頭標記。 -/
+def fixedEncTape (t : ℤ → Bool) (h : ℤ) : ℤ → Bool :=
+  fun i ↦ if i % 2 = 0 then t (i / 2) else headMark h ((i - 1) / 2)
+
+/-- 偶位取回帶格。 -/
+theorem fixedEncTape_even (t : ℤ → Bool) (h : ℤ) (k : ℤ) :
+    fixedEncTape t h (2 * k) = t k := by
+  simp only [fixedEncTape]
+  rw [if_pos (by omega : (2 * k) % 2 = 0),
+    Int.mul_ediv_cancel_left k (by norm_num : (2 : ℤ) ≠ 0)]
+
+/-- 奇位取回頭標記。 -/
+theorem fixedEncTape_odd (t : ℤ → Bool) (h : ℤ) (k : ℤ) :
+    fixedEncTape t h (2 * k + 1) = decide (k = h) := by
+  simp only [fixedEncTape, headMark]
+  rw [if_neg (by omega : ¬(2 * k + 1) % 2 = 0),
+    show 2 * k + 1 - 1 = 2 * k from by ring,
+    Int.mul_ediv_cancel_left k (by norm_num : (2 : ℤ) ≠ 0)]
+
+/-- **編碼單射**：不同的（帶, 頭）給不同的編碼帶 —— 字面構造的地基
+（垃圾能靜止堆疊、頭標記唯一可尋，皆賴此）。 -/
+theorem fixedEncTape_injective {t t' : ℤ → Bool} {h h' : ℤ}
+    (heq : fixedEncTape t h = fixedEncTape t' h') : t = t' ∧ h = h' := by
+  have htape : t = t' := by
+    funext k
+    have := congrFun heq (2 * k)
+    rwa [fixedEncTape_even, fixedEncTape_even] at this
+  refine ⟨htape, ?_⟩
+  have hodd := congrFun heq (2 * h + 1)
+  rw [fixedEncTape_odd, fixedEncTape_odd, decide_eq_true (rfl : h = h)] at hodd
+  exact of_decide_eq_true hodd.symm
+
 end FixedTM
 
 end FluidTuring
