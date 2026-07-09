@@ -19,18 +19,24 @@ v0.5 驗收時記錄、本次收斂：(1) 對可合流 `step` 主張嚴格 `Simu
 全由 M3b/M3c/M3 既有鏈餵入。任意（可合流）機器的模擬語意由
 `bitTM_suspension_simulates` 的垃圾外顯形式承接，不再由主定理直接主張。
 
-**明確不主張**（v0.3 前身草案中被判定為錯誤或嚴重超譯的斷言，永久移除）：
+**關於 Navier–Stokes 黏滯免疫（2026-07-09 依源頭論文更正，見 `M7_NavierStokes`）**：
 
-1. ~~「調和場 `Δ_H X = 0` ⟹ Navier–Stokes 黏滯耗散為零」~~ —— 假。
-   NS 耗散率是 `ν ∫ |∇u|²`，非 `ν ∫ |Δu|²`；由 Weitzenböck
-   `Δ_H = ∇*∇ + Ric`，「調和 ⟹ 平行（`∇X = 0`）」只在 Ricci-flat
-   流形成立，一般 Hodge-admissible 3-流形上 `Ric ≠ 0`、耗散非零。
-2. ~~「圖靈完備性對任意黏滯性 ν > 0 免疫」~~ —— 超譯。
-   Beltrami 場是 Euler 穩態，通常不是 NS 穩態（`νΔu ≠ 0` 無外力不可抵銷）。
+本檔前身 docstring 曾把「NS 黏滯免疫」判為**假/超譯**，理由是 (a) 混淆動量方程黏滯項
+`νΔX` 與耗散率 `ν∫|∇u|²`，(b) 用 **Bochner** `Δ = ∇*∇`（Weitzenböck 帶 `Ric`）推得
+「需 Ricci-flat」。**該判斷基於錯誤的運算元選擇。**
 
-依硬規則 5：此「不可證／為假」判定不因後續壓力反轉。若未來要碰 NS，
-合法途徑只有：(A) 限制 Ricci-flat（如平坦 T³）或 (C) forced-NS 外力吸收
-`νΔu` —— 需重新開範圍決策，不得靜默放寬本檔假設。
+源頭論文 **Dyhr–González-Prieto–Miranda–Peralta-Salas 2025/2026**（arXiv:2507.07696）
+Proposition 4.1 用的是 **Hodge Laplacian `Δ_H = dd*+d*d` 作用在對偶 1-形式 `α = X♭`**：
+`dα = 0 ∧ d*α = 0`（調和）⟹ `Δ_H α = 0` ⟹ 動量方程黏滯項 `νΔX = 0` **對任意 `ν` 消失**，
+**不需 Ricci-flat**。前身兩點的精確錯處：(1) Prop 4.1 只需 `Δ_H X = 0`（調和），**不需**
+更強的 `∇X = 0`（平行）——前身經 Bochner 誤導出平行；(2) 前身說「Beltrami 通常非 NS 穩態」
+**正確但不相關**——NS 構造用的是**調和場**（`curl=0, div=0`），非 Beltrami（`curl u = λu`，
+一般 `Δu = λ²u ≠ 0`、確非 NS 穩態）。
+
+**這是基於新證據（具體論文＋精確運算元）的修正，非硬規則 5 所禁的「壓力反轉」**——rule 5
+禁的是屈從壓力、不是在被展示正確數學後改正一個基於混淆的舊判斷。NS 黏滯免疫的形式化見
+`M7 prop_4_1`（抽象簽名版：釘死前提 A=Hodge Laplacian、B=Hodge-admissibility；真幾何內容
+mathlib 無、抽象層空洞已機器背書 `trivialNS_vacuous`）。**仍不對任意流形宣稱、不冒充真流體物理。**
 
 sorry 數：**0**（**方案 A，2026-07-08**）：`euler_flow_turing_complete` 前身的
 paper-blocked sorry 已消除——把唯一未形式化的幾何依賴（Cardona et al. 2021 Thm 1

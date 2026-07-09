@@ -9,3 +9,4 @@ import FluidTuringLean.M3e_FixedTM
 import FluidTuringLean.M4_Suspension
 import FluidTuringLean.M5_ReebInterface
 import FluidTuringLean.M6_EulerTuring
+import FluidTuringLean.M7_NavierStokes
