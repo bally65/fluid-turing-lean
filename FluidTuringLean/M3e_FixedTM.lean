@@ -401,6 +401,17 @@ def trackWalkL (t : Fin 4) : ((Fin 3 → Bool) × Bool) ≃ ((Fin 3 → Bool) ×
         ((Equiv.prodAssoc Bool (Fin 4) Bool).symm.trans
           (Equiv.prodCongr ctrlBits (Equiv.refl Bool)))))
 
+/-- **橋接（可達性地基）**：`trackWalkL`（機器控制置換、3 位元）作用在 `ctrlBits`-打包的
+控制 = 控制層 `trackWalkFwd` 的結果再打包。連接機器層與已 decide 驗的控制層語意
+（`trackWalk_cross`/`_bounce`），所有走位可達性推理的基礎。 -/
+theorem trackWalkL_pack (t : Fin 4) (dir : Bool) (off : Fin 4) (a : Bool) :
+    trackWalkL t (ctrlBits (dir, off), a) =
+      (ctrlBits ((trackWalkFwd t (dir, off, a)).1, (trackWalkFwd t (dir, off, a)).2.1),
+        (trackWalkFwd t (dir, off, a)).2.2) := by
+  simp only [trackWalkL, Equiv.trans_apply, Equiv.prodCongr_apply, Equiv.coe_refl,
+    Equiv.prodAssoc_apply, Equiv.prodAssoc_symm_apply, Prod.map_apply, id_eq,
+    Equiv.symm_apply_apply, trackWalkEquiv, Equiv.coe_fn_mk]
+
 /-- 方向表：方向位（位 0）true=左、false=右。 -/
 def trackWalkMu : (Fin 3 → Bool) → Dir := fun bits ↦ bif bits 0 then Dir.left else Dir.right
 
@@ -412,6 +423,21 @@ def trackWalkTM (t : Fin 4) : BitTM := BitTM.ofPerm 3 (trackWalkL t) trackWalkMu
 （含穿越 run，已 `trackWalk_reversible` decide 裁為置換）的無界軌跡可逆性一次付清。 -/
 theorem trackWalkTM_reversible (t : Fin 4) : (trackWalkTM t).Reversible :=
   BitTM.ofPerm_reversible 3 (trackWalkL t) trackWalkMu
+
+/-- **機器層 cross**（可達性步進）：讀非目標軌（`off ≠ t`）、任意讀位 `a`，機器狀態
+更新 = 保持方向、offset 隨方向 ±1（打包）。直接由橋接 + `trackWalk_cross`。 -/
+theorem trackWalkTM_next_cross (t : Fin 4) (dir : Bool) (off : Fin 4) (a : Bool) (h : off ≠ t) :
+    (trackWalkTM t).next (ctrlBits (dir, off)) a
+      = ctrlBits (dir, bif dir then off - 1 else off + 1) := by
+  change (trackWalkL t (ctrlBits (dir, off), a)).1 = _
+  rw [trackWalkL_pack, trackWalk_cross t dir off a h]
+
+/-- **機器層 bounce**（可達性步進）：讀目標軌唯一標記（`off = t`、`a = true`）→ 翻方向。 -/
+theorem trackWalkTM_next_bounce (t : Fin 4) (dir : Bool) :
+    (trackWalkTM t).next (ctrlBits (dir, t)) true
+      = ctrlBits (!dir, bif !dir then t - 1 else t + 1) := by
+  change (trackWalkL t (ctrlBits (dir, t), true)).1 = _
+  rw [trackWalkL_pack, trackWalk_bounce t dir]
 
 /-! ### C-δ：deposit 迴圈本體（ring-controlled，2026-07-09，對抗設計艦隊 wf_a19b206c 修法）
 
