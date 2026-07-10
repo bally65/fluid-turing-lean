@@ -68,3 +68,21 @@ Lean 化、需自造光滑 round 的顯式收縮界）。
 無 smooth floor）**、G4/G5 = 組裝（G5 有 `bounded_orbit` 備）、G6 = 接停機不可判定（中）、自治流黏合 =
 paper-blocked。**下一步 = G2（smooth 讀符號 exact-on-lattice）= 真核心**，建議下輪先跑 G2 設計 scope。
 **`ρ<1` 只在 `δ<1/4` 嚴格**（半整數斥不動點）= smooth rounding 內稟，下游全程 `δ`-tube。
+
+## 2026-07-10 更新②：G2 已建（M46）— 診斷更正「G2 不是 smooth floor」
+
+**G2 設計 scope（wf_047bf8a0）裁決 = G2A_ACHIEVABLE**。診斷更正：G2 標成「卡 mathlib 無 smooth floor」
+是**範疇錯誤**——不需 smooth floor（不連續、不可能），需要的是 **gap 編碼格點上精確的光滑階梯**，
+直接用 M41/M44 的 exact-plateau 引理（`smoothTransition.zero_of_nonpos/one_of_one_le`）疊出、≈ M41 等級。
+**G2 已建（M46）**：`sstep c g u=smoothTransition((u−c)/g)`（單階）+ `sfloor k w u=∑_{j<k−1} sstep(j+w,1−w,u)`
+（階梯）；**`sfloor_exact_on_plateau`（★CRUX★：`u∈[j₀,j₀+w]⟹sfloor=j₀` 字面相等）**+ `_contDiff`+`_hasDerivAt`。
+
+**★新增誠實 concern（Brick 6 之上的真決策點）★**：整條 GPAC 線用 **C^∞（smoothTransition=expNegInvGlue）、
+非 analytic**（`ContDiff ℝ ⊤` 現指 analytic ω、smoothTransition 對它為假；只 `ContDiff ℝ ((⊤:ℕ∞):WithTop ℕ∞)`
+=C^∞）。**本線目標 = C^∞ 光滑流**（同 M13 起全線）；**若** Brick 6 真目標是**嚴格 GPAC（analytic 向量場）**，
+則 exact-on-lattice 是**不可能定理**（analytic 區間常值⟹全域常值）、M40-46 scaffold 離題。需先釘死此語意。
+
+**修正 G-brick 難度（再次）**：G1✅(M44)、G2✅(M46、≈M41 等級非多月)、G3✅(M45)。**真牆全在下游、與 G2/G3
+正交**：φ 自治化（M41 已標多月）、真不連續 σ 全域 tube 不變式（Wall A/B）、GPAC analytic 語意分歧（上）、
+邊際價值（條件式仍弱於且冗餘於 M33 無條件）。**剩 G4（組單步 σ 格點精確恆等）+G5（tube 不變式、有
+`bounded_orbit` 備）+G6（splice 停機不可判定）= 組裝為主，真牆是 φ 自治化 + analytic 語意。**
