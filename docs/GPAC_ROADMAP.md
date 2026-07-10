@@ -49,3 +49,22 @@ Lean 化、需自造光滑 round 的顯式收縮界）。
 
 最低風險、最清楚可達、明確 GPAC 基石（TM 轉移表的有限 case 分析 = n-way smoothSelect 的巢狀/疊加）。
 先建 G1 立地基，G2/G3 續攻（G3 為真核心、需最多 research）。
+
+---
+
+## 2026-07-10 更新：G3 已建（M45）+ 難度修正（G3 非多月心臟、真 crux 在 G2）
+
+**G3 設計 scope workflow（wf_776adfe3）裁決 = G3A_ACHIEVABLE**，並**修正本路線圖兩處誤導**：
+1. **G3 資產不是 smoothTransition（M40/M41）**：smoothTransition 單調（平坦→升→平坦）是 gating/select
+   工具（G1），是週期 re-rounding 的**錯工具**，且 mathlib 對它**零導數界引理**（M44 已撞牆）。
+   **G3 改用週期 `sin`**：`sround(x)=x−sin(2πx)/(2π)`，整數 = 超吸引不動點、導數閉式 `1−cos(2πx)`、
+   mathlib trig 全套量化支援。
+2. **G3 不是多月心臟**：M45 一次建成（8 定理、零 sorry、標準三公理），含 CRUX `sround_contract`
+   （basin 收縮 `ρ=1−cos(2πδ)`，MVT）+ **`bounded_orbit`（破 Wall B：發散 `ΣLⁱ` → 收斂 `b/(1−Λ)`）**。
+   **真 crux 移到 G2**（smooth 讀符號 `⌊k·y⌋` 於格點**精確**——mathlib 無 smooth floor，且 G4 需
+   `σ(enc c)=enc(step c)` **字面相等**非 ε-近似）——**比 G3 難**。
+
+**修正 G-brick 難度**：G1 ✅（M44）、**G3 ✅（M45，低-中，非多月）**、**G2 = 新真核心 crux（高、mathlib
+無 smooth floor）**、G4/G5 = 組裝（G5 有 `bounded_orbit` 備）、G6 = 接停機不可判定（中）、自治流黏合 =
+paper-blocked。**下一步 = G2（smooth 讀符號 exact-on-lattice）= 真核心**，建議下輪先跑 G2 設計 scope。
+**`ρ<1` 只在 `δ<1/4` 嚴格**（半整數斥不動點）= smooth rounding 內稟，下游全程 `δ`-tube。
