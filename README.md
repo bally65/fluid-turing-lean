@@ -52,14 +52,25 @@ Cardona et al. 2021 紙上證的、本專案未形式化的部分。
   通用碼 `univ_wiring` + **`stepT_halting_undecidable`（無條件、零假設：機器家族
   停機不可判定）**。
 
-**假設帳本**：忠實性 = 定理 ✅；通用機器 = 定理 ✅；**唯一剩餘 = (ii) 機器的緊空間
-同胚實現**（`ToPartrec` ↔ `BitTM` 橋，kickoff 規格在 `docs/UNDECIDABILITY_LINE.md`）。
-接上後「懸掛流家族的爆破觸發不可判定」成**無條件定理**。
+**假設帳本**：忠實性 = 定理 ✅；通用機器 = 定理 ✅；(ii) 機器的緊空間同胚實現
+（`ToPartrec` ↔ `BitTM` 橋）**已完成 ✅**（M16–M33，全線地圖見 `docs/UNDECIDABILITY_LINE.md`）。
 
-**誠實界線**：M10 的真 ODE 構造（TM→光滑向量場）paper-blocked（analog computation、
-mathlib 無）；本線的「流」= 懸掛流，接真 Euler/NS 幾何仍走 M5/M7 明寫假設。
-爆破不可判定與千禧年難題**正交**（定常/可達性 vs 時間演化/blowup 的爆與不爆），
-不宣稱逼近後者。
+### ★★★ 封頂：`fluid_blowup_undecidable`（M33，2026-07-10，無條件、零 sorry、標準三公理）★★★
+
+**存在緊空間連續時間流 `F`、基點族 `base`、目標集 `Target`，使「code 的軌道於有限時間打進
+`Target`」（= blowup 觸發、耦合 Riccati 有限時間爆破的充要條件）無演算法可判定。**
+
+完整證明鏈（離散/拓撲流端**全機器背書**、零假設）：`mathlib halting_problem` → 通用 TM2 停機
+（M16/M30）→ 化約鏈 `TM2→TM1→TM1(Bool)→TM0(Bool)`（M31 手建 `TrCfg` + M32 eval 鏈，複用 mathlib
+`TM2to1/TM1to1/TM1to0`）→ 自建 `BitTM` `M_tr`（M27 一步模擬 `Mtr_step_run` + M28 停機橋
+`Mtr_halts_iff`）→ Bennett 可逆化（M3c，無時間膨脹）→ 懸掛流（M4/M14 忠實性）→ blowup 不可判定
+（M10）。**33 模組、零 sorry、僅 `propext`/`Classical.choice`/`Quot.sound`。**
+
+**誠實界線**：封頂定理的「流」= **懸掛流（mapping torus 上的拓撲流）**，**不是**真 Euler/NS
+幾何流體。M10 的真 ODE 構造（TM→光滑向量場）+ 接真 Euler/NS 幾何仍 paper-blocked（analog
+computation / 接觸幾何，mathlib 無），走 M5/M7 明寫假設。爆破不可判定與 NS 千禧年難題**正交**
+（拓撲流可達性/blowup 觸發 vs 真 NS 正則性），**不宣稱逼近後者**。貢獻 = 把「流體計算」想法的
+離散不可判定骨架**無條件機器背書** + 誠實標出幾何缺口。
 
 - Lean `v4.32.0-rc1` + mathlib（pin 於 `lakefile.toml`）
 - 建置：`lake build`（首次先 `lake exe cache get`）
