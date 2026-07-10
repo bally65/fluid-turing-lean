@@ -42,3 +42,4 @@ import FluidTuringLean.M35_CoupledRiccati
 import FluidTuringLean.M36_Corollaries
 import FluidTuringLean.M37_ReachCharacterization
 import FluidTuringLean.M38_CouplingObstruction
+import FluidTuringLean.M39_AnalogTargeting
