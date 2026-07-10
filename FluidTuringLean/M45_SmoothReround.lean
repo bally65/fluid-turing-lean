@@ -45,7 +45,9 @@ namespace FluidTuring
 open Real
 
 /-- **smooth re-rounding 原語**：`sround x = x − sin(2πx)/(2π)`。整數 = 超吸引不動點、半整數 = 斥點；
-迭代拉向最近整數。導數閉式 `g'(x) = 1 − cos(2πx)`。 -/
+迭代拉向最近整數。導數閉式 `g'(x) = 1 − cos(2πx)`。**注**：`sin/cos` ⟹ `sround` **real-analytic** 且
+**GPAC 可生成**（`y''=−ω²y`）——比 C^∞ 更強，**無** M46/M47 `smoothTransition` 的 analytic 缺口（G3 於嚴格
+GPAC 語意亦乾淨；讀/查表/窗 G1/G2/G4 仍 C^∞-only）。 -/
 noncomputable def sround (x : ℝ) : ℝ := x - Real.sin (2 * π * x) / (2 * π)
 
 theorem sround_zero : sround 0 = 0 := by
@@ -156,9 +158,11 @@ theorem sround_iterate (k : ℤ) {δ : ℝ} (hδ0 : 0 < δ) (hδ : δ ≤ 1 / 4)
       _ = (1 - Real.cos (2 * π * δ)) ^ (m + 1) * |x - (k : ℝ)| := by
           rw [pow_succ]; ring
 
-/-- **★破 Wall B★**：`0≤Λ<1`、`0≤b`、`e 0=0`、`e(n+1) ≤ Λ·e n + b` ⟹ `e n ≤ b/(1−Λ)`（`n`-無關界）。
-代 `Λ := ρL`（re-rounded step 的 tube-Lipschitz、選 `δ` 使 `ρL<1`）、`b := ρM·e^{-C}` ⟹ 誤差**收斂**、
-tube 不變式對**一般擴張 TM** 成立（M43 `error_accumulation` 的發散 `ΣLⁱ` 被此收斂遞迴取代）。 -/
+/-- **★破 Wall B 的機制（抽象引理）★**：`0≤Λ<1`、`0≤b`、`e 0=0`、`e(n+1) ≤ Λ·e n + b` ⟹
+`e n ≤ b/(1−Λ)`（`n`-無關界）。**誠實**：本引理的前提 `hrec`（每步 `e(n+1)≤Λ·e n+b`）是**顯式假設**；
+真把 `Λ := ρL`（re-rounded step 的 tube-Lipschitz）、`b := ρM·e^{-C}` **綁到 M43 步進算子**（建立每步 tube
+收縮 ⟹ 對一般擴張 TM 誤差**收斂**、取代 M43 發散 `ΣLⁱ`）需下游 **G4/G5**（smooth 讀 + 格點精確恆等 +
+tube 不變式），**尚未**在本模組導出。本引理只提供收斂遞迴的**代數骨架**。 -/
 theorem bounded_orbit {e : ℕ → ℝ} {Λ b : ℝ} (h0 : 0 ≤ Λ) (h1 : Λ < 1) (hb : 0 ≤ b)
     (he0 : e 0 = 0) (hrec : ∀ n, e (n + 1) ≤ Λ * e n + b) :
     ∀ n, e n ≤ b / (1 - Λ) := by
