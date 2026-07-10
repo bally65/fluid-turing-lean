@@ -40,8 +40,8 @@ open Nat.Partrec MappingTorus
 （忠實 + huniv → 不可判定）。把下游全鏈壓成單一「有前向可達不可判定的緊自同胚 ⟹ 流 blowup
 不可判定」。 -/
 theorem suspension_blowup_trigger_undecidable {X : Type} [TopologicalSpace X] [CompactSpace X]
-    (e : X ≃ₜ X) (H : Set X) (hH : ∀ h ∈ H, e h ∈ H)
-    (init : Code → X) (n : ℕ)
+    (e : X ≃ₜ X) (H : Set X) (init : Code → X)
+    (hH : ∀ code : Code, init code ∈ H → e (init code) ∈ H) (n : ℕ)
     (huniv : ∀ code : Code, (∃ k : ℕ, (⇑e)^[k + 1] (init code) ∈ H) ↔ (code.eval n).Dom) :
     ∃ (M : Type) (_ : TopologicalSpace M) (F : ContinuousFlowOn M) (enc : X → M),
       Simulates F (⇑e) enc ∧
@@ -49,7 +49,7 @@ theorem suspension_blowup_trigger_undecidable {X : Type} [TopologicalSpace X] [C
           ∃ t : ℝ, 0 < t ∧ F.φ t (enc (init code)) ∈ enc '' H) := by
   obtain ⟨M, tM, cM, F, enc, hsim, hfaith⟩ := suspension_flow_simulates_faithful e
   exact ⟨M, tM, F, enc, hsim,
-    coupled_blowup_undecidable hsim hfaith H hH init n huniv⟩
+    coupled_blowup_undecidable hsim hfaith H init hH n huniv⟩
 
 /-! ## bennett 層歸約：把頂石實例化到位元機的可逆化 -/
 
@@ -67,7 +67,7 @@ open BitTM in
 的 M_tr 建構要交付的東西——**誠實外顯的唯一剩餘缺口**。 -/
 theorem bitTM_bennett_blowup_undecidable (M : BitTM)
     (Hcfg : Set M.Cfg) (init : Code → M.Cfg) (n : ℕ)
-    (hHclosed : ∀ p : M.Cfg × (ℤ → M.HistRec), p.1 ∈ Hcfg → (M.bennettAut p).1 ∈ Hcfg)
+    (hHclosed : ∀ code : Code, init code ∈ Hcfg → M.step (init code) ∈ Hcfg)
     (hmachine : ∀ code : Code,
         (∃ k : ℕ, M.step^[k + 1] (init code) ∈ Hcfg) ↔ (code.eval n).Dom) :
     ∃ (Mt : Type) (_ : TopologicalSpace Mt) (F : ContinuousFlowOn Mt)
@@ -83,12 +83,16 @@ theorem bitTM_bennett_blowup_undecidable (M : BitTM)
     simp only [M.coe_bennettHomeo]
     obtain ⟨η, heq, _⟩ := M.bennettAut_iterate c k
     exact congrArg Prod.fst heq
-  -- 前向封閉性（提升集）
-  have hH : ∀ h ∈ {p : M.Cfg × (ℤ → M.HistRec) | p.1 ∈ Hcfg},
-      M.bennettHomeo h ∈ {p : M.Cfg × (ℤ → M.HistRec) | p.1 ∈ Hcfg} := by
-    intro h hh
-    simp only [Set.mem_setOf_eq, M.coe_bennettHomeo] at hh ⊢
-    exact hHclosed h hh
+  -- 前向封閉性（僅需 init 點：init 的歷史空白 ⟹ bennettAut 第一分量 = M.step，無 Feistel 擾動）
+  have hH : ∀ code : Code,
+      (init code, M.blankHist) ∈ {p : M.Cfg × (ℤ → M.HistRec) | p.1 ∈ Hcfg} →
+      M.bennettHomeo (init code, M.blankHist) ∈ {p : M.Cfg × (ℤ → M.HistRec) | p.1 ∈ Hcfg} := by
+    intro code hmem
+    simp only [Set.mem_setOf_eq] at hmem ⊢
+    have h1 : (M.bennettHomeo (init code, M.blankHist)).1 = M.step (init code) := by
+      simpa using hfst (init code) 1
+    rw [h1]
+    exact hHclosed code hmem
   -- 通用接線：降到機器層
   have huniv : ∀ code : Code,
       (∃ k : ℕ, (⇑M.bennettHomeo)^[k + 1] (init code, M.blankHist)
@@ -103,6 +107,6 @@ theorem bitTM_bennett_blowup_undecidable (M : BitTM)
       simp only [Set.mem_setOf_eq, hfst (init code) (k + 1)]
       exact hk
   exact suspension_blowup_trigger_undecidable M.bennettHomeo
-    {p | p.1 ∈ Hcfg} hH (fun code ↦ (init code, M.blankHist)) n huniv
+    {p | p.1 ∈ Hcfg} (fun code ↦ (init code, M.blankHist)) hH n huniv
 
 end FluidTuring

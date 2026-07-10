@@ -52,7 +52,7 @@ theorem neverHalts_never_reaches {M : Type*} [TopologicalSpace M] {F : Continuou
 theorem orbitReaches_iff_halts {M : Type*} [TopologicalSpace M] {F : ContinuousFlowOn M}
     {Γ : Type*} {step : Γ → Γ} {enc : Γ → M}
     (hsim : Simulates F step enc) (hfaith : OrbitFaithful F step enc)
-    (c : Γ) (H : Set Γ) (hH : ∀ h ∈ H, step h ∈ H) :
+    (c : Γ) (H : Set Γ) (hH : c ∈ H → step c ∈ H) :
     OrbitReaches F (enc c) (enc '' H) ↔ ∃ k : ℕ, step^[k + 1] c ∈ H := by
   constructor
   · rintro ⟨t, ht, hmem⟩
@@ -64,7 +64,7 @@ theorem orbitReaches_iff_halts {M : Type*} [TopologicalSpace M] {F : ContinuousF
     cases n with
     | zero =>
       simp only [Function.iterate_zero_apply] at hnH
-      exact ⟨0, by simpa using hH c hnH⟩
+      exact ⟨0, by simpa using hH hnH⟩
     | succ m => exact ⟨m, hnH⟩
   · rintro ⟨k, hk⟩
     exact halts_imp_orbitReaches hsim c H k hk
@@ -80,8 +80,8 @@ theorem orbitReaches_iff_halts {M : Type*} [TopologicalSpace M] {F : ContinuousF
 theorem coupled_blowup_undecidable {M : Type} [TopologicalSpace M] {F : ContinuousFlowOn M}
     {Γ : Type*} {step : Γ → Γ} {enc : Γ → M}
     (hsim : Simulates F step enc) (hfaith : OrbitFaithful F step enc)
-    (H : Set Γ) (hH : ∀ h ∈ H, step h ∈ H)
-    (init : Code → Γ) (n : ℕ)
+    (H : Set Γ) (init : Code → Γ) (hH : ∀ code : Code, init code ∈ H → step (init code) ∈ H)
+    (n : ℕ)
     (huniv : ∀ code : Code, (∃ k : ℕ, step^[k + 1] (init code) ∈ H) ↔ (code.eval n).Dom) :
     ¬ ComputablePred fun code : Code =>
         ∃ t : ℝ, 0 < t ∧ F.φ t (enc (init code)) ∈ enc '' H := by
@@ -89,7 +89,7 @@ theorem coupled_blowup_undecidable {M : Type} [TopologicalSpace M] {F : Continuo
       (∃ t : ℝ, 0 < t ∧ F.φ t (enc (init code)) ∈ enc '' H) ↔ (code.eval n).Dom := by
     intro code
     rw [← huniv code]
-    exact orbitReaches_iff_halts hsim hfaith (init code) H hH
+    exact orbitReaches_iff_halts hsim hfaith (init code) H (hH code)
   exact finite_time_blowup_undecidable
     (fun code t ↦ F.φ t (enc (init code)))
     (fun traj ↦ ∃ t : ℝ, 0 < t ∧ traj t ∈ enc '' H) n hred
