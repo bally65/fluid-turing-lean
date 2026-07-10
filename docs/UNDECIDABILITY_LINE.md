@@ -324,3 +324,17 @@ Graça/Huynh 路線（光滑 ODE 逐步模擬 TM、動力學計算、繞過 clop
 
 **淨結果**：核心（M33 無條件到達不可判定）+ M37 精確特徵化（Σ₁\Δ₁ 定位）+ M38 障礙精確化
 （連續耦合的真牆）+ M39 analog 起步磚。誠實界線全機器背書。
+
+### 線三 Brick 2 ✅ gated/windowed targeting + HOLD 凍結原語（M40）
+承接 Brick 1（M39 steer-to-target）。Branicky 迭代機制的**排程原子**：閘控收縮
+`y' = -C·φ(t)·(y-b)`（`φ` = 窗函數）。顯式解 `y=b+(y₀-b)e^{-C·Φ(t)}`（`Φ'=φ`），全證：
+- `targetingGatedSol_hasDerivAt`：真滿足閘控 ODE（`HasDerivAt.exp` 鏈、抽象 `Φ` 假設）。
+- **`targetingGatedSol_hold`（新能力）**：空窗 `φ=0 ⟹ y'=0 ⟹ 凍結` = leapfrog 時鐘所需原子
+  （Brick 1 係數常數恆收縮、辦不到）。
+- `targetingGatedSol_const_of_Φ_eq`：值層 HOLD（`Φ s=Φ t ⟹` 值相等）。
+- `targetingGatedSol_tendsto`：`C>0`、`Φ→∞` ⟹ 精確收斂到 `b`（窗版 targeting）。
+- `targetingGatedSol_id`：`Φ=id ⟹` 回 Brick 1（框架可實例化機器背書；此實例恆開窗不 gate）。
+設計 workflow（wf_d701aebc，3 研究員+綜合，選 α 抽象 Φ）+ 對抗審查 workflow（wf_ba76b295，3
+驗證員全 SOUND + judge overall SOUND、must_fix 空、cosmetic 誠實 polish 已修）。**paper-blocked
+（明寫）**：具體 bump FTC 反導數、round/decode（不連續）、leapfrog 排程、undecidability 轉移。
+零 sorry、標準三公理、41 模組。
