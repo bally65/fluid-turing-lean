@@ -338,3 +338,17 @@ Graça/Huynh 路線（光滑 ODE 逐步模擬 TM、動力學計算、繞過 clop
 驗證員全 SOUND + judge overall SOUND、must_fix 空、cosmetic 誠實 polish 已修）。**paper-blocked
 （明寫）**：具體 bump FTC 反導數、round/decode（不連續）、leapfrog 排程、undecidability 轉移。
 零 sorry、標準三公理、41 模組。
+
+### 線三 Brick 3 ✅ 具體非退化窗（消 Brick 2 缺口）（M41）
+**破解 Brick 2 的 paper-block 誤判**：`Real.smoothTransition`（`expNegInvGlue` 型、M13 已用）**本身
+就是** bump 的**閉式**原函數（`x≤0` 恰 0、`x≥1` 恰 1、`[0,1]` 光滑升），**無需區間積分**。造具體窗
+`windowΦ k := smoothTransition(·-k)` 實例化 Brick 2 抽象 `Φ`：
+- `windowΦ_hasDerivAt`（M13 `comp_sub_const` 法）、`_zero_before`/`_one_after`（精確平坦）、
+  `_hold_before`/`_hold_after`（兩側導數 0）、`_monotone`（φ≥0）。
+- `windowedTargetingSol := targetingGatedSol · (windowΦ k)`：`_hasDerivAt`（具體閘控 ODE、閉式 φ）、
+  `_frozen_before`（`t≤k`⟹恰 `y₀`）、`_frozen_after`（`k+1≤t`⟹恰 `b+(y₀-b)e^{-C}`）、`_hold_before/after`。
+- **`windowedTargetingSol_moves`（消缺口）**：`C>0`、`y₀≠b`⟹前值 `y₀`≠後值——**單一具體 Φ 同時逃離
+  兩退化**（不同 `Φ=id` 恆開、不同 `Φ=const` 恆凍）。`_contracts`：`|y-b|=|y₀-b|e^{-C}`（有限收縮）。
+設計 workflow（wf_2a1ed5be，3 研究員機器驗簽名+綜合，選 (a) 具體窗）。**paper-blocked（明寫、不 overclaim）**：
+單窗只有限收縮 `e^{-C}`（非精確、勿套 `_tendsto`）、窗仍**非自治**（φ 依時間非狀態=GPAC 核心）、
+round/decode、`σ`、leapfrog 排程、undecidability 轉移。零 sorry、標準三公理、42 模組。
