@@ -51,3 +51,4 @@ import FluidTuringLean.M44_SmoothSelect
 import FluidTuringLean.M45_SmoothReround
 import FluidTuringLean.M46_SmoothRead
 import FluidTuringLean.M47_SmoothStep
+import FluidTuringLean.M48_SmoothStepAssemble
