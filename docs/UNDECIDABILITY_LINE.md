@@ -394,3 +394,12 @@ re-rounding}對真 TM 不連續 round map 不可實例化**（Wall A/B/C = GPAC 
 真 undecidability 已由主線 M33 無條件達成。unblock 需單一 mathlib-from-zero 工程：Graça/Branicky GPAC σ 構造
 （round 光滑化 + tube 不變式 + re-rounding，多月）。前沿定位條件式草圖見決策文件 §5（選配、非現在、明框「定位
 前沿」非「達成」）。
+
+### 線三 GPAC σ 構造起手（unblock Brick 6）— 路線圖 + G1（M44）
+使用者選「真前進 = GPAC σ 構造」。目標 = 造光滑 σ:ℝ→ℝ 逐步模擬 TM（四性質:光滑∧格點=step∧
+tube-Lipschitz∧向格點收縮），使線三從條件式升級為真·光滑 analog 流不可判定（超越主線 M33 拓撲懸掛流）。
+= 多月 mathlib-from-zero research。路線圖 docs/GPAC_ROADMAP.md:有序 G1-G6（G3 smooth 數位穩健/
+re-rounding=真核心 crux、破 Wall B）。**G1（M44 smoothSelect）已建**:`smoothSelect s a b=a+
+smoothTransition(s)·(b-a)`（s≤0→a/s≥1→b/中間光滑）=TM case 分析光滑化原子;_left/_right(精確)/
+_hasDerivAt(smooth)/_mem(有界)。零 sorry、標準三公理、45 模組。誠實:只交 smooth 2-way 分支原語,
+未宣稱模擬 TM;G2(smooth 讀符號)/G3(re-rounding 真核心)/G4-G6 續攻(多月);路線圖待 8:10pm 額度回對抗驗證。
