@@ -26,3 +26,4 @@ import FluidTuringLean.M19_MtrEncoder
 import FluidTuringLean.M20_FlowCapstone
 import FluidTuringLean.M21_MtrConfig
 import FluidTuringLean.M22_MathlibReduction
+import FluidTuringLean.M23_TM1to1Bool
