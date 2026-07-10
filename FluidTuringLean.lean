@@ -36,3 +36,4 @@ import FluidTuringLean.M29_MtrFlow
 import FluidTuringLean.M30_UnivConfig
 import FluidTuringLean.M31_TM2to1Univ
 import FluidTuringLean.M32_EvalChain
+import FluidTuringLean.M33_FluidCapstone

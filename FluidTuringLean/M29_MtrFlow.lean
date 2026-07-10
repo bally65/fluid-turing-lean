@@ -22,7 +22,9 @@ init 組態控制皆可達），若其 `eval` 停機逐 code 對應 `code.eval n
 = M28 `Mtr_halts_iff`（M_tr 迭代到 `encHalt` ⟺ TM0 `eval` 停機）+ M28 `Mtr_step_fst_halt`
 （停機吸收兌現 `hHclosed`）+ M20 `bitTM_bennett_blowup_undecidable`。剩 `hcorr` = 化約鏈（4b-5b-B）。 -/
 theorem mtr_flow_blowup_undecidable {Λ : Type*} [Inhabited Λ] (M : Turing.TM0.Machine Bool Λ)
-    (S : Finset Λ) (hSupp : Turing.TM0.Supports M ↑S)
+    (S : Finset Λ)
+    (hClosed : ∀ {q : Λ} {a : Bool} {q' : Λ} {s : Turing.TM0.Stmt Bool},
+        (q', s) ∈ M q a → q ∈ (↑S : Set Λ) → q' ∈ (↑S : Set Λ))
     (init : Code → Turing.TM0.Cfg Bool Λ) (n : ℕ) (hinit_q : ∀ code, (init code).q ∈ S)
     (hcorr : ∀ code : Code,
         (StateTransition.eval (Turing.TM0.step M) (init code)).Dom ↔ (code.eval n).Dom) :
@@ -40,6 +42,6 @@ theorem mtr_flow_blowup_undecidable {Λ : Type*} [Inhabited Λ] (M : Turing.TM0.
   · -- hmachine：M_tr 迭代到 encHalt ⟺ TM0 eval 停機 ⟺ code.eval 停機
     intro code
     simp only [Set.mem_setOf_eq]
-    rw [Mtr_halts_iff M S hSupp (init code) (hinit_q code), hcorr code]
+    rw [Mtr_halts_iff M S hClosed (init code) (hinit_q code), hcorr code]
 
 end FluidTuring
