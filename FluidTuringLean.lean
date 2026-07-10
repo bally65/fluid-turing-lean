@@ -30,3 +30,4 @@ import FluidTuringLean.M23_TM1to1Bool
 import FluidTuringLean.M24_TM1to0
 import FluidTuringLean.M25_TapeBridge
 import FluidTuringLean.M26_StateEncode
+import FluidTuringLean.M27_MtrMachine
