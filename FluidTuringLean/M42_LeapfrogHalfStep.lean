@@ -48,8 +48,9 @@ import FluidTuringLean.M41_ConcreteWindow
 
 **相對 Brick 3 的實質增量（誠實）**：約 6 條引理（`activeHalfStep_hasDerivAt/_frozen_before/_advance/`
 `_eps`、`passiveReg_frozen_before/_holds`）是 M41 的**字面單行實例化**（`b→σ p`、`bp` 更名）。真新增 =
-`deriv_smoothTransition_zero_before`（HOLD→`deriv=0` 經 `HasDerivAt.unique`）、`HasDerivAt.prodMk` 2D 打包、
-`passiveReg_frozen_on_active` frozen-read 化約、`leapfrog_step` data-flow 打包——為真但薄；headline 勿讀成大於內容。
+`deriv_smoothTransition_zero_before`（HOLD→`deriv=0` 經 `HasDerivAt.unique`）、`HasDerivAt.prodMk`
+2D 打包、`passiveReg_frozen_on_active` frozen-read 化約、`leapfrog_step` data-flow 打包——為真但薄；
+headline 勿讀成大於內容。
 
 ## ★誠實範圍（Brick 4 之上仍 paper-blocked，明寫，禁 overclaim）★
 
