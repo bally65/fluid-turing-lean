@@ -4,24 +4,36 @@ import FluidTuringLean.M32_EvalChain
 # Module 33 — 流體端 blowup 不可判定（無條件）★專案封頂★（M_tr 本體 4b-5b-B4）
 
 B4：把化約鏈（M30-M32）+ supports threading 焊死，兌現 M29 `mtr_flow_blowup_undecidable` 的
-`hcorr`，得**無條件**的最終定理：存在一個緊空間上的連續時間流，其（由 code 索引的）有限時間
-blowup 觸發謂詞**不可計算**。
+`hcorr`，得**無條件**的最終定理：存在一個緊空間上的連續時間流，其（由 code 索引的）
+**到達謂詞**（∃ 正時間打進編碼停機區 `Target`）**不可計算**。
 
-= 全專案「特定流體/流的圖靈完備性 ⟹ blowup 觸發不可判定」核心目標的無條件達成
-（離散端全鏈機器背書、零 sorry、標準三公理）。真微分幾何/真 NS 仍是外部 paper-blocked、明寫範圍。
+**★誠實範圍（審計後校正 2026-07-10）★**：本定理**實際證的**是「緊空間懸掛流的**到達性
+（reachability）不可判定」——`∃ t>0, F.φ t (base code) ∈ Target`。**這是「blowup 觸發」的
+*到達性版本*、不是字面的有限時間爆破**：懸掛流在緊空間上，座標不可能真的跑到無窮（緊性），
+故此處**無**字面 blowup。字面的 Riccati `z'=z²` 有限時間爆破**另證於 M11-M13**（`blowupSol` /
+`halts_imp_smooth_blowup`，且**僅正向** `停機 ⟹ 爆破`、於非自治混成系統），**並未**組進本鏈
+（M14/M20/M29/M33 不含 M12/M13）。「blowup」在此是把「到達編碼停機區」**詮釋**為觸發（經 M12/M13
+的正向橋），非本定理直接斷言的爆破。
+
+= 全專案「特定流的圖靈完備性 ⟹ 到達性（blowup 觸發）不可判定」核心目標的無條件達成
+（離散/拓撲流端全鏈機器背書、零 sorry、標準三公理）。真微分幾何/真 Euler/NS 幾何流、以及把 M12/M13
+字面爆破組進緊空間流，仍是外部 paper-blocked、明寫範圍。
 -/
 
 namespace FluidTuring
 
 open Turing Turing.PartrecToTM2 Nat.Partrec
 
-/-- **★流體端 blowup 不可判定（無條件）★**：存在緊空間連續時間流 `F`、基點族 `base`、目標集
-`Target`，使「code 的軌道於有限時間打進 `Target`」（= blowup 觸發、耦合 Riccati 有限時間爆破的
-充要條件）**無演算法可判定**。
+/-- **★流體端到達性（blowup 觸發）不可判定（無條件）★**：存在緊空間連續時間流 `F`、基點族
+`base`、目標集 `Target`，使「code 的軌道於**某正時間**打進 `Target`」（= 懸掛流到達編碼停機區
+= blowup **觸發**的到達性版本）**無演算法可判定**。
+
+**注意**：實際斷言 = **到達性**（緊空間上無字面爆破）；字面 Riccati 有限時間爆破另證於 M11-M13
+（僅正向、未組進本鏈）。詳見檔頭誠實範圍。
 
 證明鏈：mathlib `halting_problem`（M16 via M30）→ 化約鏈 `TM2→TM1→TM1(Bool)→TM0(Bool)`
 （M31/M32）→ 我們 `BitTM` `M_tr`（M27，一步模擬 + 停機橋 M28）→ Bennett 可逆化（M3c）→ 懸掛流
-（M4/M14）→ blowup 不可判定（M10）。 -/
+（M4/M14）→ 到達性不可判定（M10 `finite_time_blowup_undecidable` 的到達性實例）。 -/
 theorem fluid_blowup_undecidable (n : ℕ) :
     ∃ (X : Type) (_ : TopologicalSpace X) (F : ContinuousFlowOn X)
       (base : Nat.Partrec.Code → X) (Target : Set X),

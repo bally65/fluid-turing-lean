@@ -1,4 +1,5 @@
 import Mathlib.Computability.Halting
+import Mathlib.Data.Real.Basic
 
 /-!
 # Module 10 — 有限時間 blowup 偵測不可判定（M9 的 blowup 側姊妹）

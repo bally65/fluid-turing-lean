@@ -68,8 +68,12 @@ variable {M : Type*} [TopologicalSpace M] (N : NSCalculus3 M)
 /-- **調和向量場**（Hodge-調和）：`Δ_H X = 0`（對偶 1-形式 closed + coclosed 的結果）。 -/
 def IsHarmonic (u : N.Vec) : Prop := N.hodgeLap u = N.zero
 
-/-- **不可壓縮 Navier–Stokes 定常解**（黏滯係數 `ν`）：存在壓力 `p` 使
-`∇_X X − ν ΔX = −∇p`（動量方程；`ΔX` = **Hodge Laplacian**，前提 A）。 -/
+/-- **Navier–Stokes 定常**動量方程（黏滯係數 `ν`）：存在壓力 `p` 使
+`∇_X X − ν ΔX = −∇p`（`ΔX` = **Hodge Laplacian**，前提 A）。
+
+**注意（審計後校正）**：本 `Prop` **只含動量方程**，**不含**不可壓縮條件 `div u = 0`——
+後者是**另一個**條件（調和場經 `d*α = 0` ⟹ `div X = 0`，見檔頭 §2）。且整個 M7 是抽象簽名層、
+機器確認 trivially 可滿足（`trivialNS_vacuous`），故「不可壓縮 NS」在此為**名義簽名**、非真解。 -/
 def IsNSSteady (ν : ℝ) (u : N.Vec) : Prop :=
   ∃ p : M → ℝ, N.sub (N.conv u) (N.smul ν (N.hodgeLap u)) = N.neg (N.grad p)
 

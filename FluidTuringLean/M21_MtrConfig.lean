@@ -48,8 +48,9 @@ theorem encCfg_injective : Function.Injective encCfg := by
 `trLabels cu`（M18：固定通用碼 `cu` 的可達 TM2 label，`Finset Λ'`）。 -/
 def ctrlLabels (cu : Code) : Finset (Option Λ') := insert none ((trLabels cu).image some)
 
-/-- **可達組態的控制落在有限集**：若 `c.l` 的標籤都可達（∈ `trLabels cu`），則
-`c.l ∈ ctrlLabels cu`。⟹ 沿 `cu` 的執行，控制永遠塞得進固定有限集 = M_tr 的 `Fin m` 控制。 -/
+/-- **控制標籤 ∈ 有限集（條件式）**：**若** `c.l` 的標籤 ∈ `trLabels cu`（明寫**假設**），則
+`c.l ∈ ctrlLabels cu`。**注意**：本引理**不**證「執行必停在 `trLabels`」——那是 forward-closure
+（`Supports`，M18/M33 另證）；本引理只是「標籤可達（假設）⟹ 塞得進有限集」的封裝。 -/
 theorem l_mem_ctrlLabels (cu : Code) (c : Cfg')
     (hl : ∀ x ∈ c.l, x ∈ trLabels cu) : c.l ∈ ctrlLabels cu := by
   rcases hc : c.l with _ | x
