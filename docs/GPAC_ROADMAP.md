@@ -117,3 +117,18 @@ tube 不變式（G5）、GPAC analytic 語意分歧、邊際價值（弱於 M33 
 三層巢狀 = 真機唯一新難點）、G4d3（多符號泛化 + 若 ODE 需 Jacobian 補 HasFDerivAt）、G4e（BitTM 帶橋、
 邊界 L=[]/R=[] 破功需 eventually-0 stream 編碼、工時中心）。真牆不動：φ 自治化/G5 tube/analytic 語意/
 邊際價值弱於 M33。**注**：sround(G3) 不可施於原始帶分量（非整數格點）、只作用狀態暫存器 + scaled read。
+
+## 2026-07-11 更新⑤：G4d2 已建（M49）— 雙向 move 玩具全 σ（左移三層巢狀=純 ring）
+
+**G4d2 設計 scope（wf_c05b5f18）裁決 = G4D2_ACHIEVABLE**（一磚、非多輪；agent lean_run_code 全驗）。
+**G4d2 已建（M49）**：G4d1 右移-only 的**對稱鏡像 + 一新結構**。轉移表多 move 欄（M∈{0,1} 由第三個
+tbl2D 查得字面）；每移動帶分量 = `smoothSelect(M, 左移臂, 右移臂)`（M=0→_left(0≤0)、M=1→_right(1≤1)）。
+- **`moveL_R_exact`（★三層巢狀難點★）= 一行 `field_simp;ring`** —— **反駁「真機唯一新難點/多輪」恐懼**。
+- `smoothSelect_contDiff`（唯一新義務、M44 只出 1-D、就地補）。
+- **`sigmaRL_exact`（★CRUX★）**：雙向 `σ(gEnc c)=gEnc(gStepRL c)` 字面相等（cases move、smoothSelect
+  挑臂、各臂 M47 純代數）+ `sigmaRL_contDiff`（ContDiff.prodMk + smoothSelect_contDiff）。
+
+**G4d2 相對 G4d1 唯一真新增負擔 = 多一條 plateau 義務**（也讀 L 首符 l₀、新增 hsloL/hshiL）⟹ 下游 G5
+tube 須維持**兩半帶皆可讀**（歸納不變式工作、非 paper-block）。**剩**：G4e（BitTM 帶橋、L=[]/R=[] 邊界破功
+需 eventually-0 雙向 stream 編碼、M25 級工時中心）、G4d3（多符號 |Γ|>2 + ODE 場 Jacobian HasFDerivAt、
+ContDiff 不提供）、G5 tube、G6 splice。真牆不動（φ 自治化/analytic 語意/邊際價值弱於 M33）。
