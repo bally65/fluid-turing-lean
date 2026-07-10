@@ -19,8 +19,9 @@ mathlib `TM0` 的組態控制 `q : Option Λ`（`none` = 停機、`some q` = 標
 
 namespace FluidTuring
 
-/-- M_tr 控制的有限型：停機槽 `none` + 可達 TM0 標籤子型 `↥S`。 -/
-def ctrlType {Λ : Type*} (S : Finset Λ) : Type _ := Option ↥S
+/-- M_tr 控制的有限型：停機槽 `none` + 可達 TM0 標籤子型 `↥S`。（`abbrev` 使 `Option ↥S`
+與 `ctrlType S` 可約互通，免型別失配。） -/
+abbrev ctrlType {Λ : Type*} (S : Finset Λ) : Type _ := Option ↥S
 
 instance {Λ : Type*} (S : Finset Λ) : Fintype (ctrlType S) := by
   unfold ctrlType; infer_instance
