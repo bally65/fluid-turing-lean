@@ -352,3 +352,8 @@ Graça/Huynh 路線（光滑 ODE 逐步模擬 TM、動力學計算、繞過 clop
 設計 workflow（wf_2a1ed5be，3 研究員機器驗簽名+綜合，選 (a) 具體窗）。**paper-blocked（明寫、不 overclaim）**：
 單窗只有限收縮 `e^{-C}`（非精確、勿套 `_tendsto`）、窗仍**非自治**（φ 依時間非狀態=GPAC 核心）、
 round/decode、`σ`、leapfrog 排程、undecidability 轉移。零 sorry、標準三公理、42 模組。
+
+**Brick 3 綜合 agent 加碼（M41 升級）**：`windowedTargetingSol_eps_target`（`∀ε>0 ∃C>0` 窗後落 `b`
+的 ε-內 = **形式化 Brick 2 自承「有限窗 ε 版未形式化」那塊**）、`_dist_antitone`（`|y-b|` 反單調、
+永不擴張）、`_contracts`（精確收縮因子 `e^{-C}`）、`windowΦ_mass=1`、headline
+`_escapes_degeneracy`（兩側 HOLD + 真 move + 具體閘控 ODE 打包成單一定理 = 字面殺死缺口）。
