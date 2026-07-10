@@ -12,8 +12,8 @@ import FluidTuringLean.M48_SmoothStepAssemble
 ## 交付（全顯式、格點字面相等、C^∞、零 sorry、標準三公理）
 
 - **`moveL_R_exact`（★左移三層巢狀難點★）**：`(l₀+(s'+(K·enc(s::R')−s))/K)/K = enc(l₀::s'::R')` ——
-  **一行 `field_simp;ring`**（純代數、無 `Nat.digits`、需 `K≠0`）。直接反駁「左移巢狀是真機唯一新難點/
-  可能多輪」的恐懼。
+  **一行 `simp only [encTape]; field_simp; ring`**（定義展開 + 純代數、無 `Nat.digits`、需 `K≠0`）。
+  直接反駁「左移巢狀是真機唯一新難點/可能多輪」的恐懼。
 - **`smoothSelect_contDiff`（唯一新義務）**：`smoothSelect` 對 selector + 兩臂 joint C^∞（M44 只出 1-D
   `HasDerivAt`）。自然家在 M44，本磚就地補以免動既有鏈。
 - **`sigmaRL_exact`（★CRUX★）**：雙向玩具 `σ(gEnc c)=gEnc(gStepRL c)` 字面相等（`cases move`、
@@ -22,10 +22,11 @@ import FluidTuringLean.M48_SmoothStepAssemble
 
 ## ★誠實範圍（禁 overclaim）★
 
-- **玩具、非真機**：`gStepRL` module-local、有限 List 帶、**要求兩堆疊皆非空**（`L=l₀::L'、R=s::R'`）。
-  左端邊界（`L=[]`、`enc[]=0`、無頭可讀、List 編碼無法左移過原點）= **明寫假設**，真機橋（BitTM `ℤ→Bool`
-  ↔ base-K 實數、`L=[]/R=[]` 需 eventually-0 雙向 stream 編碼）= G4e、多 session、M25 級純簿記。
-  `sigmaRL_exact` 是**單步-單組態**、兩堆疊非空。
+- **玩具、非真機**：`gStepRL` module-local、有限 List 帶、**要求兩堆疊皆非空**（`L=l₀::L'、R=s::R'`）——
+  pattern match 對**兩個方向**都要求 L 非空（右移其實不需 l₀，但統一 match 簡化陳述；`L=[]` 全落
+  fallback `c`）。左端邊界（`L=[]`、`enc[]=0`、無頭可讀、List 編碼無法左移過原點）= **明寫假設**，
+  真機橋（BitTM `ℤ→Bool` ↔ base-K 實數、`L=[]/R=[]` 需 eventually-0 雙向 stream 編碼）= G4e、
+  多 session、M25 級純簿記。`sigmaRL_exact` 是**單步-單組態**、兩堆疊非空。
 - **G4d2 多一條 plateau 義務**：G4d1 只讀 R（`hsloR/hshiR`）；G4d2 也讀 L 首符 `l₀`（新增 `hsloL/hshiL`：
   `K·enc(l₀::L')∈[l₀,l₀+w]`）⟹ 下游 **G5 tube 不變式須維持兩半帶皆可讀**。這是 G4d2 相對 G4d1 唯一真新增
   的證明工程負擔（歸納不變式工作量、非 paper-block）。exactness 條件於此四個 headroom 假設。
