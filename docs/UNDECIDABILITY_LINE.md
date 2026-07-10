@@ -385,3 +385,12 @@ undecidability 轉移/N 步精確組合仍 paper-blocked。零 sorry、標準三
 對真 TM σ（round/decode 不連續）不可實例化**——條件化 paper-blocked 模擬正確性（方案 A 紀律）、不宣稱
 完成 undecidability 轉移。idealOrbit 僅實數層 σ-迭代（無 decode/halting）。undecidability 轉移/自治流仍
 paper-blocked。零 sorry、標準三公理、44 模組。
+
+### 線三 Brick 6 決策 = HONEST_STOP 於 Brick 5（見 docs/BRICK6_DECISION.md）
+條件式 undecidability 轉移三子裁決：(A) 把 tube 不變式 `dec xₙ=configₙ` 當假設 = **thin/circular、AVOID**；
+(B) 從 Brick 5 `tracks_ideal` **推導** tube 不變式 = **genuine 但假設 bundle{光滑 σ、tube-Lipschitz、
+re-rounding}對真 TM 不連續 round map 不可實例化**（Wall A/B/C = GPAC σ 光滑化 paper-blocked）；(C) 條件式版
+**與主線 M33 無條件到達不可判定重複**、更弱且經更難路線。**裁決：線三收在 Brick 5，不建 Brick 6 假磚。**
+真 undecidability 已由主線 M33 無條件達成。unblock 需單一 mathlib-from-zero 工程：Graça/Branicky GPAC σ 構造
+（round 光滑化 + tube 不變式 + re-rounding，多月）。前沿定位條件式草圖見決策文件 §5（選配、非現在、明框「定位
+前沿」非「達成」）。
