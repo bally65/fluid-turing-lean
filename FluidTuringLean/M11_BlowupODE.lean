@@ -6,7 +6,8 @@ import Mathlib.Topology.Algebra.Order.Field
 # Module 11 — 顯式有限時間 blowup ODE 原子（M10 的微分側接地）
 
 M10 把「blowup 偵測不可判定」的**還原邏輯**機器化，`blowsUp` 是抽象謂詞。本模組給
-**一個真 ODE 的顯式有限時間 blowup**，把那個抽象謂詞接到真微積分物件：
+**一個真 ODE 的顯式有限時間 blowup 見證**（本檔**不** import/reference M10；接到 M10/M34 的抽象
+`BlowsUpInFiniteTime` 謂詞是在 M34 才做——本檔只供微積分原子）：
 
 `y(t) = 1/(T - t)` 在 `[0, T)` 上滿足 **`y' = y²`**（Riccati/爆破原型），且 `t → T⁻` 時
 `y → +∞`——**有限時間 blowup 的顯式見證**。這是 M10→真 ODE 路徑上「微分側原子」(B)

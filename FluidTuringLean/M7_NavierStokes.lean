@@ -157,11 +157,15 @@ def ReebHarmonicRealization : Prop :=
         ∀ (t : ℝ) (x : M), (N.flowOf u).φ t (ψ x) = ψ (F.φ t x)
 
 /-- **★ 主定理（NS 版，方案 A 條件定理）★**：給定調和場幾何實現假設，任意緊空間自同胚
-`e`（承載圖靈機動力學）被某緊流形上調和向量場 `u` 的流模擬，且 `u` 是**不可壓縮
-Navier–Stokes 方程的定常解，對任意黏滯係數 `ν`**。
+`e`（承載圖靈機動力學）被某緊流形上**調和**向量場 `u` 的流模擬（結論明列 `IsHarmonic u`
+= `curl u = λu` 且 `div u = 0`，即**不可壓縮**）。
 
-= 圖靈完備的定常 Navier–Stokes 解。證明：離散→連續 `suspension_flow_simulates`（已證）
-複合 `hgeo`（調和實現）；NS-steady 由 `prop_4_1`（調和 ⟹ 黏滯項對任意 ν 消失）供。 -/
+**注意（審計後校正）**：結論**明列的是 `IsHarmonic u`**（不可壓縮 + Beltrami 型）；`u` 亦是
+NS 定常解——但那是經 `prop_4_1`（調和 ⟹ `IsNSSteady` 動量方程、黏滯項對任意 ν 消失）**另證**、
+非結論直接暴露。且整層抽象簽名、機器確認 trivially 可滿足（`trivialNS_vacuous`）。
+
+= 圖靈完備的調和（不可壓縮）向量場流。證明：離散→連續 `suspension_flow_simulates`（已證）複合
+`hgeo`（調和實現假設）。 -/
 theorem navier_stokes_turing_complete (hgeo : ReebHarmonicRealization)
     {X : Type} [TopologicalSpace X] [CompactSpace X] (e : X ≃ₜ X) :
     ∃ (M : Type) (_ : TopologicalSpace M) (_ : CompactSpace M)

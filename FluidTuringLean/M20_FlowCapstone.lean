@@ -43,12 +43,13 @@ theorem suspension_blowup_trigger_undecidable {X : Type} [TopologicalSpace X] [C
     (e : X ≃ₜ X) (H : Set X) (init : Code → X)
     (hH : ∀ code : Code, init code ∈ H → e (init code) ∈ H) (n : ℕ)
     (huniv : ∀ code : Code, (∃ k : ℕ, (⇑e)^[k + 1] (init code) ∈ H) ↔ (code.eval n).Dom) :
-    ∃ (M : Type) (_ : TopologicalSpace M) (F : ContinuousFlowOn M) (enc : X → M),
+    ∃ (M : Type) (_ : TopologicalSpace M) (_ : CompactSpace M) (F : ContinuousFlowOn M)
+      (enc : X → M),
       Simulates F (⇑e) enc ∧
       ¬ ComputablePred (fun code : Code =>
           ∃ t : ℝ, 0 < t ∧ F.φ t (enc (init code)) ∈ enc '' H) := by
   obtain ⟨M, tM, cM, F, enc, hsim, hfaith⟩ := suspension_flow_simulates_faithful e
-  exact ⟨M, tM, F, enc, hsim,
+  exact ⟨M, tM, cM, F, enc, hsim,
     coupled_blowup_undecidable hsim hfaith H init hH n huniv⟩
 
 /-! ## bennett 層歸約：把頂石實例化到位元機的可逆化 -/
@@ -70,7 +71,7 @@ theorem bitTM_bennett_blowup_undecidable (M : BitTM)
     (hHclosed : ∀ code : Code, init code ∈ Hcfg → M.step (init code) ∈ Hcfg)
     (hmachine : ∀ code : Code,
         (∃ k : ℕ, M.step^[k + 1] (init code) ∈ Hcfg) ↔ (code.eval n).Dom) :
-    ∃ (Mt : Type) (_ : TopologicalSpace Mt) (F : ContinuousFlowOn Mt)
+    ∃ (Mt : Type) (_ : TopologicalSpace Mt) (_ : CompactSpace Mt) (F : ContinuousFlowOn Mt)
       (enc : (M.Cfg × (ℤ → M.HistRec)) → Mt),
       Simulates F (⇑M.bennettHomeo) enc ∧
       ¬ ComputablePred (fun code : Code =>

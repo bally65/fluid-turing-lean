@@ -6,8 +6,9 @@ import FluidTuringLean.M1_Computability
 * `EmlExpr`：`{var, const, add, mul, neg, exp, log}` 語法樹。
 * `EmlExpr.eval`：對環境 `ρ : ℕ → ℝ` 的連續語意解釋器。
 * `eml` 原語可表達（`exp x - log y` 的語法見證）。
-* 連續邏輯閘：布林值嵌入 `{0,1} ⊆ ℝ`，NAND 閘 `1 - x·y` 正確模擬 `Bool.nand`，
-  且 NAND 可由語法樹表達 —— NAND 泛函完備，故所有布林函數皆可表達。
+* 連續邏輯閘：布林值嵌入 `{0,1} ⊆ ℝ`，NAND 閘 `1 - x·y` 正確模擬 `Bool.nand`（`nandR_boolean`），
+  且該 NAND 閘可由語法樹表達。**注意**：NAND 泛函完備（可組成所有布林函數）是**古典 folklore**、
+  **未於本檔形式化**（無電路組合定理）；本檔只證**單一 NAND 閘**的連續模擬正確性 + 語法可表達性。
 * log-free 片段的解釋器全域連續（對 `ρ` 的乘積拓撲）。
 
 本檔零 sorry。
@@ -79,8 +80,8 @@ def boolToReal (b : Bool) : ℝ := bif b then 1 else 0
 /-- 連續 NAND 閘：`nandR x y = 1 - x * y`。多項式，處處連續。 -/
 noncomputable def nandR (x y : ℝ) : ℝ := 1 - x * y
 
-/-- `nandR` 在布林嵌入上正確模擬 NAND。
-NAND 泛函完備，故所有布林函數皆可由連續函數在 `{0,1}` 上模擬。 -/
+/-- `nandR` 在布林嵌入上正確模擬**單一** NAND 閘（`nandR (bit a) (bit b) = bit (a.nand b)`）。
+（NAND 泛函完備 ⟹「所有布林函數」是古典 folklore，**未於此形式化**——本定理只證單閘正確性。） -/
 theorem nandR_boolean (a b : Bool) :
     nandR (boolToReal a) (boolToReal b) = boolToReal (!(a && b)) := by
   cases a <;> cases b <;> simp [nandR, boolToReal]

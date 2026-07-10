@@ -28,7 +28,7 @@ theorem mtr_flow_blowup_undecidable {Λ : Type*} [Inhabited Λ] (M : Turing.TM0.
     (init : Code → Turing.TM0.Cfg Bool Λ) (n : ℕ) (hinit_q : ∀ code, (init code).q ∈ S)
     (hcorr : ∀ code : Code,
         (StateTransition.eval (Turing.TM0.step M) (init code)).Dom ↔ (code.eval n).Dom) :
-    ∃ (Mt : Type) (_ : TopologicalSpace Mt) (F : ContinuousFlowOn Mt)
+    ∃ (Mt : Type) (_ : TopologicalSpace Mt) (_ : CompactSpace Mt) (F : ContinuousFlowOn Mt)
       (enc : ((Mtr M S).Cfg × (ℤ → (Mtr M S).HistRec)) → Mt),
       Simulates F (⇑(Mtr M S).bennettHomeo) enc ∧
       ¬ ComputablePred (fun code : Code =>

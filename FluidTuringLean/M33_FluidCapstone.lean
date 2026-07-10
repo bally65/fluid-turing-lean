@@ -35,7 +35,7 @@ open Turing Turing.PartrecToTM2 Nat.Partrec
 （M31/M32）→ 我們 `BitTM` `M_tr`（M27，一步模擬 + 停機橋 M28）→ Bennett 可逆化（M3c）→ 懸掛流
 （M4/M14）→ 到達性不可判定（M10 `finite_time_blowup_undecidable` 的到達性實例）。 -/
 theorem fluid_blowup_undecidable (n : ℕ) :
-    ∃ (X : Type) (_ : TopologicalSpace X) (F : ContinuousFlowOn X)
+    ∃ (X : Type) (_ : TopologicalSpace X) (_ : CompactSpace X) (F : ContinuousFlowOn X)
       (base : Nat.Partrec.Code → X) (Target : Set X),
       ¬ ComputablePred (fun code : Nat.Partrec.Code =>
           ∃ t : ℝ, 0 < t ∧ F.φ t (base code) ∈ Target) := by
@@ -95,10 +95,10 @@ theorem fluid_blowup_undecidable (n : ℕ) :
     · intro h
       exact Part.dom_iff_mem.mpr ⟨pure ((code.eval n).get h), Part.mem_map _ (Part.get_mem h)⟩
   -- 接 M_tr 流層 → 最終定理
-  obtain ⟨Mt, tMt, F, enc', _, hundec⟩ :=
+  obtain ⟨Mt, tMt, cMt, F, enc', _, hundec⟩ :=
     mtr_flow_blowup_undecidable (Muniv enc dec) SU hClosed
       (fun code ↦ univTM0Cfg enc dec enc0 cu [Encodable.encode code]) n hinit_q hcorr
-  exact ⟨Mt, tMt, F,
+  exact ⟨Mt, tMt, cMt, F,
     fun code ↦ enc' (encTM0 (Muniv enc dec) SU
       (univTM0Cfg enc dec enc0 cu [Encodable.encode code]), (Mtr (Muniv enc dec) SU).blankHist),
     enc' '' {p | p.1 ∈ {c | c.1 = encHalt SU}}, hundec⟩

@@ -10,6 +10,10 @@ mathlib **不預先組合**化約鏈，且 `TM2to1.tr_eval_dom` 用泛型 `TM2.i
 本塊起手：把 M16 的通用機器停機（`tm2_univ_wiring`，`totalize` 形式）抬到**組態層 `eval`**：
 暴露具體 TM2 組態 `c0 code = PartrecToTM2.init cu [encode code]`、`StateTransition.eval` 形式，
 逐 code 對應 `code.eval n₀`。⟹ `hcorr` 歸約到「化約鏈從此具體 TM2 組態保停機」。
+
+**注意（審計後）**：`tm2_config_halts_iff_code` 是**獨立引理、不在封頂 `fluid_blowup_undecidable`
+的證明樹上**——M33 為了暴露通用碼 `cu`（供 supports/init-label 穿線）**重推導**了同樣的 `cu` 橋
+（`exists_code` + `tr_eval` + `hcu`），未直接引用本引理。本引理保留為該接線的清晰記錄/獨立版本。
 -/
 
 namespace FluidTuring

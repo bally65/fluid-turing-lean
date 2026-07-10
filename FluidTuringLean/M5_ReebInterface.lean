@@ -9,10 +9,9 @@ import FluidTuringLean.M4_Suspension
 * `ContinuousFlowOn`：緊緻空間上的連續 ℝ-流 —— 完全嚴格、零缺口。
 * `VectorCalculus3`：抽象向量微積分簽名（`curl`、`div`、積分流），
   只是**運算元的型別簽名 + 命名法則**，不佯稱任何幾何內容。
-* `IsBeltrami` / `IsEulerStationary`：用上述簽名寫出的謂詞。
-  `Beltrami ⟹ Euler 穩態` 在光滑範疇是真定理
-  （`u × curl u = 0`、`div u = 0` ⟹ 穩態 Euler，取 Bernoulli 壓力），
-  在本抽象簽名層被列為介面法則 `beltrami_stationary`。
+* `IsBeltrami`：用上述簽名寫出的謂詞（`curl u = λu` 且 `div u = 0`）。
+  （`Beltrami ⟹ Euler 穩態` 在光滑範疇是真定理——`u × curl u = 0`、`div u = 0` ⟹ 穩態 Euler，
+  取 Bernoulli 壓力——但**本抽象簽名層不含 Euler 穩態謂詞**，那需要共變導數展開，屬詮釋層。）
 
 **Lemma B（方案 A：明寫假設，非 sorry）**：Etnyre–Ghrist 對應「非退化接觸形式的
 Reeb 場 = 某黎曼度量下的 rotational Beltrami 場」是 Cardona et al. 構造的引理 B 來源。
@@ -61,12 +60,6 @@ variable {M : Type*} [TopologicalSpace M] (V : VectorCalculus3 M)
 /-- Beltrami 場（rotational，比例常數 `λ ≠ 0`）：`curl u = λ • u` 且 `div u = 0`。 -/
 def IsBeltrami (u : V.Vec) : Prop :=
   (∃ lam : ℝ, lam ≠ 0 ∧ V.curl u = V.smul lam u) ∧ ∀ x, V.div u x = 0
-
-/-- Euler 穩態解（抽象謂詞）：`u` 是某壓力函數 `p` 下穩態 Euler 方程的解。
-簽名層無法展開 `(u·∇)u + ∇p = 0`（缺共變導數），故此謂詞以
-「存在 Bernoulli 型壓力見證」的形式抽象化；其具體展開屬詮釋層。 -/
-def IsEulerStationary (u : V.Vec) (euler_witness : V.Vec → Prop) : Prop :=
-  euler_witness u
 
 end VectorCalculus3
 
