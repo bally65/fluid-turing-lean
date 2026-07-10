@@ -94,7 +94,7 @@ theorem sround_contract (k : ℤ) {δ : ℝ} (hδ0 : 0 < δ) (hδ : δ ≤ 1 / 4
     have hyk : |y - (k : ℝ)| ≤ δ := by rw [abs_le]; constructor <;> linarith [hy.1, hy.2]
     have hper : Real.cos (2 * π * y) = Real.cos (2 * π * |y - (k : ℝ)|) := by
       have h1 : 2 * π * y = 2 * π * (y - (k : ℝ)) + (k : ℤ) * (2 * π) := by
-        push_cast; ring
+        ring
       rw [h1, Real.cos_add_int_mul_two_pi, ← Real.cos_abs (2 * π * (y - (k : ℝ))),
         abs_mul, abs_of_pos (by positivity : (0 : ℝ) < 2 * π)]
     have hcos : Real.cos (2 * π * δ) ≤ Real.cos (2 * π * y) := by
