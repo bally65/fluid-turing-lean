@@ -39,3 +39,4 @@ import FluidTuringLean.M32_EvalChain
 import FluidTuringLean.M33_FluidCapstone
 import FluidTuringLean.M34_LiteralBlowup
 import FluidTuringLean.M35_CoupledRiccati
+import FluidTuringLean.M36_Corollaries
