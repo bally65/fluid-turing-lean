@@ -56,3 +56,4 @@ import FluidTuringLean.M49_SmoothStepBidir
 import FluidTuringLean.M50_TubeInvariant
 import FluidTuringLean.M51_AutonomousClock
 import FluidTuringLean.M52_AutonomousLeapfrog
+import FluidTuringLean.M53_CpuInClock

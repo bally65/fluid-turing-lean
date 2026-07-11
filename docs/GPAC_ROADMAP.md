@@ -175,3 +175,21 @@ C^∞（局部兩項和技巧、零商空間/無限和/FTC/MeasureTheory）**；
 **（審查 cosmetic 補注）**「L3 φ 自治化=ACHIEVABLE」的精確範圍：M51/M52 交付**單暫存器自治 gated
 targeting + 自治耦合 leapfrog 窗解**（時鐘自治化半邊、真自治字面見證）；**非**「L3 全部完成」——
 B-窗鏡像/N 窗串接/自治場×玩具 σ 合體 = 組裝級後續；σ 具體化/undecidability 不在 L3 範圍。
+
+## 2026-07-11 更新⑧：M53 合體 — 時鐘插進 CPU（自振盪流驅動真 sigmaRL、玩具晶片成形）
+
+**M53（承 M52 純量自治 leapfrog + M48-50 玩具 σ）**：把 M52 抬到**向量**（兩個 ℝ³ 暫存器=兩份完整組態
+編碼）+ 抽象 σ₁σ₂ 換**真** sigmaRL。5 定理(零 sorry、標準三公理):
+- gtVec(向量 gated targeting=3 座標各一 targetingGatedSol)+gtVec_hasDerivAt(prodMk×3)+_start/_end。
+- **cpuField σstep C(★自振盪 CPU 向量場★)**: (r₁,r₂,θ)↦(-C·gate2(θ)·(r₁-σstep r₂),
+  -C·gate2(θ-1)·(r₂-σstep r₁), 1)——只依賴狀態、兩暫存器各讀對方跑 σstep、A/B 閘互補。
+- **cpuWindow_isSolution(★HEADLINE★)**: A-窗 [0,1] 全閉區間凍結-r₂ 顯式解真滿足 cpuField(B-閘恰 0⟹r₂ 吸收)。
+- cpuField_contDiff(σstep C^∞⟹場 C^∞、ℝ⁷ prodMk 組)。
+- **cpuWindow_advances(★晶片跑一步★)**: σstep:=sigmaRL、r₂:=gEnc c(良編碼)⟹窗後 r₁=
+  gEnc(gStepRL c)+(r₁₀-gEnc(gStepRL c))·e^{-C}——**一個自治時鐘週期把玩具組態推進一個 TM 步**(接 sigmaRL_exact_of_wf)。
+
+**★關鍵誠實點★**: 連續流是 ε-近似(e^{-C} 殘差、exp 永不精確到達)、離散映射 sigmaRL 才字面精確;
+橋 ε-流回精確需每步 re-rounding(sround/G3 施狀態暫存器)=Wall B 連續版、本磚不做(cpuWindow_advances
+誠實顯示 e^{-C} 殘差)。玩具非真機(G4e)、窗解非全域軌道(B-窗鏡像+N 窗接力後續)、禁宣稱 undecidability。
+**里程碑: 一顆被數學嚴格證明「零件+單步+時鐘自振+一個週期推進玩具程式一步」的半成品數學電腦。**
+54 模組零 sorry 標準三公理。
