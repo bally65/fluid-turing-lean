@@ -53,3 +53,4 @@ import FluidTuringLean.M46_SmoothRead
 import FluidTuringLean.M47_SmoothStep
 import FluidTuringLean.M48_SmoothStepAssemble
 import FluidTuringLean.M49_SmoothStepBidir
+import FluidTuringLean.M50_TubeInvariant
