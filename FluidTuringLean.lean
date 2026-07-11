@@ -59,3 +59,4 @@ import FluidTuringLean.M52_AutonomousLeapfrog
 import FluidTuringLean.M53_CpuInClock
 import FluidTuringLean.M54_ExactReround
 import FluidTuringLean.M55_BlankTape
+import FluidTuringLean.M56_G5Wall
