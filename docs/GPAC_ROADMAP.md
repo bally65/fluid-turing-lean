@@ -242,3 +242,18 @@ per-symbol re-round 全新架構 = paper-level 多月、且分數暫存器清理
 主線 BitTM、未證 undecidability）。倖存假設 = wfCfgB 初始 + 轉移表良性 hQ/hW + headroom base（皆機器
 性質、非邊界）。邊際價值仍弱於且冗餘於主線 M33 無條件。**下一步真牆全在別處**：BitTM↔兩堆疊結構橋
 （≈M25-27 級、後續 G6 splice 到真 undecidability）、φ 自治化（多月）、analytic 語意、G5 已封（WALL）。
+
+## 2026-07-11 更新⑪：M56 — G5 死牆正式進 repo（引用鏈焊死）
+
+更新⑩引的「G5=已證 WALL」根據 `pop_gain_K`，先前只活在 workflow agent scratch session（transcript）
+裡，repo 裡沒有對應模組——引用鏈斷了。**M56 補上**（零 sorry、標準三公理）：
+
+**`pop_affine_on_plateau`（★核心、比原 scratch 更強★）**：讀出算子在**整個閉 plateau**上**精確**仿射
+`pop(y)−pop(y₀)=K(y−y₀)`（非僅一階導數近似——直接消去讀出項，比原 HasDerivAt 版本更簡更強）。
+**`pop_not_contractive`（★死牆證書★）**：`K>1` ⟹ 任意 `ρ<K` 都界不住這個方向的放大——`bounded_orbit`
+（要 `Λ<1`）確定用不上。`tbl2D_zero_gain`（狀態=0）+`push_gain_inv_K`（push=1/K）補齊
+`diag(0,1/K,K)` 完整對照。
+
+誠實：只封讀方向這具體分量，不重形式化「任意加權範數皆無收縮」的通用線代事實（標準結果、非本
+專案特定內容、成本效益不對稱，故不做）。不影響離散精確模擬（M50/M55、ε=0 時增益不出現）、與
+G4e/M55 正交。純負結果——省未來白費在 G5 正面 construction 的投入。57 模組零 sorry 標準三公理。
