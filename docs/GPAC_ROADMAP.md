@@ -154,3 +154,20 @@ C^∞（局部兩項和技巧、零商空間/無限和/FTC/MeasureTheory）**；
 
 **剩（L3 完整版）**：M52 自治 leapfrog 對（`(y₁,y₂,θ)` 3D、period-2 閘給 HOLD、工作量≈M42）+ N 步
 自治串接（M43 相位版）。誠實：M51 只清償單暫存器「非自治」caveat；不動 σ、禁宣稱 undecidability。
+
+## 2026-07-11 更新⑦：L3 整合磚 M52 — 自治耦合 leapfrog 窗解
+
+**M52（承 M51）**：`φ₀_at_zero`（0 邊界、`φ₀_at_one` 鏡像）；**period-2 閘** `clockGate2=φ₀(2·fract(θ/2))`
+（活 `[2n,2n+1]`、**恰 0 於 `[2n+1,2n+2]` 全閉區間** `clockGate2_hold`，端點靠 `φ₀_at_zero/ge_one`）
++ C^∞（局部兩項和）+ **階梯** `clockStair2`（顯式反導數逐點 + HOLD 值凍結 `=n+1` 恰）；
+**★自治耦合 leapfrog 場★** `leapField(y₁,y₂,θ)=(−C·gate2(θ)·(y₁−σ₁y₂), −C·gate2(θ−1)·(y₂−σ₂y₁), 1)`
+（只依賴狀態、目標讀對方 live 值）；**★L3 整合 HEADLINE★** `leapWindow_isSolution`：A-窗 `[0,1]` 全閉
+區間上凍結-`y₂` 顯式解真滿足耦合自治場（B-閘恰 0 ⟹ y₂ 分量吸收 = M42 write-protect 自治版）+
+`leapField_contDiff`。誠實：同 M42「寫法耦合、動態解耦」；窗解非全域軌道（B-窗鏡像+N 窗串接=後續）；
+σ₁ 只在凍結值取值。
+
+**L3 戰役總結（M50-M52，一夜三磚）**：G5 tube 不變式（N 步精確模擬）+ L3 φ 自治化主磚（真自治
+字面見證）+ L3 整合磚（自治耦合 leapfrog 窗解）。「φ 自治化=多月牆」誤判已修正。**L3 剩餘誠實
+缺口**：B-窗鏡像、N 窗自治接力串接（M43 相位版）、自治 σ-耦合與 G4/G5 玩具 σ 的合體（把 leapField
+的抽象 σ₁σ₂ 換 sigmaRL 分量+良編碼不變式）——皆組裝級。真牆不動：G4e 真機橋、analytic 語意、
+邊際價值（弱於 M33 無條件）。
