@@ -257,3 +257,27 @@ per-symbol re-round 全新架構 = paper-level 多月、且分數暫存器清理
 誠實：只封讀方向這具體分量，不重形式化「任意加權範數皆無收縮」的通用線代事實（標準結果、非本
 專案特定內容、成本效益不對稱，故不做）。不影響離散精確模擬（M50/M55、ε=0 時增益不出現）、與
 G4e/M55 正交。純負結果——省未來白費在 G5 正面 construction 的投入。57 模組零 sorry 標準三公理。
+
+## 2026-07-12 更新⑫：G6 開工 — M57 BitTM↔玩具σ 步對步結構橋（★CRUX★，設計 scope 裁決 ACHIEVABLE_MULTI_ROUND）
+
+**設計 scope workflow（wf_af953c8f、6 researcher + synth）**裁決 G6 = **ACHIEVABLE_MULTI_ROUND**
+（~4 session、非牆）。原疑最高風險項——BitTM 的 `ℤ→Bool` 移動帶 ↔ `gStepRLB` 兩堆疊方向是否吻合——
+**驗證後零障礙**：`GCfgB` 的「`R.head`=當前讀符」慣例就是 mathlib 自己的 `Tape.mk' L R :=
+{head:=R.head, left:=L, right:=R.tail}`，**不需新結構**。
+
+**M57 已建（本輪落地、零 sorry、標準三公理）**：
+- 狀態橋 `bitVecToNat`(位元向量→ℕ，`Fintype.equivFin` 現成)+`natToBitVec`(往返)。
+- 字母橋 `boolToNatPM`/`blMap`(mathlib `ListBlank.map` 現成)+`digitsLtB_two_map`(Bool 字母界
+  **無條件**成立，M55 的 wf 前提對 Bool 免費)。
+- 帶橋 `tapeStep_mk'_right/_left/_stay`(BitTM 帶更新公式在 `Tape.mk'` 下 = `gStepRL3` 三臂逐項相同、
+  無方向翻轉、無 off-by-one；`stay`=BitTM 3 態獨有、`gStepRLB`(M55)沒有的第三臂)。
+- `bitEnc`(位元向量+mathlib 帶→`GCfgB`)+`gStepRL3`(`GCfgB` 3 態推廣)。
+- **`gStepRL3_simulates_BitTM`（★CRUX★）**：`gStepRL3(...)(bitEnc v T) = bitEnc(M.next v T.head)
+  (tapeStep(M.write v T.head)(M.move v T.head) T)` **字面相等**——BitTM 一步 = 玩具 σ 一步，跨過編碼。
+
+**★誠實範圍★**：本磚**不**接 `Mtr_halts_iff`、**不**得不可判定結論——純結構橋。`bitEnc` 只對
+`Turing.Tape Bool`-形狀組態定義（基數論證：`ListBlank` 可數、`ℤ→Bool` 不可數、不存在對任意
+`ℤ→Bool` 的忠實編碼）；**不構成障礙**因為 `Mtr M S` 經 `encTM0` 產生的組態恆為 Tape-形狀。G6 志在
+**離散映射**軌道可達性不可判定（`sigmaRL3` 裸 ℝ³ 自映射 + `Function.iterate`），**非**連續流——
+連續流升級已證死牆（M56）。剩：σ-level smooth lift `sigmaRL3`(3-way smoothSelect3)+wf 保持+N 步+
+最終 splice 接 `Mtr_halts_iff`（synth 估 ~3 session）。57→58 模組。
