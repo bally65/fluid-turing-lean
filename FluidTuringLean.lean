@@ -57,3 +57,4 @@ import FluidTuringLean.M50_TubeInvariant
 import FluidTuringLean.M51_AutonomousClock
 import FluidTuringLean.M52_AutonomousLeapfrog
 import FluidTuringLean.M53_CpuInClock
+import FluidTuringLean.M54_ExactReround
