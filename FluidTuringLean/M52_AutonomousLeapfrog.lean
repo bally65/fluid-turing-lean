@@ -24,8 +24,9 @@ leapfrog 場**的窗解——M42 leapfrog 的**自治版**。
 
 ## ★誠實範圍（禁 overclaim）★
 
-- 同 M42 的「寫法耦合、動態解耦」誠實：窗上 `y₂` 被 HOLD 凍成 `c₂` ⟹ `σ₁(y₂ live)=σ₁ c₂` 常數、
-  B-分量恰 0——**每窗一分量 live**（leapfrog 本意）、非同時雙向。`σ₁` 只在凍結值取值（無正則性假設）。
+- 同 M42 的「寫法耦合、動態解耦」誠實：**窗解取 `y₂ ≡ c₂`（常數 ansatz），B-閘恰 0 使其與場一致**
+  （一致性、**非**唯一性——未證任何窗解必凍結）⟹ `σ₁(y₂ live)=σ₁ c₂` 常數、B-分量恰 0——
+  **每窗一分量 live**（leapfrog 本意）、非同時雙向。`σ₁` 只在凍結值取值（無正則性假設）。
 - **窗解、非全域軌道**：本磚給單一 A-窗的解；B-窗鏡像 + N 窗接力串接（M43 相位版）= 後續磚。
 - 不動 σ 具體化/undecidability（正交、禁宣稱）。C^∞ 非 analytic。
 -/
@@ -259,6 +260,61 @@ theorem leapWindow_isSolution (y₁₀ c₂ C : ℝ) (σ₁ σ₂ : ℝ → ℝ)
     ring
   rw [hfield]
   exact hy₁.prodMk (hy₂.prodMk hθ)
+
+/-! ## 非退化見證（M41 慣例：具名檔內定理、杜絕 fluent-but-thin） -/
+
+/-- 階梯於偶數整點：`clockStair2 (2n) = n`。 -/
+theorem clockStair2_even (n : ℤ) : clockStair2 (2 * (n : ℝ)) = (n : ℝ) := by
+  have hfl : ⌊(2 * (n : ℝ)) / 2⌋ = n := by
+    rw [show 2 * (n : ℝ) / 2 = (n : ℝ) by ring, Int.floor_intCast]
+  have hfr : 2 * Int.fract ((2 * (n : ℝ)) / 2) = 0 := by
+    simp only [Int.fract, hfl]; ring
+  rw [clockStair2, hfr, Real.smoothTransition.zero, hfl, zero_add]
+
+/-- `clockStair2` 連續（處處可微）。 -/
+theorem clockStair2_continuous : Continuous clockStair2 :=
+  continuous_iff_continuousAt.mpr fun θ => (clockStair2_hasDerivAt θ).continuousAt
+
+/-- **★非退化見證（閘）★**：A-窗內閘**真非零**（MVT 於 `clockStair2`：窗跨值差恰 1 ⟹
+`∃ θ ∈ (2n, 2n+1), clockGate2 θ = 1 ≠ 0`）——場不塌縮。 -/
+theorem clockGate2_active (n : ℤ) :
+    ∃ θ ∈ Set.Ioo (2 * (n : ℝ)) (2 * (n : ℝ) + 1), clockGate2 θ ≠ 0 := by
+  obtain ⟨c, hc, hderiv⟩ := exists_hasDerivAt_eq_slope clockStair2 clockGate2
+    (by linarith : 2 * (n : ℝ) < 2 * (n : ℝ) + 1)
+    clockStair2_continuous.continuousOn
+    (fun x _ => clockStair2_hasDerivAt x)
+  refine ⟨c, hc, ?_⟩
+  rw [hderiv, clockStair2_frozen (n := n) (by linarith) (by linarith), clockStair2_even]
+  norm_num
+
+/-- 窗解起點值 `= y₁₀`（`Φ(0)=0`）。 -/
+theorem leapWindowSol_start (y₁₀ c₂ C : ℝ) (σ₁ : ℝ → ℝ) (n : ℤ) :
+    (leapWindowSol y₁₀ c₂ C σ₁ n 0).1 = y₁₀ := by
+  simp only [leapWindowSol, targetingGatedSol, add_zero, sub_self, mul_zero, neg_zero,
+    Real.exp_zero, mul_one]
+  ring
+
+/-- 窗解終點值 `= σ₁ c₂ + (y₁₀−σ₁ c₂)e^{−C}`（`Φ(1) = stair2(2n+1)−stair2(2n) = 1` 恰）。 -/
+theorem leapWindowSol_end (y₁₀ c₂ C : ℝ) (σ₁ : ℝ → ℝ) (n : ℤ) :
+    (leapWindowSol y₁₀ c₂ C σ₁ n 1).1 = σ₁ c₂ + (y₁₀ - σ₁ c₂) * Real.exp (-C) := by
+  have hs1 : clockStair2 (2 * (n : ℝ) + 1) = (n : ℝ) + 1 :=
+    clockStair2_frozen (by linarith) (by linarith)
+  simp only [leapWindowSol, targetingGatedSol, hs1, clockStair2_even]
+  rw [show (n : ℝ) + 1 - (n : ℝ) = 1 by ring, mul_one]
+
+/-- **★非退化見證（窗解真動）★**：`C≠0 ∧ y₁₀≠σ₁ c₂ ⟹` 窗解起點值 `≠` 終點值。 -/
+theorem leapWindowSol_moves (y₁₀ c₂ C : ℝ) (σ₁ : ℝ → ℝ) (n : ℤ)
+    (hC : C ≠ 0) (hy : y₁₀ ≠ σ₁ c₂) :
+    (leapWindowSol y₁₀ c₂ C σ₁ n 0).1 ≠ (leapWindowSol y₁₀ c₂ C σ₁ n 1).1 := by
+  rw [leapWindowSol_start, leapWindowSol_end]
+  intro hcontra
+  have hexp : Real.exp (-C) ≠ 1 := fun h => hC (by
+    have h0 : -C = 0 := (Real.exp_eq_one_iff (-C)).mp h
+    linarith)
+  have hz : (y₁₀ - σ₁ c₂) * (1 - Real.exp (-C)) = 0 := by linear_combination hcontra
+  rcases mul_eq_zero.mp hz with h | h
+  · exact hy (by linarith)
+  · exact hexp (by linarith)
 
 /-- **場 C^∞**（σ 光滑時）。 -/
 theorem leapField_contDiff (σ₁ σ₂ : ℝ → ℝ) (C : ℝ)
