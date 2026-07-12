@@ -15,8 +15,9 @@ doi: "10.5281/zenodo.21320838"
 authors:
   - family-names: "Li"
     given-names: "Wei-Ting"
+    orcid: "https://orcid.org/0009-0005-8891-330X"
+    affiliation: "Chaoyang University of Technology"
     alias: "bally65"
-    # orcid: "https://orcid.org/0000-0000-0000-0000"  # optional — add if you register one
 repository-code: "https://github.com/bally65/fluid-turing-lean"
 license: "MIT"
 keywords:
