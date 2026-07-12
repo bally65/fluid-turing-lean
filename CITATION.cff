@@ -13,11 +13,10 @@ abstract: >-
 type: software
 doi: "10.5281/zenodo.21320838"
 authors:
-  - name: "bally65"
-    # To use your legal name instead, replace the line above with:
-    #   family-names: "Surname"
-    #   given-names: "GivenName"
-    #   orcid: "https://orcid.org/0000-0000-0000-0000"
+  - family-names: "Li"
+    given-names: "Wei-Ting"
+    alias: "bally65"
+    # orcid: "https://orcid.org/0000-0000-0000-0000"  # optional — add if you register one
 repository-code: "https://github.com/bally65/fluid-turing-lean"
 license: "MIT"
 keywords:

@@ -99,15 +99,15 @@ This project was developed with substantial assistance from a large language mod
 Please cite the archived release (see `CITATION.cff`):
 
 ```
-bally65. fluid_turing_lean: Machine-checked undecidability of dynamical systems in Lean 4.
+Li, Wei-Ting. fluid_turing_lean: Machine-checked undecidability of dynamical systems in Lean 4.
 Zenodo, 2026. DOI: 10.5281/zenodo.21320838
 ```
 
 BibTeX:
 
 ```bibtex
-@software{bally65_fluid_turing_lean_2026,
-  author    = {bally65},
+@software{li_fluid_turing_lean_2026,
+  author    = {Li, Wei-Ting},
   title     = {{fluid\_turing\_lean}: Machine-checked undecidability of dynamical systems in Lean 4},
   year      = {2026},
   publisher = {Zenodo},
