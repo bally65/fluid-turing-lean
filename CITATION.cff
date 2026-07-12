@@ -1,0 +1,36 @@
+cff-version: 1.2.0
+message: "If you use this formalization, please cite it as below."
+title: "fluid_turing_lean: Machine-checked undecidability of dynamical systems in Lean 4"
+abstract: >-
+  A Lean 4 + mathlib formalization contributing two machine-checked, unconditional,
+  zero-sorry undecidability theorems for dynamical systems: (1) the reachability of a
+  compact-space continuous-time flow is not computable (fluid_blowup_undecidable), and
+  (2) the orbit-reachability of an explicit C-infinity map on R^3 is not computable
+  (sigmaRL3_reachability_undecidable). It also contributes a machine-checked negative
+  result (pop_not_contractive) showing the continuous-flow robustification of the
+  smooth-map construction is impossible. Proofs depend only on the standard three
+  axioms (propext, Classical.choice, Quot.sound).
+type: software
+authors:
+  # TODO: replace with your real name (and optionally ORCID) before archiving to Zenodo.
+  - family-names: "TODO-Surname"
+    given-names: "TODO-GivenName"
+    # orcid: "https://orcid.org/0000-0000-0000-0000"
+    alias: "bally65"
+repository-code: "https://github.com/bally65/fluid-turing-lean"
+license: "TODO-add-a-LICENSE-file (Apache-2.0 or MIT recommended)"
+keywords:
+  - "Lean 4"
+  - "mathlib"
+  - "formal verification"
+  - "interactive theorem proving"
+  - "undecidability"
+  - "dynamical systems"
+  - "Turing completeness"
+  - "computability"
+  - "GPAC"
+  - "analog computation"
+version: "0.9"
+date-released: "2026-07-12"
+# After creating a Zenodo release, add:
+# doi: "10.5281/zenodo.XXXXXXX"
