@@ -18,7 +18,7 @@ authors:
     # orcid: "https://orcid.org/0000-0000-0000-0000"
     alias: "bally65"
 repository-code: "https://github.com/bally65/fluid-turing-lean"
-license: "TODO-add-a-LICENSE-file (Apache-2.0 or MIT recommended)"
+license: "MIT"
 keywords:
   - "Lean 4"
   - "mathlib"
