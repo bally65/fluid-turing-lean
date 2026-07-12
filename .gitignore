@@ -1,1 +1,4 @@
 /.lake
+
+# macOS junk
+.DS_Store
