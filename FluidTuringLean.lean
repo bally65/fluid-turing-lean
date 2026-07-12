@@ -61,3 +61,4 @@ import FluidTuringLean.M54_ExactReround
 import FluidTuringLean.M55_BlankTape
 import FluidTuringLean.M56_G5Wall
 import FluidTuringLean.M57_BitTMBridge
+import FluidTuringLean.M58_SmoothStep3

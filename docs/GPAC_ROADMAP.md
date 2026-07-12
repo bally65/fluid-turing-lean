@@ -281,3 +281,23 @@ G4e/M55 正交。純負結果——省未來白費在 G5 正面 construction 的
 **離散映射**軌道可達性不可判定（`sigmaRL3` 裸 ℝ³ 自映射 + `Function.iterate`），**非**連續流——
 連續流升級已證死牆（M56）。剩：σ-level smooth lift `sigmaRL3`(3-way smoothSelect3)+wf 保持+N 步+
 最終 splice 接 `Mtr_halts_iff`（synth 估 ~3 session）。57→58 模組。
+
+## 2026-07-12 更新⑬：G6 續 — M58 σ-level 光滑提升（3 態 sigmaRL3、接 M57 Dir-based 橋）
+
+**承 M57（gStepRL3=Dir-based 離散步、已證=BitTM 一步）**。M57 只給離散 step；M58 把它提升成顯式
+C^∞ 映射 sigmaRL3，證其在 gEncB 下逐步字面等於 gStepRL3。**注意：對接 M57 的 Dir-based gStepRL3**
+（非 scope researcher 草稿的 ℕ-based 版），使 M57↔M58 鏈接得起來。落地（零 sorry、標準三公理）:
+- smoothSelect3(巢狀兩層 2 態選)+smoothSelect3_zero/_one/_ge_two(grid 精確)+_contDiff。
+- dirNat: Dir→ℕ(left↦0/stay↦1/right↦2)把 Dir 移動編成 σ 讀得到的實數碼。
+- sigmaRL3(★3 態光滑 σ★): 每帶分量=smoothSelect3(讀 move)(左臂)(stay 臂)(右臂);stay_L=恆等、
+  stay_R=(δw+pop R)/K=encInf(R.tail.cons δw)、零新代數。
+- ★sigmaRL3_exact_of_wfB(CRUX)★: sigmaRL3(…)(dirNat∘moveD)(gEncB c)=gEncB(gStepRL3 δq δw moveD c)
+  字面相等無 bothNonempty(cases moveD、smoothSelect3 grid 挑臂、encInf_cons/pop 純代數)。
+- sigmaRL3_contDiff(3 態 σ C^∞)+gStepRL3_wf/_iterate_wf(M57 只給模擬定理未給 wf、補上)。
+- ★sigmaRL3_iterate_exactB(HEADLINE)★: σ3^[n](gEncB c)=gEncB(gStepRL3^[n] c)N 步字面相等無 hne。
+
+★誠實★: 仍未接 undecidability(未經 bitEnc+Mtr_halts_iff 合成 ¬ComputablePred、=G6 最後一步、下模組);
+離散映射非連續流(連續流升級=已證死牆 M56);倖存 wfCfgB/hQ/hW/headroom、無 bothNonempty;C^∞ 非 analytic。
+G6 完工後 headline 與主線 M33(連續流無條件)是不同數學物件(光滑映射 vs 流)、皆源自同一 Mtr_halts_iff、
+不冗餘。59 模組。剩 G6 最後一步 = 把 sigmaRL3_iterate_exactB 沿 M57 gStepRL3_simulates_BitTM 拉到
+BitTM.step^[n]、接 Mtr_halts_iff 到通用碼停機 splice(splice researcher 估~0.5-1 session、機械)。
