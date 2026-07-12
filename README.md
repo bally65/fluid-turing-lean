@@ -1,5 +1,7 @@
 # fluid_turing_lean
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21320838.svg)](https://doi.org/10.5281/zenodo.21320838)
+
 **Machine-checked undecidability of dynamical systems — continuous flows and smooth maps, formalized in Lean 4 + mathlib.**
 
 動力系統圖靈完備性與不可判定性的 Lean 4 形式化（連續流 + 光滑映射兩座封頂）。
@@ -94,14 +96,26 @@ This project was developed with substantial assistance from a large language mod
 
 ## How to cite
 
-Please cite the archived release (see `CITATION.cff`). A Zenodo DOI is minted from a GitHub release:
+Please cite the archived release (see `CITATION.cff`):
 
 ```
-<AUTHOR>. fluid_turing_lean: Machine-checked undecidability of dynamical systems in Lean 4.
-Zenodo, 2026. DOI: 10.5281/zenodo.XXXXXXX
+bally65. fluid_turing_lean: Machine-checked undecidability of dynamical systems in Lean 4.
+Zenodo, 2026. DOI: 10.5281/zenodo.21320838
 ```
 
-> Fill in `<AUTHOR>` / DOI after creating the Zenodo release, and edit `CITATION.cff` with your real name and (optionally) ORCID before archiving.
+BibTeX:
+
+```bibtex
+@software{bally65_fluid_turing_lean_2026,
+  author    = {bally65},
+  title     = {{fluid\_turing\_lean}: Machine-checked undecidability of dynamical systems in Lean 4},
+  year      = {2026},
+  publisher = {Zenodo},
+  version   = {v0.9},
+  doi       = {10.5281/zenodo.21320838},
+  url       = {https://doi.org/10.5281/zenodo.21320838}
+}
+```
 
 ---
 

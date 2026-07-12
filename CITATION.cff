@@ -11,12 +11,13 @@ abstract: >-
   smooth-map construction is impossible. Proofs depend only on the standard three
   axioms (propext, Classical.choice, Quot.sound).
 type: software
+doi: "10.5281/zenodo.21320838"
 authors:
-  # TODO: replace with your real name (and optionally ORCID) before archiving to Zenodo.
-  - family-names: "TODO-Surname"
-    given-names: "TODO-GivenName"
-    # orcid: "https://orcid.org/0000-0000-0000-0000"
-    alias: "bally65"
+  - name: "bally65"
+    # To use your legal name instead, replace the line above with:
+    #   family-names: "Surname"
+    #   given-names: "GivenName"
+    #   orcid: "https://orcid.org/0000-0000-0000-0000"
 repository-code: "https://github.com/bally65/fluid-turing-lean"
 license: "MIT"
 keywords:
@@ -30,7 +31,5 @@ keywords:
   - "computability"
   - "GPAC"
   - "analog computation"
-version: "0.9"
+version: "v0.9"
 date-released: "2026-07-12"
-# After creating a Zenodo release, add:
-# doi: "10.5281/zenodo.XXXXXXX"
