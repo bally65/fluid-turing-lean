@@ -6,7 +6,8 @@ import FluidTuringLean.M33_FluidCapstone
 
 **承 M57（`gStepRL3` = `BitTM` 一步）+ M58（`sigmaRL3` = `gStepRL3` 步對步、C^∞）+ M28
 （`Mtr_halts_iff`、機器停機橋，無條件）+ M33（通用碼組裝 block，直接複用）**。本磚把整條 GPAC 鏈
-焊到 mathlib 停機問題，得**第一個關於「顯式光滑映射」的不可判定結果**：
+焊到 mathlib 停機問題，得一個關於**顯式光滑映射**的不可判定結果（**據我們所查**、於證明助理中
+就此類「顯式光滑映射動力系統不可判定性」的形式化尚無前例；非嚴格文獻普查、僅盡力查證）：
 
 > **存在一個顯式 C^∞ 映射 `σ : ℝ³ → ℝ³`，其軌道可達性（∃k，σ^[k](base code) ∈ Target）不可計算。**
 
