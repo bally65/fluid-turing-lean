@@ -1,4 +1,4 @@
--- 六模組翻譯鏈：離散圖靈計算 → 連續流場
+-- 專案根匯入：離散計算、連續流、光滑映射與誠實 NS 介面
 import FluidTuringLean.M1_Computability
 import FluidTuringLean.M2_Interpreter
 import FluidTuringLean.M3_Encoding
@@ -64,3 +64,4 @@ import FluidTuringLean.M57_BitTMBridge
 import FluidTuringLean.M58_SmoothStep3
 import FluidTuringLean.M59_SmoothUndecidable
 import FluidTuringLean.M60_AnalyticWall
+import FluidTuringLean.M61_NSIncompressibleSpec

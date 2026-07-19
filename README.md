@@ -6,7 +6,7 @@
 
 動力系統圖靈完備性與不可判定性的 Lean 4 形式化（連續流 + 光滑映射兩座封頂）。
 
-> **Status:** 63 modules · **0 `sorry`** · axioms limited to `propext`, `Classical.choice`, `Quot.sound` (the mathlib standard three) · Lean `v4.32.0-rc1` + pinned mathlib.
+> **Status:** 65 modules · **0 `sorry`** · axioms limited to `propext`, `Classical.choice`, `Quot.sound` (the mathlib standard three) · Lean `v4.32.0-rc1` + pinned mathlib.
 >
 > *(The detailed pre-M33 Euler–Beltrami design log is archived at [`docs/README_ARCHIVE_eulerBeltrami_2026-07-08.md`](docs/README_ARCHIVE_eulerBeltrami_2026-07-08.md).)*
 
@@ -44,7 +44,7 @@ The central claim is **mechanically checkable**: the proofs either compile with 
 ```bash
 # The Lean 4 toolchain is pinned in `lean-toolchain`; `elan` fetches it.
 lake exe cache get     # fetch the pinned mathlib build cache
-lake build             # builds all 63 modules; success ⇒ every theorem holds
+lake build             # builds all 65 modules; success ⇒ every theorem holds
 ```
 
 Axiom hygiene (no `sorryAx`, no custom axioms) is re-checkable per declaration:
@@ -65,8 +65,12 @@ open FluidTuring
 - `M1`–`M9` — computability base, reversible Turing machine `BitTM`, Bennett reversibilization (`M3b`–`M3e`), flow suspension, Euler/Reeb interface.
 - `M10`–`M33` — **main line** (continuous flow): `BitTM`/`Mtr` machine layer, `Mtr_halts_iff`, universal-code assembly, capstone `fluid_blowup_undecidable`.
 - `M34`–`M38` — literal-blowup and reachability-characterization extensions.
-- `M39`–`M59` — **GPAC line** (smooth map): smooth primitives (`smoothSelect`, `sfloor`, `sround`), a toy smooth CPU, the infinite-tape bridge (`ListBlank`), the certified G5 wall (`M56`), the smooth-map lift (`M58`), capstone `sigmaRL3_reachability_undecidable` (`M59`).
+- `M39`–`M60` — **GPAC line** (smooth map): smooth primitives (`smoothSelect`, `sfloor`, `sround`), a toy smooth CPU, the infinite-tape bridge (`ListBlank`), the certified G5 wall (`M56`), the smooth-map lift (`M58`), capstone `sigmaRL3_reachability_undecidable` (`M59`), and the analytic-reader wall (`M60`).
+- `M61` — additive abstract-NS specification repair: divergence-free and steady momentum are explicit separate obligations; still a vacuous signature layer, not a real NS PDE result.
 - `docs/GPAC_ROADMAP.md`, `docs/UNDECIDABILITY_LINE.md` — dated design logs and scope maps.
+- `docs/NAVIER_STOKES_FORMALIZATION_ROADMAP.md` — honest separation of the current abstract
+  signature/concrete-example layers from the future periodic PDE, energy, Galerkin, Sobolev, and
+  regularity programme.
 
 ---
 
@@ -121,4 +125,4 @@ BibTeX:
 
 ## License
 
-**No license file is present yet.** A citable/reusable artifact needs one — for a Lean/mathlib-adjacent formalization, `Apache-2.0` (mathlib's own license) or `MIT` is conventional. Add a `LICENSE` file before archiving to Zenodo.
+This project is released under the MIT License; see [`LICENSE`](LICENSE).

@@ -77,13 +77,14 @@ def IsHarmonic (u : N.Vec) : Prop := N.hodgeLap u = N.zero
 def IsNSSteady (ν : ℝ) (u : N.Vec) : Prop :=
   ∃ p : M → ℝ, N.sub (N.conv u) (N.smul ν (N.hodgeLap u)) = N.neg (N.grad p)
 
-/-- **★ Proposition 4.1（Dyhr et al. 2025/2026）★**：調和向量場是不可壓縮 Navier–Stokes
-方程的定常解，**對任意 `ν` 成立**（黏滯免疫）。
+/-- **★ Proposition 4.1 的動量方程部分（Dyhr et al. 2025/2026）★**：
+調和向量場滿足 Navier–Stokes 定常動量方程，**對任意 `ν` 成立**（黏滯項消失）。
 
 證明骨架步驟 3：因 `ΔX = 0`（調和），黏滯項 `ν ΔX = ν • 0 = 0` 對任意 `ν` 消失，
 動量方程化為 `∇_X X = −∇p`；步驟 4（`harmonic_conv_isGrad`）供壓力見證。
 
-**機器證的是推導結構**（黏滯項為何對任意 `ν` 消失）；真幾何內容在簽名法則、抽象空洞
+**機器證的是推導結構**（黏滯項為何對任意 `ν` 消失）；結論 `IsNSSteady`
+不含 `div u = 0`，故本定理本身不宣稱不可壓縮性。真幾何內容在簽名法則、抽象空洞
 （見 `trivialNS_vacuous`）。 -/
 theorem prop_4_1 (u : N.Vec) (h : N.IsHarmonic u) (ν : ℝ) : N.IsNSSteady ν u := by
   obtain ⟨p, hp⟩ := N.harmonic_conv_isGrad u h
@@ -122,16 +123,19 @@ theorem trivialNS_vacuous {M : Type*} [TopologicalSpace M] (F : ContinuousFlowOn
     ∀ (u : (trivialNS F).Vec) (ν : ℝ), (trivialNS F).IsNSSteady ν u ∧ (trivialNS F).IsHarmonic u :=
   fun _ _ ↦ ⟨⟨fun _ ↦ 0, rfl⟩, rfl⟩
 
-/-! ## Step 3 — 圖靈完備定常 Navier–Stokes 解（capstone 條件定理，方案 A）
+/-! ## Step 3 — 抽象定常動量方程 capstone（條件定理，方案 A）
 
 把 `prop_4_1`（調和 ⟹ NS-steady 對任意 ν）+ **調和場幾何實現假設**
 `ReebHarmonicRealization` + 已證離散→連續模擬鏈 `suspension_flow_simulates`，複合成
-主定理：**存在圖靈完備的定常 Navier–Stokes 解，對任意 `ν`**（同 `euler_flow_turing_complete`
-的方案 A 手法、NS 版）。
+主定理給出被模擬流、`IsHarmonic` 與對任意 `ν` 的 `IsNSSteady`。這兩個舊謂詞
+都不把 `div u = 0` 放進結論；不可壓縮性必須另列為假設與結論，見下游 additive
+規格層。
 
 **`ReebHarmonicRealization`（明寫假設，folds 論文 Theorem A + Prop 4.3/Lemma 4.5 的
-全部 paper-blocked 幾何）**：任意緊空間連續流可實現為某緊流形上**調和向量場**的流、經
-單射共軛。這一個假設包住：
+全部 paper-blocked 幾何）**：任意緊空間連續流可實現為某緊空間上抽象
+`NSCalculus3` 的**調和向量場**之流、經單射共軛。正式型別沒有宣稱該空間是
+真流形。
+這一個假設意圖包住：
 - **前提 B**：Hodge-admissible 流形（Tischler：纖維化到 `S¹`）；
 - **度量形變 `g_ε`**（Prop 4.3 / Lemma 4.5）：只支撐在嵌入實心環面 `T = D × S¹`、`T` 外
   `g̃ = g`、`T` 內把 `β` 改成 `β̃` 植入模擬 TM 的回歸映射並保 `α = ⋆_g̃ β̃`（`X̃` 仍調和）；
@@ -146,8 +150,10 @@ compatible metric 的流形上度量形變不可行；故此假設**只對形變
 `ReebHarmonicRealization` 抽象可滿足（`reebHarmonicRealization_trivial`）、真幾何 mathlib 無、
 paper-blocked。不冒充真流體 NS。 -/
 
-/-- **調和場幾何實現假設**（明寫，方案 A）：任意緊空間連續流 `F` 可實現為某緊流形上
-`NSCalculus3` 結構的**調和向量場** `u` 的流、經單射 `ψ` 共軛。Folds 論文 Theorem A +
+/-- **調和場抽象實現假設**（明寫，方案 A）：
+任意緊空間連續流 `F` 可實現為某緊空間上
+`NSCalculus3` 結構的 `IsHarmonic` 場 `u` 之流、經單射 `ψ` 共軛。正式結論只有
+`hodgeLap u = zero`，不含流形結構或 `div u = 0`；真幾何意圖來自論文 Theorem A +
 Prop 4.3/Lemma 4.5（Hodge-admissibility + 度量形變 + Reeb=調和）。 -/
 def ReebHarmonicRealization : Prop :=
   ∀ (M : Type) [TopologicalSpace M] [CompactSpace M] (F : ContinuousFlowOn M),
@@ -156,16 +162,18 @@ def ReebHarmonicRealization : Prop :=
       Function.Injective ψ ∧ N.IsHarmonic u ∧
         ∀ (t : ℝ) (x : M), (N.flowOf u).φ t (ψ x) = ψ (F.φ t x)
 
-/-- **★ 主定理（NS 版，方案 A 條件定理）★**：給定調和場幾何實現假設，任意緊空間自同胚
-`e`（承載圖靈機動力學）被某緊流形上**調和**向量場 `u` 的流模擬（結論明列 `IsHarmonic u`
-= `curl u = λu` 且 `div u = 0`，即**不可壓縮**）。
+/-- **★ 舊版抽象 NS capstone（方案 A 條件定理）★**：
+給定調和場抽象實現假設，任意緊空間自同胚 `e` 被某緊空間上 `NSCalculus3` 場 `u`
+的流模擬。結論明列：
 
-**注意（審計後校正）**：結論**明列的是 `IsHarmonic u`**（不可壓縮 + Beltrami 型）；`u` 亦是
-NS 定常解——但那是經 `prop_4_1`（調和 ⟹ `IsNSSteady` 動量方程、黏滯項對任意 ν 消失）**另證**、
-非結論直接暴露。且整層抽象簽名、機器確認 trivially 可滿足（`trivialNS_vacuous`）。
+- `N.IsHarmonic u`，其正式定義僅為 `N.hodgeLap u = N.zero`；
+- `∀ ν, N.IsNSSteady ν u`，即抽象定常**動量方程**；
+- `Simulates ...`。
 
-= 圖靈完備的調和（不可壓縮）向量場流。證明：離散→連續 `suspension_flow_simulates`（已證）複合
-`hgeo`（調和實現假設）。 -/
+它**不**斷言 `curl u = λ • u`、Beltrami 或 `div u = 0`，因此不可稱為正式的
+不可壓縮 Navier–Stokes 解。整層抽象簽名亦可 trivially 滿足
+（`trivialNS_vacuous`）。證明只複合
+`suspension_flow_simulates`、`hgeo` 與 `prop_4_1`；舊 statement 保留作 API 相容。 -/
 theorem navier_stokes_turing_complete (hgeo : ReebHarmonicRealization)
     {X : Type} [TopologicalSpace X] [CompactSpace X] (e : X ≃ₜ X) :
     ∃ (M : Type) (_ : TopologicalSpace M) (_ : CompactSpace M)
