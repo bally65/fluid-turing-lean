@@ -67,6 +67,7 @@ open FluidTuring
 - `M34`–`M38` — literal-blowup and reachability-characterization extensions.
 - `M39`–`M60` — **GPAC line** (smooth map): smooth primitives (`smoothSelect`, `sfloor`, `sround`), a toy smooth CPU, the infinite-tape bridge (`ListBlank`), the certified G5 wall (`M56`), the smooth-map lift (`M58`), capstone `sigmaRL3_reachability_undecidable` (`M59`), and the analytic-reader wall (`M60`).
 - `M61` — additive abstract-NS specification repair: divergence-free and steady momentum are explicit separate obligations; still a vacuous signature layer, not a real NS PDE result.
+- Periodic-NS companion status — `contact_geometry_lean` is verified through C229: canonical LF zero-final time tests, finite-Fourier weak identities, realizable consumer provenance, the residual-kernel obstruction, and an algebraic initial-slot tensor lift. Contact checkpoint commits: `8ad0174` / `b4fef1c`. This still is not a Leray–Hopf package or a Clay result.
 - `docs/GPAC_ROADMAP.md`, `docs/UNDECIDABILITY_LINE.md` — dated design logs and scope maps.
 - `docs/NAVIER_STOKES_FORMALIZATION_ROADMAP.md` — honest separation of the current abstract
   signature/concrete-example layers from the future periodic PDE, energy, Galerkin, Sobolev, and
