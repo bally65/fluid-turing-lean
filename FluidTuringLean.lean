@@ -67,3 +67,4 @@ import FluidTuringLean.M60_AnalyticWall
 import FluidTuringLean.M61_NSIncompressibleSpec
 import FluidTuringLean.M62_DecideDrill
 import FluidTuringLean.M63_SigmaCorollaries
+import FluidTuringLean.M64_PrimeComputer
