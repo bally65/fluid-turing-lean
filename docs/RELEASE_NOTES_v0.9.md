@@ -1,5 +1,38 @@
 # v0.9 — Two machine-checked undecidability theorems (continuous flow + smooth map)
 
+> ### Errata — 2026-08-13
+>
+> These notes are the archived record of the v0.9 release and the text below is left **unaltered**.
+> One correction is recorded here instead.
+>
+> **The "Honest scope" paragraph understates what v0.9 contained.** It reads
+> "(C) Toy binary encoding; reachability (not literal blow-up)", which suggests the release had no
+> result about *literal* finite-time blow-up. It did. `M34_LiteralBlowup.lean` was already present at
+> tag `v0.9` and proves:
+>
+> - `blowupFamily_blowsUp_iff (n : ℕ) (code : Code) : BlowsUpInFiniteTime (blowupFamily n code) ↔ (code.eval n).Dom`
+>   — a two-way equivalence, not the one-directional bridge the phrasing implies;
+> - `literal_blowup_undecidable (n : ℕ) : ¬ ComputablePred (fun code ↦ BlowsUpInFiniteTime (blowupFamily n code))`
+>   — unconditional (no hypotheses beyond `n`), zero-`sorry`, standard three axioms, resting on `M13`'s
+>   genuine `C^∞` Riccati escape (`Tendsto … atTop`).
+>
+> The accurate caveat is a *different* one, and it is a real one: `literal_blowup_undecidable` is
+> **reduction-level**. `blowupFamily` is assembled by case-splitting on the (undecidable) halting
+> predicate, so the trajectory is selected by the answer rather than computing it. In `M33`/`M59` the
+> flow and the map are single objects fixed independently of `code`; `M34` is not. Welding literal
+> blow-up into *one autonomous coupled vector field* was blocked at v0.9 and still is — see the
+> continuity/clopen obstruction in `M38`.
+>
+> What this errata does **not** change: the two headline theorems, their unconditional status, the
+> `sorry` count, the axiom set, and the module count are all as stated below. The Zenodo record for
+> v0.9 is frozen and does not carry this note; `README.md` on `main` has been corrected.
+>
+> Verify: `git ls-tree -r v0.9 --name-only -- FluidTuringLean | grep M34`, then read
+> `FluidTuringLean/M34_LiteralBlowup.lean` lines 40–65.
+>
+> Found by an adversarial audit of the plain-language rewrite (`docs/popular_paper_zh.html`), which
+> inherited the same understatement from this text.
+
 First archival release of **fluid_turing_lean**: a Lean 4 + mathlib formalization of Turing-completeness and undecidability for dynamical systems. This release captures the project at **63 modules, zero `sorry`, standard-three-axioms only**.
 
 ## Headline results (both unconditional, zero-`sorry`)
