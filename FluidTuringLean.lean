@@ -65,3 +65,5 @@ import FluidTuringLean.M58_SmoothStep3
 import FluidTuringLean.M59_SmoothUndecidable
 import FluidTuringLean.M60_AnalyticWall
 import FluidTuringLean.M61_NSIncompressibleSpec
+import FluidTuringLean.M62_DecideDrill
+import FluidTuringLean.M63_SigmaCorollaries

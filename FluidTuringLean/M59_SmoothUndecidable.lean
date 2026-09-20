@@ -155,6 +155,45 @@ theorem offset_exists {P : ℕ → Prop} (h0 : ¬ P 0) : (∃ k, P k) ↔ (∃ k
     | succ m => exact ⟨m, hk⟩
   · rintro ⟨k, hk⟩; exact ⟨k + 1, hk⟩
 
+/-! ## ★結構閘門★：σ 軌道可達 ⟺ TM0 機器停機（無 index、無 `hcorr`、無不可判定性） -/
+
+/-- **★σ 可達 ⟺ TM0 停機（純橋、無不可判定性內容）★**
+
+對**任意**起始組態 `c`（只要控制字在 `S` 裡），σ 軌道打進 halt 目標集 ⟺ 該組態的 TM0-eval 停機。
+
+這是 `sigmaM_reach_undecidable_of` 證明內部原本寫成 `have key` 的那一段（`reach_at_k` +
+`offset_exists` + `Mtr_halts_iff`），抬成可引用的定理。抬出來的理由有三：
+
+1. **它不含不可判定性。** 原本那段被 `rw [key] at hcomp` 之後就消失了，讀者看不到橋本身。
+   唯一產生可計算性內容的一步是後面的 `ComputablePred.halting_problem`，與本條無關。
+2. **原式把 index 綁死在 `Nat.Partrec.Code` 且綁死「程式變／輸入固定」**
+   （`init : Nat.Partrec.Code → Cfg` 搭 `(code.eval n).Dom`）。本條對**單一組態**陳述，
+   於是任何 index 型別、任何「誰變誰不變」的排法都只是把它套在不同的 `c` 上。
+3. `sigmaM_reach_undecidable_of` 隨後縮成三行推論，**全檔行數淨減**。 -/
+theorem sigmaM_reach_iff_of {Λ : Type*} [Inhabited Λ]
+    (M0 : Turing.TM0.Machine Bool Λ) (S : Finset Λ)
+    (hClosed : ∀ {q : Λ} {a : Bool} {q' : Λ} {s : Turing.TM0.Stmt Bool},
+        (q', s) ∈ M0 q a → q ∈ (↑S : Set Λ) → q' ∈ (↑S : Set Λ))
+    (c : Turing.TM0.Cfg Bool Λ) (hc : c.q ∈ S) :
+    (∃ k : ℕ, (sigmaM (Mtr M0 S))^[k]
+        (gEncB 8 (bitEnc (encCtrl S (ctrlOfLabel S c.q)) c.Tape))
+          ∈ {x | x.1 = (bitVecToNat (ctrlCard S) (encHalt S) : ℝ)})
+      ↔ (StateTransition.eval (Turing.TM0.step M0) c).Dom := by
+  have step1 : (∃ k : ℕ, (sigmaM (Mtr M0 S))^[k]
+        (gEncB 8 (bitEnc (encCtrl S (ctrlOfLabel S c.q)) c.Tape))
+          ∈ {x | x.1 = (bitVecToNat (ctrlCard S) (encHalt S) : ℝ)})
+      ↔ ∃ k : ℕ, ((Mtr M0 S).step^[k] (encTM0 M0 S c)).1 = encHalt S := by
+    apply exists_congr
+    intro k
+    rw [Set.mem_setOf_eq]
+    exact reach_at_k (Mtr M0 S) (encCtrl S (ctrlOfLabel S c.q)) (encHalt S) c.Tape k
+  rw [step1]
+  have h0 : ¬ ((Mtr M0 S).step^[0] (encTM0 M0 S c)).1 = encHalt S := by
+    simp only [Function.iterate_zero, id]
+    exact encTM0_fst_ne_encHalt M0 S hc
+  rw [offset_exists h0]
+  exact Mtr_halts_iff M0 S hClosed c hc
+
 /-! ## ★機器參數化 headline★：TM0 + 封閉性 + `hcorr` ⟹ σ 可達性不可判定 -/
 
 /-- **★機器參數化不可判定★**：任意 TM0(Bool) 機器 `M0` + 封閉性 `hClosed` + 停機對應 `hcorr`
@@ -179,39 +218,53 @@ theorem sigmaM_reach_undecidable_of {Λ : Type*} [Inhabited Λ]
   have key : (fun code : Nat.Partrec.Code => ∃ k : ℕ, (sigmaM (Mtr M0 S))^[k]
         (gEncB 8 (bitEnc (encCtrl S (ctrlOfLabel S (init code).q)) (init code).Tape))
           ∈ {x | x.1 = (bitVecToNat (ctrlCard S) (encHalt S) : ℝ)})
-      = fun code => (code.eval n).Dom := by
-    funext code
-    apply propext
-    have step1 : (∃ k : ℕ, (sigmaM (Mtr M0 S))^[k]
-          (gEncB 8 (bitEnc (encCtrl S (ctrlOfLabel S (init code).q)) (init code).Tape))
-            ∈ {x | x.1 = (bitVecToNat (ctrlCard S) (encHalt S) : ℝ)})
-        ↔ ∃ k : ℕ, ((Mtr M0 S).step^[k] (encTM0 M0 S (init code))).1 = encHalt S := by
-      apply exists_congr
-      intro k
-      rw [Set.mem_setOf_eq]
-      exact reach_at_k (Mtr M0 S) (encCtrl S (ctrlOfLabel S (init code).q)) (encHalt S)
-        (init code).Tape k
-    rw [step1]
-    have h0 : ¬ ((Mtr M0 S).step^[0] (encTM0 M0 S (init code))).1 = encHalt S := by
-      simp only [Function.iterate_zero, id]
-      exact encTM0_fst_ne_encHalt M0 S (hinit_q code)
-    rw [offset_exists h0, Mtr_halts_iff M0 S hClosed (init code) (hinit_q code), hcorr code]
+      = fun code => (code.eval n).Dom :=
+    funext fun code => propext
+      ((sigmaM_reach_iff_of M0 S hClosed (init code) (hinit_q code)).trans (hcorr code))
   rw [key] at hcomp
   exact ComputablePred.halting_problem n hcomp
 
-/-! ## ★封頂：無條件「顯式 C^∞ 映射軌道可達性不可判定」 -/
+/-- **★機器參數化特徵化★**：同樣的前提（TM0 機器 + 封閉性 + `hcorr`），結論改成
+**精確歸約**而非「不可判定」：軌道可達性 `⟺` `(code.eval n).Dom`，逐 `code` 成立。
 
-/-- **★★G6 封頂（無條件）★★**：存在一個**顯式 C^∞ 映射** `σ : ℝ³ → ℝ³`、基點族 `base`、目標集
-`Target`，使「`code` 的軌道於某步打進 `Target`」**無演算法可判定**。通用碼組裝 block（`cu`/`enc`/`SU`/
-`hClosed`/`hinit_q`/`hcorr`）**逐字複用 M33**，尾端接 `sigmaM_reach_undecidable_of`（離散映射版、
-非 M33 的懸掛流版）。
-
-**與主線 M33 的關係**：不同數學物件（**離散映射** vs **連續流**）、共用機器層、平行不取代。
-C^∞ 非 analytic；離散映射非連續流（連續流升級 = 死牆 M56）。 -/
-theorem sigmaRL3_reachability_undecidable (n : ℕ) :
+比 `sigmaM_reach_undecidable_of` **嚴格強**——後者由本條加 `ComputablePred.halting_problem`
+一步導出（見 `sigmaRL3_reachability_undecidable`）。模式鏡射流線的
+`mtr_flow_characterization`（M37:89）。零新數學：本體就是 `sigmaM_reach_iff_of` 串 `hcorr`。 -/
+theorem sigmaM_reach_characterization_of {Λ : Type*} [Inhabited Λ]
+    (M0 : Turing.TM0.Machine Bool Λ) (S : Finset Λ)
+    (hClosed : ∀ {q : Λ} {a : Bool} {q' : Λ} {s : Turing.TM0.Stmt Bool},
+        (q', s) ∈ M0 q a → q ∈ (↑S : Set Λ) → q' ∈ (↑S : Set Λ))
+    (init : Nat.Partrec.Code → Turing.TM0.Cfg Bool Λ) (n : ℕ)
+    (hinit_q : ∀ code, (init code).q ∈ S)
+    (hcorr : ∀ code, (StateTransition.eval (Turing.TM0.step M0) (init code)).Dom
+        ↔ (code.eval n).Dom) :
     ∃ σ : ℝ × ℝ × ℝ → ℝ × ℝ × ℝ, ContDiff ℝ ((⊤ : ℕ∞) : WithTop ℕ∞) σ ∧
       ∃ (base : Nat.Partrec.Code → ℝ × ℝ × ℝ) (Target : Set (ℝ × ℝ × ℝ)),
-        ¬ ComputablePred (fun code : Nat.Partrec.Code => ∃ k : ℕ, σ^[k] (base code) ∈ Target) := by
+        ∀ code : Nat.Partrec.Code,
+          (∃ k : ℕ, σ^[k] (base code) ∈ Target) ↔ (code.eval n).Dom :=
+  ⟨sigmaM (Mtr M0 S), sigmaM_contDiff _,
+    fun code => gEncB 8 (bitEnc (encCtrl S (ctrlOfLabel S (init code).q)) (init code).Tape),
+    {x | x.1 = (bitVecToNat (ctrlCard S) (encHalt S) : ℝ)},
+    fun code => (sigmaM_reach_iff_of M0 S hClosed (init code) (hinit_q code)).trans (hcorr code)⟩
+
+/-! ## ★封頂：無條件特徵化，不可判定性由它導出 -/
+
+/-- **★★σ 線特徵化封頂（無條件、reduction 顯式）★★**：存在顯式 C^∞ 映射 `σ : ℝ³ → ℝ³`、
+基點族 `base`、目標集 `Target`，使 code 的軌道可達性**恰等於**停機問題：
+
+> `∀ code, (∃ k, σ^[k] (base code) ∈ Target) ⟺ (code.eval n).Dom`
+
+**比 `sigmaRL3_reachability_undecidable` 強**：不只「不可判定」，而是**多一還原到停機問題**。
+不可判定（下方）、r.e.、補集不可判定（M63）皆由這條單一 iff 導出。
+
+通用碼組裝 block（`cu`/`enc`/`SU`/`hClosed`/`hinit_q`/`hcorr`）**逐字複用 M33**；
+本檔此 block 只出現這一次，`sigmaRL3_reachability_undecidable` 改為它的推論。
+模式鏡射流線的 `fluid_reach_characterization`（M37:118）。 -/
+theorem sigmaRL3_reach_characterization (n : ℕ) :
+    ∃ σ : ℝ × ℝ × ℝ → ℝ × ℝ × ℝ, ContDiff ℝ ((⊤ : ℕ∞) : WithTop ℕ∞) σ ∧
+      ∃ (base : Nat.Partrec.Code → ℝ × ℝ × ℝ) (Target : Set (ℝ × ℝ × ℝ)),
+        ∀ code : Nat.Partrec.Code,
+          (∃ k : ℕ, σ^[k] (base code) ∈ Target) ↔ (code.eval n).Dom := by
   -- 暴露通用 code cu（複用 M33）
   have hf : Partrec fun m : ℕ ↦
       Nat.Partrec.Code.eval (Denumerable.ofNat Nat.Partrec.Code m) n :=
@@ -263,8 +316,23 @@ theorem sigmaRL3_reachability_undecidable (n : ℕ) :
       exact Part.dom_iff_mem.mpr ⟨a, ha⟩
     · intro h
       exact Part.dom_iff_mem.mpr ⟨pure ((code.eval n).get h), Part.mem_map _ (Part.get_mem h)⟩
-  -- 接離散映射版 headline（非 M33 的懸掛流）
-  exact sigmaM_reach_undecidable_of (Muniv enc dec) SU hClosed
+  -- 接離散映射版特徵化（非 M33 的懸掛流）
+  exact sigmaM_reach_characterization_of (Muniv enc dec) SU hClosed
     (fun code ↦ univTM0Cfg enc dec enc0 cu [Encodable.encode code]) n hinit_q hcorr
+
+/-- **★★G6 封頂（無條件）★★**：存在一個**顯式 C^∞ 映射** `σ : ℝ³ → ℝ³`、基點族 `base`、目標集
+`Target`，使「`code` 的軌道於某步打進 `Target`」**無演算法可判定**。通用碼組裝 block（`cu`/`enc`/`SU`/
+`hClosed`/`hinit_q`/`hcorr`）**逐字複用 M33**，尾端接 `sigmaM_reach_undecidable_of`（離散映射版、
+非 M33 的懸掛流版）。
+
+**與主線 M33 的關係**：不同數學物件（**離散映射** vs **連續流**）、共用機器層、平行不取代。
+C^∞ 非 analytic；離散映射非連續流（連續流升級 = 死牆 M56）。 -/
+theorem sigmaRL3_reachability_undecidable (n : ℕ) :
+    ∃ σ : ℝ × ℝ × ℝ → ℝ × ℝ × ℝ, ContDiff ℝ ((⊤ : ℕ∞) : WithTop ℕ∞) σ ∧
+      ∃ (base : Nat.Partrec.Code → ℝ × ℝ × ℝ) (Target : Set (ℝ × ℝ × ℝ)),
+        ¬ ComputablePred (fun code : Nat.Partrec.Code => ∃ k : ℕ, σ^[k] (base code) ∈ Target) := by
+  obtain ⟨σ, hσ, base, Target, hiff⟩ := sigmaRL3_reach_characterization n
+  exact ⟨σ, hσ, base, Target,
+    fun hcomp => ComputablePred.halting_problem n (hcomp.of_eq hiff)⟩
 
 end FluidTuring
