@@ -2,25 +2,31 @@ import FluidTuringLean.M62_DecideDrill
 import Mathlib.Computability.RE
 
 /-!
-# Module 64 — 質數電腦（誠實版）：固定的 C^∞ 映射，軌道打進固定目標 ⟺ 輸入是質數
+# Module 64 — 半可判定謂詞的通用閘門，與它的質數實例（「質數電腦」誠實版）
 
 **承 M59（`sigmaM_reach_iff_of` 結構閘門、通用機組裝 block）+ M62（`reach_at_k_tape`）**。
-使用者於 2026-09-21 拍板實作（稽核裁決見 `docs/PRIME_COMPUTER_AUDIT_2026-09-20.md`，結論為 NO-GO；
-本模組是拍板後的**誠實版**實作，不是推翻稽核）。
+起因＝使用者問「流體電腦能不能變質數電腦」；稽核裁 NO-GO（`docs/PRIME_COMPUTER_AUDIT_2026-09-20.md`），
+使用者於 2026-09-21 拍板實作。實作過程暴露：證明裡與質數有關的只有一行，其餘全是通用零件——
+所以本模組真正交付的是**通用閘門**，質數只是它的一個（零內容的）實例。
 
-> **`prime_computer_uniform`**：存在一台固定 `BitTM` `M`、固定起始狀態字 `v₀`、固定停機字 `vhalt`、
-> 與只依賴 `n` 的帶子 `tape n`，使得對所有 `n`：機器從 `(v₀, tape n)` 出發有限步到 `vhalt`
-> ⟺ `n` 是質數；且同一組資料經 `sigmaM M` 給出光滑映射版。
+> **`rePred_computer_uniform`（★核心★）**：對任何半可判定 `p : ℕ → Prop`，存在一台固定 `BitTM`、固定
+> 起始字 `v₀`、固定停機字 `vhalt`、與只依賴 `n` 的帶子 `tape n`，使得對所有 `n`：機器從 `(v₀, tape n)`
+> 有限步到 `vhalt` ⟺ `p n`；同一組資料經 `sigmaM M` 給出光滑映射版（`sigma_reach_of_rePred`）。
 >
-> **`primeSigma_reach_iff`**：`(∃ k, primeSigma^[k] (primeBase n) ∈ primeTarget) ↔ Nat.Prime n`，
+> **規則**：填可判定的 `p` → 零可計算性內容；填不可判定的 `p`（停機、Collatz 實例、Goldbach 反例存在）→
+> 才有內容。M59 capstone 是前者以外的實例；下方的質數電腦是前者。
+
+> **質數實例**：`prime_computer_uniform` = 閘門填入 `Nat.Prime`；
+> `primeSigma_reach_iff`：`(∃ k, primeSigma^[k] (primeBase n) ∈ primeTarget) ↔ Nat.Prime n`，
 > 其中 `primeSigma`、`primeTarget` 是與 `n` 無關的常數，`n` 在陳述裡只出現一次。
 
 ## 交付（零 sorry、標準三公理）
 
 - `primrecPred_nat_prime`：**`Nat.Prime` 是原始遞迴謂詞**（mathlib 此 pin 缺；獨立可上游，= 稽核 B4）。
-- `partrec_primePart` / `primePart_dom`：質數程式（定義域恰為質數的部分函數）。
-- `prime_computer_uniform`（★核心★）、`sigmaRL3_prime_computer`（∃ 版）、
-  `primeSigma_reach_iff`（具名常數版）、`primeSigma_not_reach_of_not_prime` 等推論。
+- `rePart` / `partrec_rePart` / `rePart_dom`：半可判定謂詞 → 定義域恰為它的部分函數。
+- `rePred_computer_uniform`（★核心閘門★）、`sigma_reach_of_rePred`（∃ 版）。
+- 質數實例：`prime_computer_uniform`、`sigmaRL3_prime_computer`、`primeSigma_reach_iff`（具名常數版）、
+  `primeSigma_not_reach_of_not_prime` 等推論。
 
 ## ★誠實範圍（禁 overclaim）★
 
@@ -76,39 +82,50 @@ theorem computablePred_nat_prime : ComputablePred Nat.Prime := by
 
 theorem rePred_nat_prime : REPred Nat.Prime := computablePred_nat_prime.to_re
 
-/-! ## 2. 質數程式：質數上輸出 0、合數（與 0、1）上不停機 -/
+/-! ## 2. 半可判定謂詞 → 部分函數（定義域恰為 `p`）；質數是其中一個實例 -/
 
-/-- 質數程式（部分函數）：定義域恰為質數。 -/
-def primePart : ℕ →. ℕ :=
-  fun n => (Part.assert (Nat.Prime n) fun _ => Part.some ()).map fun _ => 0
+/-- 把半可判定謂詞 `p` 變成部分函數：`p n` 成立時回 `0`，否則不停機。 -/
+def rePart (p : ℕ → Prop) : ℕ →. ℕ :=
+  fun n => (Part.assert (p n) fun _ => Part.some ()).map fun _ => 0
 
-theorem partrec_primePart : Partrec primePart :=
-  rePred_nat_prime.map (Computable.const 0).to₂
+theorem partrec_rePart {p : ℕ → Prop} (hp : REPred p) : Partrec (rePart p) :=
+  hp.map (Computable.const 0).to₂
 
-theorem primePart_dom (n : ℕ) : (primePart n).Dom ↔ Nat.Prime n := by
-  unfold primePart
+theorem rePart_dom (p : ℕ → Prop) (n : ℕ) : (rePart p n).Dom ↔ p n := by
+  unfold rePart
   constructor
   · intro h
     obtain ⟨y, hy⟩ := Part.dom_iff_mem.mp h
     obtain ⟨a, ha, -⟩ := (Part.mem_map_iff _).mp hy
-    obtain ⟨hp, -⟩ := Part.mem_assert_iff.mp ha
-    exact hp
-  · intro hp
-    exact Part.dom_iff_mem.mpr ⟨0, (Part.mem_map_iff _).mpr ⟨(), Part.mem_assert_iff.mpr ⟨hp, Part.mem_some ()⟩, rfl⟩⟩
+    obtain ⟨hpn, -⟩ := Part.mem_assert_iff.mp ha
+    exact hpn
+  · intro hpn
+    exact Part.dom_iff_mem.mpr
+      ⟨0, (Part.mem_map_iff _).mpr ⟨(), Part.mem_assert_iff.mpr ⟨hpn, Part.mem_some ()⟩, rfl⟩⟩
 
+/-- 質數程式 = `rePart Nat.Prime`。 -/
+abbrev primePart : ℕ →. ℕ := rePart Nat.Prime
 
-/-! ## 3. 通用機組裝（逐字複用 M59 的 block，把通用碼換成質數程式）＋ 核心定理 -/
+theorem partrec_primePart : Partrec primePart := partrec_rePart rePred_nat_prime
 
-/-- **★質數電腦（機器層、反循環可由陳述形狀檢查）★**：一台固定 `BitTM`、固定起始字、固定停機字、
-`n` 只寫進帶子。兩個結論：離散機器版與 σ 版。 -/
-theorem prime_computer_uniform :
+theorem primePart_dom (n : ℕ) : (primePart n).Dom ↔ Nat.Prime n := rePart_dom Nat.Prime n
+
+/-! ## 3. ★通用閘門★：任何半可判定謂詞 → 一台固定機器／一個固定 σ 的軌道可達性 -/
+
+/-- **★通用閘門（機器層、反循環可由陳述形狀檢查）★**：對**任何**半可判定謂詞 `p`，存在一台固定
+`BitTM`、固定起始字、固定停機字，`n` 只寫進帶子，使得：從 `(v₀, tape n)` 有限步到 `vhalt` ⟺ `p n`；
+且同一組資料經 `sigmaM M` 給出光滑映射版。
+
+規則：填**可判定**的 `p`（如 `Nat.Prime`）得到零可計算性內容的 characterization；填**不可判定**的 `p`
+（如停機、Collatz 實例、Goldbach 反例存在）才有內容。M59 的 capstone 與下方的質數電腦都是本定理的實例。 -/
+theorem rePred_computer_uniform {p : ℕ → Prop} (hp : REPred p) :
     ∃ (M : BitTM) (v₀ vhalt : Fin M.m → Bool) (tape : ℕ → Tape Bool),
-      (∀ n : ℕ, (∃ k : ℕ, ((bitStepTape M)^[k] (v₀, tape n)).1 = vhalt) ↔ Nat.Prime n) ∧
+      (∀ n : ℕ, (∃ k : ℕ, ((bitStepTape M)^[k] (v₀, tape n)).1 = vhalt) ↔ p n) ∧
       (∀ n : ℕ, (∃ k : ℕ, (sigmaM M)^[k] (gEncB 8 (bitEnc v₀ (tape n)))
-          ∈ {x | x.1 = (bitVecToNat M.m vhalt : ℝ)}) ↔ Nat.Prime n) := by
-  -- 質數程式編成 TM2 碼 cu
+          ∈ {x | x.1 = (bitVecToNat M.m vhalt : ℝ)}) ↔ p n) := by
+  -- `p` 的程式編成 TM2 碼 cu
   obtain ⟨cu, hcu⟩ :=
-    Turing.ToPartrec.Code.exists_code (Nat.Partrec'.part_iff₁.mpr partrec_primePart)
+    Turing.ToPartrec.Code.exists_code (Nat.Partrec'.part_iff₁.mpr (partrec_rePart hp))
   -- 位元編碼
   obtain ⟨N, enc, dec, enc0, encdec⟩ :=
     tm1to1_enc (Turing.TM2to1.Γ' K' (fun _ ↦ Γ'))
@@ -138,30 +155,30 @@ theorem prime_computer_uniform :
     refine Finset.mem_product.2 ⟨?_, Finset.mem_univ _⟩
     exact Finset.some_mem_insertNone.2
       (Finset.mem_biUnion.2 ⟨_, hInS2, Turing.TM1.stmts₁_self⟩)
-  -- 停機 ⟺ 質數（與 M59 唯一不同處：右端是 `Nat.Prime n`）
+  -- 停機 ⟺ p n（與 M59 唯一不同處：右端是 `p n`，不是 `(code.eval n).Dom`）
   have hcorr : ∀ n : ℕ,
       (StateTransition.eval (Turing.TM0.step (Muniv enc dec))
-        (univTM0Cfg enc dec enc0 cu [n])).Dom ↔ Nat.Prime n := by
+        (univTM0Cfg enc dec enc0 cu [n])).Dom ↔ p n := by
     intro n
     rw [univ_eval_chain enc dec encdec enc0 cu [n]]
     have hv := hcu (n ::ᵥ List.Vector.nil)
     simp only [List.Vector.head_cons] at hv
-    have hv' : cu.eval [n] = pure <$> primePart n := hv
-    rw [hv', ← primePart_dom n]
+    have hv' : cu.eval [n] = pure <$> rePart p n := hv
+    rw [hv', ← rePart_dom p n]
     constructor
     · intro h
       obtain ⟨b, hb⟩ := Part.dom_iff_mem.mp h
       obtain ⟨a, ha, -⟩ := (Part.mem_map_iff _).mp hb
       exact Part.dom_iff_mem.mpr ⟨a, ha⟩
     · intro h
-      exact Part.dom_iff_mem.mpr ⟨pure ((primePart n).get h), Part.mem_map _ (Part.get_mem h)⟩
+      exact Part.dom_iff_mem.mpr ⟨pure ((rePart p n).get h), Part.mem_map _ (Part.get_mem h)⟩
   -- ★起始狀態字與 n 無關★：輸入只進帶子（`univTM0Cfg` 的 `.q` 由 trCfg 鏈決定，`rfl`）
   set q₀ := (univTM0Cfg enc dec enc0 cu []).q with hq₀
   have hq : ∀ n : ℕ, (univTM0Cfg enc dec enc0 cu [n]).q = q₀ := fun _ => rfl
   -- σ 版（逐 n）：結構閘門 sigmaM_reach_iff_of（M59）
   have hσ : ∀ n : ℕ, (∃ k : ℕ, (sigmaM (Mtr (Muniv enc dec) SU))^[k]
       (gEncB 8 (bitEnc (encCtrl SU (ctrlOfLabel SU q₀)) (univTM0Cfg enc dec enc0 cu [n]).Tape))
-        ∈ {x | x.1 = (bitVecToNat (ctrlCard SU) (encHalt SU) : ℝ)}) ↔ Nat.Prime n := by
+        ∈ {x | x.1 = (bitVecToNat (ctrlCard SU) (encHalt SU) : ℝ)}) ↔ p n := by
     intro n
     have h := (sigmaM_reach_iff_of (Muniv enc dec) SU hClosed _ (hinit_q n)).trans (hcorr n)
     rw [hq n] at h
@@ -173,16 +190,42 @@ theorem prime_computer_uniform :
   rw [Set.mem_setOf_eq]
   exact (reach_at_k_tape _ _ _ _ k).symm
 
-/-! ## 4. 推論：∃ 版、具名常數版 -/
+/-! ## 4. 推論：通用 ∃ 版、質數實例、具名常數版 -/
 
-/-- **質數電腦（∃ 版）**：固定 `σ`、固定 `Target`、起點族 `base`，`∀ n, 到達 ↔ Nat.Prime n`。 -/
+/-- **★通用閘門（∃ 版）★**：任何半可判定 `p`，存在固定 C^∞ `σ`、固定 `Target`、起點族 `base`，
+`∀ n, 到達 ↔ p n`。 -/
+theorem sigma_reach_of_rePred {p : ℕ → Prop} (hp : REPred p) :
+    ∃ σ : ℝ × ℝ × ℝ → ℝ × ℝ × ℝ, ContDiff ℝ ((⊤ : ℕ∞) : WithTop ℕ∞) σ ∧
+      ∃ (base : ℕ → ℝ × ℝ × ℝ) (Target : Set (ℝ × ℝ × ℝ)),
+        ∀ n : ℕ, (∃ k : ℕ, σ^[k] (base n) ∈ Target) ↔ p n := by
+  obtain ⟨M, v₀, vhalt, tape, -, hσ⟩ := rePred_computer_uniform hp
+  exact ⟨sigmaM M, sigmaM_contDiff M, fun n ↦ gEncB 8 (bitEnc v₀ (tape n)),
+    {x | x.1 = (bitVecToNat M.m vhalt : ℝ)}, hσ⟩
+
+/-- **閘門的第一個非平凡消費者**：M59 capstone 的形狀（軌道可達 ⟺ 第 `m` 台機器在輸入 `n` 停機）
+由閘門一行重得。不取代 M59（那裡的 σ 是具體組裝、且進一步推出不可判定與 Σ₁ 定位）；
+此處只證明閘門確實涵蓋不可判定的實例——與下方零內容的質數實例對照。 -/
+theorem sigma_reach_halting_of_gate (n : ℕ) :
+    ∃ σ : ℝ × ℝ × ℝ → ℝ × ℝ × ℝ, ContDiff ℝ ((⊤ : ℕ∞) : WithTop ℕ∞) σ ∧
+      ∃ (base : ℕ → ℝ × ℝ × ℝ) (Target : Set (ℝ × ℝ × ℝ)),
+        ∀ m : ℕ, (∃ k : ℕ, σ^[k] (base m) ∈ Target) ↔
+          ((Denumerable.ofNat Nat.Partrec.Code m).eval n).Dom :=
+  sigma_reach_of_rePred ((ComputablePred.halting_problem_re n).of_eq fun _ => Iff.rfl)
+
+/-- **質數電腦（機器層）** = 通用閘門填入 `Nat.Prime`。 -/
+theorem prime_computer_uniform :
+    ∃ (M : BitTM) (v₀ vhalt : Fin M.m → Bool) (tape : ℕ → Tape Bool),
+      (∀ n : ℕ, (∃ k : ℕ, ((bitStepTape M)^[k] (v₀, tape n)).1 = vhalt) ↔ Nat.Prime n) ∧
+      (∀ n : ℕ, (∃ k : ℕ, (sigmaM M)^[k] (gEncB 8 (bitEnc v₀ (tape n)))
+          ∈ {x | x.1 = (bitVecToNat M.m vhalt : ℝ)}) ↔ Nat.Prime n) :=
+  rePred_computer_uniform rePred_nat_prime
+
+/-- **質數電腦（∃ 版）** = 通用閘門填入 `Nat.Prime`。 -/
 theorem sigmaRL3_prime_computer :
     ∃ σ : ℝ × ℝ × ℝ → ℝ × ℝ × ℝ, ContDiff ℝ ((⊤ : ℕ∞) : WithTop ℕ∞) σ ∧
       ∃ (base : ℕ → ℝ × ℝ × ℝ) (Target : Set (ℝ × ℝ × ℝ)),
-        ∀ n : ℕ, (∃ k : ℕ, σ^[k] (base n) ∈ Target) ↔ Nat.Prime n := by
-  obtain ⟨M, v₀, vhalt, tape, -, hσ⟩ := prime_computer_uniform
-  exact ⟨sigmaM M, sigmaM_contDiff M, fun n ↦ gEncB 8 (bitEnc v₀ (tape n)),
-    {x | x.1 = (bitVecToNat M.m vhalt : ℝ)}, hσ⟩
+        ∀ n : ℕ, (∃ k : ℕ, σ^[k] (base n) ∈ Target) ↔ Nat.Prime n :=
+  sigma_reach_of_rePred rePred_nat_prime
 
 /-- 質數電腦的機器（由 `prime_computer_uniform` 取出的固定見證）。 -/
 noncomputable def primeMachine : BitTM := Classical.choose prime_computer_uniform
