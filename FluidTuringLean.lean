@@ -69,3 +69,4 @@ import FluidTuringLean.M62_DecideDrill
 import FluidTuringLean.M63_SigmaCorollaries
 import FluidTuringLean.M64_PrimeComputer
 import FluidTuringLean.M65_Collatz
+import FluidTuringLean.M66_Goldbach
